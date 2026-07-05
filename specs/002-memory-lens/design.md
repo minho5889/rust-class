@@ -3,8 +3,8 @@
 > **Doc 3 of 4. Derived from approved `requirements.md`.** Audited by `spec-auditor`
 > before review. ✋ **Human gate.**
 
-**Status:** awaiting-review
-**Approved:** — · **Assurance verdict:** design 74% → revised per
+**Status:** approved
+**Approved:** 2026-07-05 by Minho · **Assurance verdict:** design 74% → revised per
 `_assurance/design-review.md` (both MAJORs + all MEDIUMs addressed, rev 2)
 
 ## High-level design (the shape)
