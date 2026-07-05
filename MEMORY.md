@@ -44,7 +44,7 @@
 | 2026-07-05 | Turn-end telemetry (`Stop` hook) removed; capture = session.start + spec/gate events only | Fired every turn → noise events + a telemetry-only commit per reply; turn boundaries derivable from timestamps |
 | 2026-07-05 | Git strategy from 002's close: merge to `main` + tag `spec/NNN-name` at spec close; branch-per-spec (`claude/NNN-*`) thereafter | `main` = sum of approved work; tags = spec-boundary markers for the lake; learner asked for worthwhile fixes to be implemented |
 | 2026-07-05 | **IaC = AWS CDK v2 with TypeScript** (over SAM/Terraform/Pulumi); CDK app in `infra/` beside the cargo workspace; introduced when the first AWS-deploying spec constructs | Learner decision; conventions to be refined from CDK deep-research report |
-| 2026-07-05 | Research reports live in `research/` as `YYYY-MM-DD-<topic>.md`, generated from verified deep-research workflow output | Learner requested a research folder with three reports (best practices / Rust-on-AWS / CDK) |
+| 2026-07-05 | Research reports live in `research/` as `<topic>.md` (no dates in filenames — date in header, versions via git) | Learner requested a research folder with three reports (best practices / Rust-on-AWS / CDK); learner amended: no date in the name |
 
 ## Concepts mastered
 
