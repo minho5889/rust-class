@@ -3,17 +3,25 @@
 > Claude: read this at the start of every session; append to it at the end of every
 > session. Keep entries short and factual. Newest session-log entries go on top.
 
-## Learner profile
+## Learner profile (updated 2026-07-05 from LinkedIn)
 
-- **Name / contact:** Minho (minho5889@gmail.com)
+- **Name / contact:** Minho Lee (minho5889@gmail.com) — Toronto, ON.
+- **Day job:** Associate Delivery Consultant AI/ML, AWS Professional Services
+  (Dec 2025–): architecting/delivering **GenAI and agentic AI solutions on
+  AWS**. Before that: **Cloud Support Engineer, 3 yrs 4 mos — troubleshooting
+  and optimizing Serverless applications on AWS**. Western University. Earlier
+  career: 2,000+ hrs EN⇄KR medical interpretation (bilingual).
+- **Consequence for the class:** AWS-expert / Rust-beginner. Skip all AWS-101;
+  lean into Rust language depth; his serverless *operations* instincts
+  (cold starts, throttling, observability) are assets to build on, not teach.
+  GenAI/agentic day job → MicroVMs (AI-code sandboxes) and Bedrock-from-Rust
+  are high-motivation later units. Time-constrained working professional.
 - **Rust experience:** Beginner — no substantial prior Rust knowledge.
-- **Goal:** Learn Rust as a systems-engineering language with a focus on memory
-  management and efficiency, deployed on AWS.
-- **Target AWS services:** Lambda, Lambda MicroVMs (June 2026), ECS Fargate, EC2.
-- **Methodology:** AI-DLC + Kiro-style spec-driven development (no Kiro IDE),
-  extended by the learner's own four-doc pipeline design — see `CLAUDE.md` v2.
-- **Learning style:** Fundamentals first ("the bedrock"), then hands-on building;
-  likes process/telemetry thinking (designed the data lake himself).
+- **Goal:** Rust as a systems-engineering language, memory management as the
+  through-line, deployed across Lambda, Lambda MicroVMs, ECS Fargate, EC2.
+- **Methodology:** AI-DLC + Kiro-style four-doc pipeline (see CLAUDE.md).
+- **Learning style:** Fundamentals first ("the bedrock"), then hands-on
+  building; likes process/telemetry thinking (designed the data lake himself).
 
 ## Current state
 
@@ -61,6 +69,23 @@ _(Move items here from `SKILLS.md` when demonstrated, with date and evidence.)_
 - AWS credentials: are they configured in this environment? (Blocks Wave 2.)
 - Telegram: provide `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID` as env vars when you
   want gate notifications live (hook already falls back gracefully without them).
+
+## Phase 1 plan (approved direction 2026-07-05; each spec still gates individually)
+
+Learner constraints: 10+ h/week · personal AWS account ready · build-first +
+hands-on exercises (reading optional) · Phase 2 = agentic/GenAI tilt.
+
+| # | Spec | Builds | Rust concepts |
+|---|---|---|---|
+| 003 | `rust-bedrock` | `glake` CLI v0 (validate/stats the local lake, std-only) | ownership, borrowing, String/&str, enums, match, Option/Result, iterators |
+| 004 | `glake-traits` | glake → lib+bin with query traits, thiserror chain, proptest suite | traits, generics, modules, error design, API-guidelines rubric |
+| 005 | `async-relay` | local axum service receiving envelope events (hooks can POST) | async/await, tokio, channels, Send/Sync, graceful shutdown |
+| 006 | `hello-lambda` | relay handler as ARM64 Lambda + Function URL; `infra/` CDK born; panic=abort cold-start experiment | lambda_runtime, serde events, release profile in anger, cargo-bloat |
+| 007 | `lake-to-s3` | CDK stateful stack (lake buckets) + Rust ingest Lambda + backlog sync + DuckDB-over-S3 scan pack | aws-sdk-s3, batching, buffer reuse, streaming serde |
+| 008 | `lambda-memlab` | capstone: memlens-instrumented workloads ON Lambda across memory configs; traces → lake; insight cards → discovery | allocator behavior under vCPU scaling; original published-in-repo research |
+
+Phase 2 (agentic tilt, sketched): 009 MicroVMs AI-code sandbox · 010
+Bedrock-from-Rust agent core · 011 Fargate/EC2 + cost capstone.
 
 ## Session log
 
