@@ -97,6 +97,14 @@ epistemics lesson: love Rust, distrust vibes.
 4. **ap-northeast-1 feature parity** for the full goldeneye stack — verify
    before assuming the secondary region supports everything.
 
+## Volatility & review
+
+**Volatile (review by 2026-10-05):** everything MicroVMs/Managed Instances
+(unverified); sha2 0.10 `asm` flag specifics (0.11 auto-detects). **Annual
+(2027-07):** all cold-start/cost benchmark numbers; aws-sdk binary-size figures.
+**Stable:** GA status, bootstrap/provided.al2023 deployment model, Tier-1
+platform status, memory→vCPU proportionality.
+
 ## Adopted into goldeneye (applied 2026-07-05)
 
 1. Container images: `distroless-static`/`chainguard-static` over bare scratch

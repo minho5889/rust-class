@@ -1,0 +1,17 @@
+{
+  "id": "001-assurance-predicts-rework",
+  "date": "2026-07-05",
+  "consumer": "MEMORY.md",
+  "query": "datalake/queries/scan.sh :: gate funnel + doc churn",
+  "data": {
+    "spec": "002-memory-lens",
+    "docs": [
+      {"doc": "requirements.md", "verdict": 78, "revisions_pre_gate": 1, "human_change_requests": 0, "writes": 4},
+      {"doc": "design.md", "verdict": 74, "revisions_pre_gate": 1, "human_change_requests": 0, "writes": 12},
+      {"doc": "tasks.md", "verdict": 86, "revisions_pre_gate": 1, "human_change_requests": null, "writes": 11}
+    ]
+  },
+  "finding": "Every gated doc needed exactly one pre-gate revision; auditor verdict rank-ordered defect severity; zero human change requests post-audit.",
+  "action": "Recheck threshold calibration (70s=defects, 80s=polish) after 2-3 more specs.",
+  "caveats": "n=3 docs, single spec/day; trust-based fast approvals"
+}

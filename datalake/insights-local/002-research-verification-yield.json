@@ -1,0 +1,18 @@
+{
+  "id": "002-research-verification-yield",
+  "date": "2026-07-05",
+  "consumer": "research/README.md",
+  "query": "datalake/queries/scan.sh :: research.* events",
+  "data": {
+    "runs": [
+      {"topic": "typescript-cdk-for-goldeneye", "extracted": 65, "verified": 25, "confirmed": 25, "killed": 0},
+      {"topic": "rust-best-practices-and-big-tech", "extracted": 110, "verified": 25, "confirmed": 24, "killed": 1},
+      {"topic": "rust-on-aws-compute", "extracted": 48, "verified": 25, "confirmed": 24, "killed": 1}
+    ],
+    "open_questions": 12,
+    "refuted": 2
+  },
+  "finding": "62-77% of extracted claims silently unverified (budget cap); 97% of verified claims survived; both kills prevented concrete design errors; MicroVMs gap found only post-hoc.",
+  "action": "Adopted: unverified-backlog rule, mid-run completeness critic, lens-diverse verifiers (research/README.md protocol v2).",
+  "caveats": "n=3 runs, same harness and day"
+}

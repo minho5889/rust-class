@@ -82,14 +82,22 @@ raw prompt ─► intent.md ─► requirements.md ─► design.md ─► tasks
   (amend requirements, re-gate) / code bug (fix, keep seed) / test bug (fix
   strategy). Classify before fixing.
 
-## Telemetry (the goldeneye data lake)
+## Telemetry (the goldeneye data lake = gradebook + lab notebook)
 
+Three workloads, priority order: **memlens traces** (the volume; Parquet/DuckDB
+curriculum), **learning analytics** (`learning.*` mistake ledger → SKILLS.md
+evidence), **process telemetry** (plain JSONL in git forever, no curation).
 Hooks append envelope events (`datalake/schema/envelope.v1.json`) to
-`datalake/raw-local/dt=YYYY-MM-DD/*.jsonl`; capture = session.start + spec-doc/gate
-events. Committed with normal work commits (private repo; raw prompts allowed by
-learner decision 2026-07-05). **Never put secrets in payloads.** S3 zones
-(`goldeneye-lake`, `goldeneye-discovery`) are Wave 2 — no AWS telemetry resources
-until that spec is approved. Details: `datalake/README.md`.
+`datalake/raw-local/dt=YYYY-MM-DD/*.jsonl`. Rules that bind every session:
+
+- **Never put secrets in payloads.** Events commit with normal work commits.
+- **Research runs must emit `research.*` events** (protocol:
+  `research/README.md` v2) — findings invisible to the lake don't exist.
+- **Log the mistake ledger while teaching**: recurring compiler-error classes,
+  borrow-checker fights, counterexample triages → `learning.*` events.
+- Standing queries (`datalake/queries/scan.sh`) each name the doc they feed;
+  insight cards → `datalake/insights-local/`. S3 zones are a Wave-2 class unit.
+  Details: `datalake/README.md`.
 
 ## Teaching rules (this is a class, not just a codebase)
 

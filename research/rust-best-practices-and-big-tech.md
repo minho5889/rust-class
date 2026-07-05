@@ -110,6 +110,14 @@ latencies) — those are motivation, not targets.
 **Later:** cargo-fuzz nightly lane (first untrusted-input parser), Miri for
 memlens's unsafe core, fat LTO/PGO only on measured need.
 
+## Volatility & review
+
+**Volatile (review by 2026-10-05):** cargo-fuzz nightly requirement (`-Csanitize`
+stabilization PR open); aws-lc-rs as default SDK crypto provider. **Annual
+(2027-07):** all benchmark magnitudes (Pingora/Android/Discord numbers, LTO
+gains). **Stable:** API Guidelines, Nomicon unsafe model, Cargo profile
+semantics, Go's forced-GC mechanism.
+
 ## Open questions the research could not settle
 
 - Async/tokio production patterns: no claims survived verification — re-research

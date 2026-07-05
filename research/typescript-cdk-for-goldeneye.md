@@ -119,6 +119,14 @@ All three building blocks are first-party documented patterns *(3-0 ×3,
 | **Later** | CDK Pipelines (single learner = plain `cdk deploy` first); Athena/Glue constructs (Wave 2+); budgets stack |
 | **Never / avoid** | `cdklabs/aws-lambda-rust` (experimental), `aws-samples/aws-cdk-with-rust` (archived 2022), hand-managed ECR repos, physical names outside the two lake buckets |
 
+## Volatility & review
+
+**Volatile (review by 2026-10-05):** cargo-lambda-cdk pre-1.0 status; absence of
+a first-party Rust construct; **MicroVMs CDK/CFN support unknown** (re-check at
+that spec regardless). **Annual (2027-07):** cdk-nag v3 API shape; roadmap
+priorities. **Stable:** best-practices guidance (stack split, naming, monorepo);
+DockerImageAsset/EC2 patterns.
+
 ## Consequences for goldeneye docs
 
 1. `steering/tech.md`: add construct choices + the two ARM64 explicit-flag rules

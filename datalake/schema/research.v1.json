@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "goldeneye/research/v1",
+  "title": "goldeneye research.* event payloads v1",
+  "description": "Payload shapes for the research event family (envelope.v1 carries them). Every deep-research run MUST emit these events alongside its markdown report — findings invisible to the lake don't exist.",
+  "$defs": {
+    "research.run": {
+      "type": "object",
+      "required": ["topic", "report", "stats"],
+      "properties": {
+        "topic": { "type": "string", "description": "kebab-case, matches research/<topic>.md" },
+        "report": { "type": "string" },
+        "stats": { "type": "object", "description": "angles, sourcesFetched, claimsExtracted, claimsVerified, confirmed, killed, agentCalls" }
+      }
+    },
+    "research.finding": {
+      "type": "object",
+      "required": ["topic", "claim", "confidence", "volatility"],
+      "properties": {
+        "topic": { "type": "string" },
+        "claim": { "type": "string", "maxLength": 600 },
+        "confidence": { "enum": ["high", "medium", "low"] },
+        "vote": { "type": "string", "description": "adversarial panel outcome, e.g. '3-0', '2-1'" },
+        "volatility": {
+          "enum": ["stable", "annual", "volatile"],
+          "description": "stable = definitional/official, no review; annual = benchmarks/prices, review yearly; volatile = pre-1.0 tools, open PRs, unverified service facts — review quarterly"
+        },
+        "review_by": { "type": ["string", "null"], "format": "date" },
+        "sources": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "research.open_question": {
+      "type": "object",
+      "required": ["topic", "question"],
+      "properties": { "topic": {"type": "string"}, "question": {"type": "string"}, "owner": {"type": "string", "description": "future spec or routine expected to answer it"} }
+    },
+    "research.refuted": {
+      "type": "object",
+      "required": ["topic", "claim"],
+      "properties": { "topic": {"type": "string"}, "claim": {"type": "string"} }
+    },
+    "research.adoption": {
+      "type": "object",
+      "required": ["topic", "adopted_into", "commit"],
+      "properties": { "topic": {"type": "string"}, "claim": {"type": "string"}, "adopted_into": {"type": "string", "description": "file/section changed"}, "commit": {"type": "string"} }
+    }
+  }
+}

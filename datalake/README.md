@@ -1,44 +1,60 @@
-# goldeneye data lake
+# goldeneye data lake — the class's gradebook and lab notebook
 
-Everything the AI-DLC workflow exhales — agent events, gate decisions, assurance
-verdicts, property-test counterexamples, build/deploy metrics, learning events —
-captured as envelope events and archived for pattern mining.
+Reframed 2026-07-05 (learner-approved): **not a mini enterprise data platform.**
+Three workloads, in priority order, each sized honestly:
+
+## 1. memlens traces — the lake's primary citizen
+
+The only data we produce at real volume (~100k events per traced run). This is
+where columnar formats genuinely pay off, and where the queries *are* the
+curriculum: allocation-size distributions across exercises, `Vec` growth
+patterns before/after an optimization, "how did my allocation behavior change
+between playground 02 and 07."
+
+- Land in `raw-local/traces/dt=YYYY-MM-DD/` as `memlens.v1` JSONL (spec 002).
+- **Wave 2 (S3, as a class unit):** traces → Parquet (zstd) in
+  `s3://goldeneye-lake/traces/`, DuckDB query pack over them. Athena/Glue only
+  when it teaches something.
+
+## 2. Learning analytics — the mistake ledger (the novel part)
+
+`learning.*` events measure the learner learning: compiler-error classes
+encountered (borrow-checker fights!), time-to-green on property tests, triaged
+counterexamples, concepts exercised per session. Standing query: *"which error
+classes stopped recurring?"* — spaced-repetition input, and **SKILLS.md mastery
+promotions get evidence attached instead of vibes.**
+
+## 3. Process telemetry — small forever, no ceremony
+
+Sessions, spec docs, gates, assurance verdicts, research findings. Kilobytes.
+**Plain JSONL in git indefinitely** — no curation pipeline, no compaction job
+(explicitly killed from the old plan), queryable with jq/DuckDB as-is.
 
 ```
-capture (hooks → raw-local JSONL, committed)          ← v1, THIS REPO, live now
-  → s3://goldeneye-lake/raw/       JSONL+zstd, Hive-partitioned   ← Wave 2
-  → s3://goldeneye-lake/curated/   Parquet, compacted             ← Wave 2
-  → scan: DuckDB (default) / Athena                               ← Wave 2
-  → s3://goldeneye-discovery/      promoted insight cards only    ← Wave 3
+capture (hooks + research runs + memlens) → raw-local/dt=YYYY-MM-DD/*.jsonl (committed)
+traces (volume)  → Wave 2: s3://goldeneye-lake/traces/ (Parquet) → DuckDB
+insights         → insights-local/ now → s3://goldeneye-discovery/ later
 ```
 
-## v1 (current): local raw zone
+## Rules
 
-- Hooks (`.claude/hooks/telemetry.sh`) append events to
-  `raw-local/dt=YYYY-MM-DD/events.jsonl` — one JSON object per line, envelope schema
-  in `schema/envelope.v1.json`.
-- Capture granularity (decision 2026-07-05): `session.start` + spec-doc/gate events
-  only. Turn-end capture (`Stop` hook) was removed — it fired every turn, produced
-  low-value events, and forced a telemetry-only commit per reply. Turn boundaries
-  are recoverable from event timestamps if ever needed.
-- Files are **committed with normal work commits** (sessions are ephemeral remote
-  containers; git is the durability layer until S3 exists). Private repo; raw
-  prompts in intent events are permitted by learner decision (2026-07-05).
-- **Never** put secrets/credentials in payloads.
+- Envelope schema: `schema/envelope.v1.json`; payload families:
+  `schema/research.v1.json`, `schema/memlens.v1.json` (with spec 002).
+  **No secrets in payloads, ever.**
+- **Research runs must emit events** (`research.run/finding/open_question/
+  refuted/adoption`) alongside their markdown report — findings invisible to
+  the lake don't exist. Volatility-tag every finding; `volatile` ⇒ `review_by`.
+- **Every standing query names the document it feeds** (SKILLS.md, MEMORY.md,
+  a spec's evidence.md) — a query with no consumer doesn't get built.
+  Query pack: `queries/`. Insight cards: `insights-local/` (md + json pair,
+  each embedding its query; promoted to `s3://goldeneye-discovery` in Wave 3).
+- Naming/regions unchanged: `goldeneye-lake` / `goldeneye-discovery`,
+  us-east-1 primary, ap-northeast-1 secondary (parity unverified).
+- Capture granularity (2026-07-05): session.start + spec/gate/research events;
+  turn-end capture removed as noise.
 
-## Conventions (fixed now so Wave 2 doesn't migrate data)
+## Explicitly out of scope
 
-- Project prefix: `goldeneye-`. Regions: us-east-1 (primary), ap-northeast-1
-  (secondary). Buckets: `goldeneye-lake`, `goldeneye-discovery` (suffix with account
-  id if names are taken, e.g. `goldeneye-lake-123456789012`).
-- Partitioning: `event_type=<family>/dt=YYYY-MM-DD/` (Hive-style) in S3; local v1
-  partitions by `dt=` only, split by family at Wave-2 sync time.
-- Raw is append-only, JSONL. Curated is Parquet (zstd), one table per event family.
-- Discovery holds **insight cards only** (markdown + JSON pair, each embedding the
-  query that produced it, so every insight is reproducible) — never raw data.
-- Lifecycle (Wave 2): raw → IA at 30d → Glacier at 90d.
-
-## Deliberately out of scope
-
-Kinesis/Firehose, dashboards, Lake Formation, Iceberg/Delta — revisit as future
-Units of Work only if scale demands.
+Process-event curation/compaction, Kinesis/Firehose, dashboards (memory-lens
+viewer excepted — it reads traces, not this lake's process events), Lake
+Formation, Iceberg/Delta. Revisit only if volume proves the reframing wrong.
