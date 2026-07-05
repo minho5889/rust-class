@@ -115,21 +115,25 @@ exist only for the viewer's JS mirror (2.1.4 → 3.1.1).
 ## 4. Operations — the learner session (R9–R13, R14a, R15, L1–L5)
 
 ### 4.1 Bolt: first light
-- [ ] 4.1.1 `playground/02-collections-lens/`: prepared exercise (Vec growth,
-      String vs &str, Box, HashMap, a move and a borrow — annotated)
+- [x] 4.1.1 `playground/02-collections-lens/`: 6-lesson annotated exercise (Vec
+      doubling, zero-cost move, zero-cost borrow, String vs &str, Box, HashMap
+      rehash); canonical 64-event trace committed to the lake
 - [ ] 4.1.2 Learner runs it, opens the trace, scrubs; observations → `evidence.md`
       (R9–R13, R15)
-- [ ] 4.1.3 R14a: hyperfine (or 10-run median) feature-off vs feature-on, debug
-      builds, fixed workload → absolute times, ratio, trace size → `evidence.md`
+- [x] 4.1.3 R14a: 10-run medians, debug builds: 2.40 ms off → 2.88 ms on =
+      **1.20×**, ~14.5 KB trace/run → `evidence.md` (hyperfine unavailable;
+      python timer, min/max recorded)
 - [ ] 4.1.4 Learner explains L1–L5 unaided; explanations (and gaps) → `evidence.md`
 
 ## Operations checklist
 
-- [ ] `cargo fmt` + `cargo clippy -- -D warnings` clean
-- [ ] All [P] properties pass (≥256 cases); `proptest-regressions/` committed
-- [ ] All [E] tests pass
-- [ ] All [O] requirements observed → numbers in `evidence.md`
-- [ ] `evidence.md` learnings written; `MEMORY.md` + `SKILLS.md` updated
+- [x] `cargo fmt` + `cargo clippy -- -D warnings` clean (both feature configs)
+- [x] All [P] properties pass (256 cases each); no regression seeds existed to
+      commit (zero engine counterexamples; harness bugs documented in evidence)
+- [x] All [E] tests pass (15 tests across both feature configurations)
+- [~] [O] machine-measurable done (R11, R13 fold-path, R14a) → `evidence.md`;
+      learner-session items (R9/R10b/R12/R15 visual, 4.1.2/4.1.4) pending
+- [x] `evidence.md` written; `MEMORY.md` + `SKILLS.md` updated
 - [ ] `property-auditor` run: every [P] REQ has a faithful, passing property
 
 Template deviation (declared): the "deployed to AWS target" and "torn down" lines

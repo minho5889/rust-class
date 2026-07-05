@@ -1,0 +1,15 @@
+[package]
+name = "collections-lens"
+version = "0.1.0"
+edition = "2024"
+
+# Playground projects live OUTSIDE the workspace (steering convention) —
+# this empty table opts out of the parent workspace.
+[workspace]
+
+[dependencies]
+memlens = { path = "../../crates/memlens" }
+
+[features]
+# `cargo run` = plain program. `cargo run --features lens` = traced (debug only).
+lens = ["memlens/memlens"]

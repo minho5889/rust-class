@@ -24,12 +24,16 @@ e.g., fix a borrow-checker error unaided, or deploy a Lambda from scratch.
 - [ ] `Option<T>` and `Result<T, E>` — no null, no exceptions
 
 ### 1b. Memory management (the reason we're here)
-- [ ] **Ownership**: move semantics, `Copy` vs `Clone`, drop order
+- [~] **Ownership**: move semantics, `Copy` vs `Clone`, drop order *(taught via
+      memlens construction + exercise 02; mastery = learner explains L2/L4 in
+      the 002 operations session)*
 - [ ] **Borrowing**: `&T` vs `&mut T`, the aliasing XOR mutability rule
 - [ ] **Lifetimes**: elision rules, explicit annotations, `'static`
-- [ ] Stack vs heap: `Box<T>`, when allocation happens, why it matters for cost
+- [~] Stack vs heap: `Box<T>`, when allocation happens, why it matters for cost
+      *(exercise 02 lessons 4–5; mastery pending learner session)*
 - [ ] Shared ownership: `Rc<T>`, `Arc<T>`, interior mutability (`RefCell`, `Mutex`)
-- [ ] Slices, `String` vs `&str`, `Vec<T>` growth behavior
+- [~] Slices, `String` vs `&str`, `Vec<T>` growth behavior *(observed live in
+      exercise 02: amortized doubling staircase, HashMap alloc+dealloc rehash)*
 
 ### 1c. Abstraction & robustness
 - [ ] Traits, generics, trait objects (`dyn Trait`) — static vs dynamic dispatch
