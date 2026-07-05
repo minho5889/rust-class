@@ -9,11 +9,12 @@ description = "goldeneye memory lens: a teaching tracking allocator that records
 [features]
 # The lens is off by default: without this feature, MemLens<A> is a transparent
 # passthrough and no tracing code exists in the binary (requirement R6).
-memlens = ["dep:serde", "dep:serde_json"]
+memlens = ["dep:serde", "dep:serde_json", "dep:libc"]
 
 [dependencies]
 serde = { version = "1", features = ["derive"], optional = true }
 serde_json = { version = "1", optional = true }
+libc = { version = "0.2", optional = true }
 
 [dev-dependencies]
 proptest = "1"

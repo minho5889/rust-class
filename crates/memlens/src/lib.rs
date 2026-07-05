@@ -45,7 +45,7 @@ pub mod event;
 #[cfg(feature = "memlens")]
 mod record;
 #[cfg(feature = "memlens")]
-pub use record::{LensSession, session};
+pub use record::{LensSession, flush, session};
 
 /// Feature-off `session`: a no-op, so instrumented programs compile
 /// unchanged in both configurations (requirement R16/R6 interplay).

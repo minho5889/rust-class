@@ -36,8 +36,8 @@ fn trace_path() -> &'static std::path::PathBuf {
     })
 }
 
-/// Byte offset where the current case's segment begins.
-static OFFSET: Mutex<u64> = Mutex::new(0);
+/// Serializes proptest cases so trace segments don't interleave.
+static OFFSET: Mutex<()> = Mutex::new(());
 
 #[derive(Debug, Clone)]
 enum Op {
@@ -86,7 +86,11 @@ proptest! {
     #[test]
     fn r1_every_op_recorded_exactly_once_in_order(ops in prop::collection::vec(op_strategy(), 1..40)) {
         let path = trace_path().clone();
-        let mut start = OFFSET.lock().expect("offset lock");
+        // Serialize cases (proptest may parallelize) and mark where this
+        // case's trace segment begins: flush, then snapshot the file length.
+        let _case_lock = OFFSET.lock().expect("offset lock");
+        memlens::flush();
+        let start = std::fs::metadata(&path).map(|m| m.len()).unwrap_or(0);
 
         // Execute ops through the lens, building the expected event list.
         let mut live: Vec<(usize, Layout)> = Vec::new();
@@ -134,11 +138,10 @@ proptest! {
             expected.push(Expected::Dealloc { addr, size: layout.size(), align: layout.align() });
         }
 
-        // Read this case's trace segment.
+        // Read this case's trace segment (flush first — torn lines otherwise).
+        memlens::flush();
         let content = std::fs::read_to_string(&path).unwrap_or_default();
-        let segment = &content[usize::try_from(*start).expect("offset fits")..];
-        *start = content.len() as u64;
-        drop(start);
+        let segment = &content[usize::try_from(start).expect("offset fits")..];
 
         let mut got: Vec<Expected> = Vec::new();
         let mut last_seq: u64 = 0;
