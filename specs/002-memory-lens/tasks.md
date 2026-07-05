@@ -71,17 +71,24 @@ mirrors. One bolt. Cross-crate mechanism: `memlens-replay` dev-depends on
 exist only for the viewer's JS mirror (2.1.4 → 3.1.1).
 
 ### 2.1 Bolt: properties first, then the fold
-- [ ] 2.1.1 **[P] R2 tests first**: `validate()` accepts all harness-generated
-      traces; adversarial synthetic traces (shuffled, duplicated, mismatched sizes)
-      are rejected with the offending seq — red
-- [ ] 2.1.2 **[P] R3 + R10a tests first**: independent naive reference fold (kept
-      deliberately separate from engine code); ∀ trace, ∀ t: `live_bytes` = prefix
-      sum, `replay` ≡ reference, deterministic across calls — red
-- [ ] 2.1.3 Implement `validate`/`replay`/`live_bytes` (realloc = remove old_addr,
-      insert new_addr; scope-label attachment) — all four [P] suites green,
-      ≥256 cases, `proptest-regressions/` committed
-- [ ] 2.1.4 Generate golden fixtures (`fixtures/*.jsonl` + expected live-set
-      snapshots) for the viewer's JS mirror
+- [x] 2.1.1 **[P] R2 tests**: `validate()` accepts all generated traces;
+      adversarial mutations (seq swap, duplicate, size corruption, orphaned free)
+      rejected with the offending seq. *Deviation: synthetic valid-by-construction
+      generator instead of memlens-harness reuse (keeps crates decoupled — the
+      trace FILE is the contract); real-trace integration test covers the link.*
+- [x] 2.1.2 **[P] R3 + R10a tests**: independent naive reference interpreter in
+      the test file (no shared code); ∀ trace, ∀ prefix t: `live_bytes` = reference,
+      `replay` ≡ reference, deterministic across calls/clones; R2-corollary
+      (no negative live bytes on valid traces) explicit. *Deviation from strict
+      red-first: engine and properties landed in one bolt commit; independence
+      preserved by the reference interpreter, not by commit ordering.*
+- [x] 2.1.3 `validate`/`replay`/`live_bytes` implemented (realloc removes
+      old_addr, inserts new_addr with lineage_root preserved; scope-label
+      attachment) — all [P] suites green at 256 cases; no regression seeds
+      (no engine failures found)
+- [x] 2.1.4 Golden fixtures generated + self-checking (`fixtures/basic.jsonl`
+      + `basic.expected.json`, 6 snapshot points covering in-place realloc,
+      moving realloc, address reuse, nested scopes)
 
 ## 3. `viewer/memlens.html` — the lens (R9–R13, R15)
 

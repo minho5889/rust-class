@@ -1,0 +1,21 @@
+[package]
+name = "memlens-replay"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "goldeneye memory lens replay engine: fold a memlens trace into the live heap at any instant"
+
+[dependencies]
+serde_json = "1"
+thiserror = "2"
+
+[dev-dependencies]
+proptest = "1"
+# Real traces for integration tests — the trace FILE is the contract between
+# the crates; this dev-dep only generates test inputs, no types are shared.
+memlens = { path = "../memlens", features = ["memlens"] }
+
+# NOTE: #![forbid(unsafe_code)] lives in src/lib.rs (the library proper),
+# not here — a Cargo-level forbid would also bind integration tests, which
+# legitimately call memlens's unsafe GlobalAlloc API to generate real traces.

@@ -1,0 +1,128 @@
+{
+  "10": {
+    "live": {
+      "0x2000": {
+        "align": 8,
+        "born_seq": 10,
+        "lineage_root": "0x2000",
+        "scopes": [
+          "outer"
+        ],
+        "size": 64
+      },
+      "0x3000": {
+        "align": 8,
+        "born_seq": 7,
+        "lineage_root": "0x1000",
+        "scopes": [
+          "outer",
+          "inner"
+        ],
+        "size": 400
+      }
+    },
+    "live_bytes": 464
+  },
+  "12": {
+    "live": {
+      "0x2000": {
+        "align": 8,
+        "born_seq": 10,
+        "lineage_root": "0x2000",
+        "scopes": [
+          "outer"
+        ],
+        "size": 64
+      }
+    },
+    "live_bytes": 64
+  },
+  "2": {
+    "live": {
+      "0x1000": {
+        "align": 8,
+        "born_seq": 2,
+        "lineage_root": "0x1000",
+        "scopes": [
+          "outer"
+        ],
+        "size": 100
+      }
+    },
+    "live_bytes": 100
+  },
+  "4": {
+    "live": {
+      "0x1000": {
+        "align": 8,
+        "born_seq": 2,
+        "lineage_root": "0x1000",
+        "scopes": [
+          "outer"
+        ],
+        "size": 100
+      },
+      "0x2000": {
+        "align": 16,
+        "born_seq": 4,
+        "lineage_root": "0x2000",
+        "scopes": [
+          "outer",
+          "inner"
+        ],
+        "size": 32
+      }
+    },
+    "live_bytes": 132
+  },
+  "6": {
+    "live": {
+      "0x1000": {
+        "align": 8,
+        "born_seq": 6,
+        "lineage_root": "0x1000",
+        "scopes": [
+          "outer",
+          "inner"
+        ],
+        "size": 200
+      },
+      "0x2000": {
+        "align": 16,
+        "born_seq": 4,
+        "lineage_root": "0x2000",
+        "scopes": [
+          "outer",
+          "inner"
+        ],
+        "size": 32
+      }
+    },
+    "live_bytes": 232
+  },
+  "7": {
+    "live": {
+      "0x2000": {
+        "align": 16,
+        "born_seq": 4,
+        "lineage_root": "0x2000",
+        "scopes": [
+          "outer",
+          "inner"
+        ],
+        "size": 32
+      },
+      "0x3000": {
+        "align": 8,
+        "born_seq": 7,
+        "lineage_root": "0x1000",
+        "scopes": [
+          "outer",
+          "inner"
+        ],
+        "size": 400
+      }
+    },
+    "live_bytes": 432
+  }
+}
