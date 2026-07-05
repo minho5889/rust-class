@@ -44,7 +44,13 @@ rust-class/  (project: goldeneye)
   `goldeneye-<purpose>`.
 - **Workspace**: root `Cargo.toml` with `members = ["crates/*"]` once the first
   crate exists. Playground exercises stay outside the workspace.
-- **Branches**: `claude/rust-aws-learning-*`. **Commits**: imperative mood,
-  reference the spec (`002: implement handler (task 1.1.2)`).
+- **Branches & merges** (adopted 2026-07-05, effective from spec 002's close):
+  work happens on a branch per spec (`claude/NNN-short-name`; the current
+  `claude/rust-aws-learning-44il52` carries everything through 002). When a spec
+  closes (all gates passed, evidence written), merge to `main` and tag
+  `spec/NNN-short-name` — `main` is the sum of approved+verified work, and tags
+  give the data lake clean spec-boundary markers.
+- **Commits**: imperative mood, reference the spec
+  (`002: implement handler (task 1.1.2)`).
 - **Teaching docs**: `///` doc comments in code; learnings in each spec's
   `evidence.md`, promoted to `MEMORY.md`/`SKILLS.md`.

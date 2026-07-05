@@ -17,6 +17,10 @@ capture (hooks → raw-local JSONL, committed)          ← v1, THIS REPO, live 
 - Hooks (`.claude/hooks/telemetry.sh`) append events to
   `raw-local/dt=YYYY-MM-DD/events.jsonl` — one JSON object per line, envelope schema
   in `schema/envelope.v1.json`.
+- Capture granularity (decision 2026-07-05): `session.start` + spec-doc/gate events
+  only. Turn-end capture (`Stop` hook) was removed — it fired every turn, produced
+  low-value events, and forced a telemetry-only commit per reply. Turn boundaries
+  are recoverable from event timestamps if ever needed.
 - Files are **committed with normal work commits** (sessions are ephemeral remote
   containers; git is the durability layer until S3 exists). Private repo; raw
   prompts in intent events are permitted by learner decision (2026-07-05).

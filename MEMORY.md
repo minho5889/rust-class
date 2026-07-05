@@ -41,6 +41,8 @@
 | 2026-07-05 | goldeneye data lake: hooks → local JSONL (v1, committed to git) → S3 `goldeneye-lake` raw/curated (Wave 2) → `goldeneye-discovery` insight cards (Wave 3). DuckDB default scan engine, Athena optional. No Kinesis/dashboards/Iceberg | Learner's idea; sized for a one-learner repo; doubles as curriculum |
 | 2026-07-05 | Project name **goldeneye**; us-east-1 primary, ap-northeast-1 secondary; raw prompts may be committed (private repo) | Learner decision |
 | 2026-07-05 | Spec 001-hello-rust-lambda (draft, never approved) **removed**; numbering starts at 002 | Learner said "don't make one"; predated pipeline v2 (no intent.md); recoverable at commit 3bba9d5 |
+| 2026-07-05 | Turn-end telemetry (`Stop` hook) removed; capture = session.start + spec/gate events only | Fired every turn → noise events + a telemetry-only commit per reply; turn boundaries derivable from timestamps |
+| 2026-07-05 | Git strategy from 002's close: merge to `main` + tag `spec/NNN-name` at spec close; branch-per-spec (`claude/NNN-*`) thereafter | `main` = sum of approved work; tags = spec-boundary markers for the lake; learner asked for worthwhile fixes to be implemented |
 
 ## Concepts mastered
 
