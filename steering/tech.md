@@ -8,11 +8,28 @@
 
 ## Language & toolchain
 
-- **Rust stable** (via `rustup`), edition 2024. No nightly features.
+- **Rust stable** (via `rustup`), edition 2024. No nightly features (exception
+  later: a dedicated cargo-fuzz CI lane may use nightly).
 - `cargo fmt` + `cargo clippy -- -D warnings` gate every commit.
 - Errors: `thiserror` (libraries) / `anyhow` (binaries). Logging: `tracing`.
 - Async: `tokio`. Serialization: `serde` / `serde_json`.
 - HTTP services: `axum`. AWS access: official `aws-sdk-*` crates + `aws-config`.
+
+Conventions adopted 2026-07-05 from `research/rust-best-practices-and-big-tech.md`:
+
+- **Unsafe policy:** `#![forbid(unsafe_code)]` on every crate **except**
+  `memlens`; in memlens `#![deny(unsafe_op_in_unsafe_fn)]` and a `// SAFETY:`
+  comment on every unsafe block (Nomicon model: safe public APIs over audited
+  unsafe internals). Miri for memlens's core: later.
+- **Shared release profile** (workspace root): `lto = "thin"`,
+  `codegen-units = 1`, `panic = "abort"`, `strip = "symbols"` — tests are
+  unaffected (test harness ignores the panic setting). Fat LTO/PGO only on
+  measured need.
+- **No `unwrap()`/`expect()` in handler/service code paths** —
+  `clippy::unwrap_used` on deployable crates (the Cloudflare Nov-2025 outage was
+  an unwrap panic in memory-safe Rust).
+- **API rubric:** public APIs reviewed against the rust-lang API Guidelines
+  checklist (C-COMMON-TRAITS, C-GOOD-ERR, C-NEWTYPE, C-BUILDER) in design.md.
 
 ## Testing
 

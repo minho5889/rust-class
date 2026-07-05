@@ -17,8 +17,11 @@ action item = one commit. Layers collapse where a deliverable is one bolt.
 emits a valid `memlens.v1` trace into the lake's `dt=` partitions.
 
 ### 1.1 Bolt: workspace, skeleton, build guard
-- [ ] 1.1.1 Root `Cargo.toml` workspace (`members = ["crates/*"]`); `crates/memlens`
-      skeleton with `memlens` feature flag; passthrough `MemLens<A>` (feature off)
+- [ ] 1.1.1 Root `Cargo.toml` workspace (`members = ["crates/*"]`) with shared
+      `[profile.release]` (thin LTO, codegen-units=1, panic=abort, strip — per
+      steering/tech.md 2026-07-05); `crates/memlens` skeleton with `memlens`
+      feature flag, `#![deny(unsafe_op_in_unsafe_fn)]`; passthrough `MemLens<A>`
+      (feature off)
 - [ ] 1.1.2 R14b compile guard + `trybuild` compile-fail test proving release+feature
       builds die with the teaching message
 - [ ] 1.1.3 `datalake/schema/memlens.v1.json` (envelope-compatible; distinct realloc
@@ -34,9 +37,10 @@ emits a valid `memlens.v1` trace into the lake's `dt=` partitions.
       on session start; flush via `LensSession` drop guard **and** `atexit`-style
       hook (per design)
 - [ ] 1.2.3 Reentrancy guard: const-init `thread_local!` + `try_with` fallback-to-
-      forward; `unsafe impl GlobalAlloc` recording alloc/realloc/dealloc — R1 green
-      at ≥256 cases, `proptest-regressions/` committed (may split into two commits:
-      guard, then impl)
+      forward; `unsafe impl GlobalAlloc` recording alloc/realloc/dealloc, with a
+      `// SAFETY:` comment on every unsafe block — R1 green at ≥256 cases,
+      `proptest-regressions/` committed (may split into two commits: guard, then
+      impl)
 
 ### 1.3 Bolt: failure paths + feature-off verification
 - [ ] 1.3.1 R7a/b [E] tests: sink on closed/full fd → no panic, loss marker with
