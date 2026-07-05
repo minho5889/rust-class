@@ -15,6 +15,9 @@ memlens = ["dep:serde", "dep:serde_json"]
 serde = { version = "1", features = ["derive"], optional = true }
 serde_json = { version = "1", optional = true }
 
+[dev-dependencies]
+proptest = "1"
+
 [lints.rust]
 # This crate is the project's ONE sanctioned home for unsafe code (CLAUDE.md
 # unsafe policy). Inside unsafe fns, each unsafe operation still needs its own

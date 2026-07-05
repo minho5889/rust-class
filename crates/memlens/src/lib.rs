@@ -42,6 +42,24 @@ compile_error!(
 
 #[cfg(feature = "memlens")]
 pub mod event;
+#[cfg(feature = "memlens")]
+mod record;
+#[cfg(feature = "memlens")]
+pub use record::{LensSession, session};
+
+/// Feature-off `session`: a no-op, so instrumented programs compile
+/// unchanged in both configurations (requirement R16/R6 interplay).
+#[cfg(not(feature = "memlens"))]
+#[must_use]
+pub fn session(_program: &str) -> LensSession {
+    LensSession { _priv: () }
+}
+
+/// Feature-off session guard (no-op).
+#[cfg(not(feature = "memlens"))]
+pub struct LensSession {
+    _priv: (),
+}
 
 use std::alloc::{GlobalAlloc, Layout, System};
 
@@ -99,10 +117,17 @@ unsafe impl<A: GlobalAlloc> GlobalAlloc for MemLens<A> {
         // SAFETY: the caller upholds `alloc`'s precondition (non-zero-sized
         // `layout`); we forward the same layout to an allocator bound by the
         // same contract.
-        unsafe { self.inner.alloc(layout) }
+        let ptr = unsafe { self.inner.alloc(layout) };
+        #[cfg(feature = "memlens")]
+        if !ptr.is_null() {
+            record::record_alloc(ptr as usize, layout.size(), layout.align());
+        }
+        ptr
     }
 
     unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {
+        #[cfg(feature = "memlens")]
+        record::record_dealloc(ptr as usize, layout.size(), layout.align());
         // SAFETY: the caller guarantees `ptr` was allocated by *this*
         // allocator with this exact `layout`; since we forward all
         // allocations to `inner`, `ptr` came from `inner` and may be
@@ -113,7 +138,12 @@ unsafe impl<A: GlobalAlloc> GlobalAlloc for MemLens<A> {
     unsafe fn alloc_zeroed(&self, layout: Layout) -> *mut u8 {
         // SAFETY: same argument as `alloc`; zeroing is the inner
         // allocator's obligation.
-        unsafe { self.inner.alloc_zeroed(layout) }
+        let ptr = unsafe { self.inner.alloc_zeroed(layout) };
+        #[cfg(feature = "memlens")]
+        if !ptr.is_null() {
+            record::record_alloc(ptr as usize, layout.size(), layout.align());
+        }
+        ptr
     }
 
     unsafe fn realloc(&self, ptr: *mut u8, layout: Layout, new_size: usize) -> *mut u8 {
@@ -121,6 +151,17 @@ unsafe impl<A: GlobalAlloc> GlobalAlloc for MemLens<A> {
         // allocation from this allocator and `new_size` is non-zero and
         // does not overflow; all of it is forwarded unchanged to `inner`,
         // which allocated `ptr`.
-        unsafe { self.inner.realloc(ptr, layout, new_size) }
+        let new_ptr = unsafe { self.inner.realloc(ptr, layout, new_size) };
+        #[cfg(feature = "memlens")]
+        if !new_ptr.is_null() {
+            record::record_realloc(
+                ptr as usize,
+                new_ptr as usize,
+                layout.size(),
+                new_size,
+                layout.align(),
+            );
+        }
+        new_ptr
     }
 }
