@@ -9,7 +9,7 @@ re-running a topic updates the file, git history keeps the versions).
 |---|---|
 | `rust-best-practices-and-big-tech.md` | ⏳ in progress |
 | `rust-on-aws-compute.md` | ⏳ in progress |
-| `typescript-cdk-for-goldeneye.md` | ⏳ in progress |
+| `typescript-cdk-for-goldeneye.md` | ✅ 2026-07-05 (25/25 claims confirmed) |
 
 These feed: steering conventions, `SKILLS.md` curriculum, CI gates, and the
 design of AWS-deploying specs. Findings are ranked by confidence; every claim

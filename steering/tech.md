@@ -50,11 +50,25 @@
 ## Infrastructure as code
 
 **AWS CDK v2 with TypeScript** (learner decision, 2026-07-05). Phase 1 still uses
-`cargo lambda deploy` + AWS CLI to keep the learning surface small; CDK enters when
-the first AWS-deploying spec is constructed (candidate constructs: `cargo-lambda-cdk`
-RustFunction, DockerImageAsset for Fargate). CDK app lives in `infra/` beside the
-cargo workspace; conventions to be finalized from the CDK deep-research report in
-`research/`.
+`cargo lambda deploy` + AWS CLI; CDK enters with the first AWS-deploying spec.
+Conventions (from `research/typescript-cdk-for-goldeneye.md`, verified 2026-07-05):
+
+- CDK app in `infra/` beside the cargo workspace (one repo — AWS best practice).
+- Lambda: `cargo-lambda-cdk` `RustFunction` with **explicit
+  `architecture: Architecture.ARM_64`** (default is x86_64). Avoid the
+  experimental `cdklabs/aws-lambda-rust`.
+- Fargate: `DockerImageAsset` with **explicit `platform: Platform.LINUX_ARM64`**
+  — unset, it silently builds for the build machine's arch and fails at runtime.
+- EC2: Graviton via `InstanceType.of` + AL2023 `ARM_64` AMI; binary as S3 asset;
+  daemons via `InitService.systemdConfigFile()`/`enable(…, SYSTEMD)` — never
+  `InitCommand` for long-running processes.
+- Stacks: stateful (lake buckets, termination-protected) split from stateless
+  compute stacks. Guardrail: `cdk-nag` v3 (AwsSolutions + Serverless packs).
+- **Naming: tags over physical names.** `project=goldeneye` tag on everything;
+  hardcoded physical names only for `goldeneye-lake` / `goldeneye-discovery`
+  (cross-spec contract); all other resources use CDK-generated names.
+- Lambda MicroVMs CDK/CFN support: **unknown** — the MicroVMs spec must carry
+  this as a risk item (fallbacks: raw CfnResource → AwsCustomResource → CLI).
 
 ## Constraints
 

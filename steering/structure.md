@@ -27,6 +27,8 @@ rust-class/  (project: goldeneye)
 │   ├── agents/            #   intent-assurance, spec-auditor, property-auditor
 │   ├── hooks/             #   telemetry.sh, on-doc-write.sh
 │   └── settings.json      #   hook wiring (SessionStart/Stop/PostToolUse)
+├── research/              # Verified deep-research reports (<topic>.md, no dates)
+├── infra/                 # TypeScript CDK v2 app (created with first AWS spec)
 ├── playground/            # Throwaway experiments — no spec required
 └── crates/                # Cargo workspace members (created as class progresses)
     ├── shared/            #   shared types/utilities
