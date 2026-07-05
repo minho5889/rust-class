@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>goldeneye memlens — memory lens viewer</title>
+<style>
+  :root {
+    --bg: #0d1117; --panel: #161b22; --edge: #30363d; --ink: #e6edf3;
+    --dim: #8b949e; --accent: #58a6ff; --alloc: #3fb950; --free: #f85149;
+    --realloc: #d29922; --marker: #bc8cff; --scope: #1f6feb22;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body { background: var(--bg); color: var(--ink); font: 14px/1.45 ui-monospace, "SF Mono", Consolas, monospace; padding: 16px; }
+  h1 { font-size: 16px; letter-spacing: .04em; }
+  h1 .dim, .dim { color: var(--dim); font-weight: normal; }
+  #drop { border: 2px dashed var(--edge); border-radius: 10px; padding: 40px; text-align: center; color: var(--dim); margin: 14px 0; cursor: pointer; transition: border-color .15s; }
+  #drop.hover, #drop:hover { border-color: var(--accent); color: var(--ink); }
+  #banner { display: none; background: #3d1d1f; border: 1px solid var(--free); color: #ffb3ad; padding: 10px 14px; border-radius: 8px; margin: 10px 0; white-space: pre-wrap; }
+  #app { display: none; }
+  .tiles { display: flex; gap: 10px; flex-wrap: wrap; margin: 12px 0; }
+  .tile { background: var(--panel); border: 1px solid var(--edge); border-radius: 10px; padding: 10px 16px; min-width: 130px; }
+  .tile b { display: block; font-size: 20px; }
+  .tile span { color: var(--dim); font-size: 11px; text-transform: uppercase; letter-spacing: .08em; }
+  .panel { background: var(--panel); border: 1px solid var(--edge); border-radius: 10px; padding: 12px 14px; margin: 12px 0; overflow-x: auto; }
+  .panel h2 { font-size: 12px; color: var(--dim); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 8px; }
+  canvas { display: block; width: 100%; border-radius: 6px; background: #0a0d12; }
+  #scrub { width: 100%; accent-color: var(--accent); margin: 10px 0 2px; }
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 900px) { .cols { grid-template-columns: 1fr; } }
+  table { border-collapse: collapse; width: 100%; font-size: 12.5px; }
+  th, td { text-align: left; padding: 3px 10px 3px 0; border-bottom: 1px solid var(--edge); white-space: nowrap; }
+  th { color: var(--dim); font-weight: normal; }
+  .stair { color: var(--realloc); }
+  #callout { border-left: 3px solid var(--marker); padding-left: 10px; margin-top: 8px; color: var(--dim); min-height: 2.6em; }
+  #callout b { color: var(--marker); }
+  footer { border: 1px solid var(--edge); border-left: 3px solid var(--realloc); border-radius: 8px; background: var(--panel); color: var(--dim); padding: 10px 14px; margin: 16px 0 6px; font-size: 12.5px; }
+  .legend { display: flex; gap: 16px; font-size: 11.5px; color: var(--dim); margin-top: 6px; flex-wrap: wrap; }
+  .sw { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+  kbd { border: 1px solid var(--edge); border-radius: 4px; padding: 0 5px; font-size: 11px; }
+</style>
+</head>
+<body>
+<h1>🔍 memlens <span class="dim">— goldeneye memory lens · watch your Rust program's heap</span></h1>
+<div id="drop">drop a <b>memlens trace</b> (.jsonl) here, or click to choose a file<br>
+  <input type="file" id="file" accept=".jsonl,.json,.txt" style="display:none"></div>
+<div id="banner"></div>
+
+<div id="app">
+  <div class="tiles">
+    <div class="tile"><span>program</span><b id="t-prog">—</b></div>
+    <div class="tile"><span>events</span><b id="t-events">—</b></div>
+    <div class="tile"><span>live bytes @ t</span><b id="t-bytes">—</b></div>
+    <div class="tile"><span>live blocks @ t</span><b id="t-blocks">—</b></div>
+    <div class="tile"><span>peak bytes</span><b id="t-peak">—</b></div>
+  </div>
+
+  <div class="panel">
+    <h2>heap timeline <span class="dim">— every bar is one allocation's lifetime · <kbd>←</kbd><kbd>→</kbd> to scrub, click a ◆ for its story</span></h2>
+    <canvas id="timeline" height="260"></canvas>
+    <input type="range" id="scrub" min="0" value="0" step="1">
+    <div>t = <b id="t-val">0</b> <span class="dim" id="t-scopes"></span></div>
+    <div class="legend">
+      <span><span class="sw" style="background:var(--alloc)"></span>allocation alive</span>
+      <span><span class="sw" style="background:var(--realloc)"></span>realloc lineage</span>
+      <span><span class="sw" style="background:var(--marker)"></span>◆ marker (move/borrow — zero bytes)</span>
+      <span><span class="sw" style="background:#1f6feb"></span>scope band</span>
+    </div>
+    <div id="callout">click a ◆ marker on the timeline…</div>
+  </div>
+
+  <div class="panel">
+    <h2>live bytes over time</h2>
+    <canvas id="bytes" height="120"></canvas>
+  </div>
+
+  <div class="cols">
+    <div class="panel">
+      <h2>collections growth <span class="dim">— realloc lineage staircases</span></h2>
+      <div id="chains"></div>
+    </div>
+    <div class="panel">
+      <h2>live allocations at t <span class="dim">(R10b)</span></h2>
+      <div id="live-table"></div>
+    </div>
+  </div>
+
+  <footer><b>What this lens cannot see:</b> stack frames, registers, and
+  non-annotated borrows are invisible here — they cost <i>nothing at runtime</i>,
+  and that invisibility is Rust's whole point. Addresses are meaningless across
+  runs (ASLR). Heap events shown are the complete story <i>of the heap only</i>.</footer>
+</div>
+
+<script>
+/* ===================== MEMLENS_FOLD_BEGIN =====================
+   The pure fold — a line-for-line mirror of crates/memlens-replay.
+   Pinned to the Rust engine by viewer/test-fold.mjs against the
+   committed golden fixtures. No DOM access in this section. */
+function parseTrace(text) {
+  const events = []; let meta = null;
+  const lines = text.split("\n");
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line) continue;
+    let v;
+    try { v = JSON.parse(line); }
+    catch (e) { throw new Error(`line ${i + 1}: not valid JSON (${e.message})`); }
+    const ty = v.event_type, p = v.payload;
+    if (typeof ty !== "string" || !ty.startsWith("memlens.") || p == null)
+      throw new Error(`line ${i + 1}: not a memlens event`);
+    const addr = (f) => {
+      const s = p[f];
+      if (typeof s !== "string" || !s.startsWith("0x")) throw new Error(`line ${i + 1}: bad ${f}`);
+      return BigInt(s);
+    };
+    const num = (f) => {
+      if (typeof p[f] !== "number") throw new Error(`line ${i + 1}: bad ${f}`);
+      return p[f];
+    };
+    switch (ty) {
+      case "memlens.meta": meta = p; break;
+      case "memlens.alloc": events.push({ seq: num("seq"), k: "A", addr: addr("addr"), size: num("size"), align: num("align") }); break;
+      case "memlens.dealloc": events.push({ seq: num("seq"), k: "D", addr: addr("addr"), size: num("size"), align: num("align") }); break;
+      case "memlens.realloc": events.push({ seq: num("seq"), k: "R", oldAddr: addr("old_addr"), newAddr: addr("new_addr"), oldSize: num("old_size"), newSize: num("new_size"), align: num("align") }); break;
+      case "memlens.scope_enter": events.push({ seq: num("seq"), k: "SE", label: String(p.label) }); break;
+      case "memlens.scope_exit": events.push({ seq: num("seq"), k: "SX", label: String(p.label) }); break;
+      case "memlens.marker": events.push({ seq: num("seq"), k: "M", label: String(p.label), kind: p.kind ?? null }); break;
+      case "memlens.loss": events.push({ seq: num("seq"), k: "L", dropped: num("dropped") }); break;
+      default: throw new Error(`line ${i + 1}: unknown event_type ${ty}`);
+    }
+  }
+  return { meta, events };
+}
+
+/* Mirror of memlens_replay::replay — live map at prefix seq <= t. */
+function replayTo(events, t) {
+  const live = new Map(); const scopes = [];
+  for (const e of events) {
+    if (e.seq > t) break;
+    if (e.k === "A") live.set(e.addr, { size: e.size, align: e.align, bornSeq: e.seq, scopes: scopes.slice(), lineageRoot: e.addr });
+    else if (e.k === "D") live.delete(e.addr);
+    else if (e.k === "R") {
+      const prev = live.get(e.oldAddr);
+      const root = prev ? prev.lineageRoot : e.oldAddr;
+      live.delete(e.oldAddr);
+      live.set(e.newAddr, { size: e.newSize, align: e.align, bornSeq: e.seq, scopes: scopes.slice(), lineageRoot: root });
+    }
+    else if (e.k === "SE") scopes.push(e.label);
+    else if (e.k === "SX") scopes.pop();
+  }
+  return live;
+}
+
+/* Mirror of memlens_replay::live_bytes. */
+function liveBytes(events, t) {
+  let b = 0;
+  for (const e of events) {
+    if (e.seq > t) break;
+    if (e.k === "A") b += e.size;
+    else if (e.k === "D") b = Math.max(0, b - e.size);
+    else if (e.k === "R") b = Math.max(0, b - e.oldSize) + e.newSize;
+  }
+  return b;
+}
+/* ===================== MEMLENS_FOLD_END ===================== */
+
+/* ---------- indexes built once per load (R13: scrub is O(live)) ---------- */
+function buildIndexes(events) {
+  const lifetimes = []; const openByAddr = new Map(); const scopes = [];
+  const scopeSpans = []; const openScopes = []; const markers = [];
+  const byteSteps = [{ seq: 0, bytes: 0 }]; let bytes = 0, peak = 0;
+  for (const e of events) {
+    if (e.k === "A" || e.k === "R") {
+      let root = e.addr, size = e.size;
+      if (e.k === "R") {
+        const prev = openByAddr.get(e.oldAddr);
+        if (prev) { prev.deathSeq = e.seq; root = prev.lineageRoot; openByAddr.delete(e.oldAddr); }
+        else root = e.oldAddr;
+        size = e.newSize;
+        bytes = Math.max(0, bytes - (prev ? prev.size : e.oldSize)) + e.newSize;
+      } else bytes += e.size;
+      const lt = { addr: e.k === "A" ? e.addr : e.newAddr, size, align: e.align, bornSeq: e.seq, deathSeq: Infinity, scopes: scopes.slice(), lineageRoot: root };
+      lifetimes.push(lt); openByAddr.set(lt.addr, lt);
+    } else if (e.k === "D") {
+      const lt = openByAddr.get(e.addr);
+      if (lt) { lt.deathSeq = e.seq; openByAddr.delete(e.addr); }
+      bytes = Math.max(0, bytes - e.size);
+    } else if (e.k === "SE") { scopes.push(e.label); openScopes.push({ label: e.label, from: e.seq, to: Infinity, depth: scopes.length }); }
+    else if (e.k === "SX") { scopes.pop(); for (let i = openScopes.length - 1; i >= 0; i--) if (openScopes[i].to === Infinity) { openScopes[i].to = e.seq; scopeSpans.push(openScopes.splice(i, 1)[0]); break; } }
+    else if (e.k === "M") markers.push(e);
+    if (e.k === "A" || e.k === "D" || e.k === "R") { byteSteps.push({ seq: e.seq, bytes }); peak = Math.max(peak, bytes); }
+  }
+  for (const s of openScopes) scopeSpans.push(s);
+  // lane assignment: one lane per lineage root (chains share a lane).
+  const laneByRoot = new Map();
+  for (const lt of lifetimes) { if (!laneByRoot.has(lt.lineageRoot)) laneByRoot.set(lt.lineageRoot, laneByRoot.size); lt.lane = laneByRoot.get(lt.lineageRoot); }
+  return { lifetimes, scopeSpans, markers, byteSteps, peak, lanes: laneByRoot.size };
+}
+const liveAt = (idx, t) => idx.lifetimes.filter(l => l.bornSeq <= t && t < l.deathSeq);
+
+/* ---------------------------- UI ---------------------------- */
+const $ = (id) => document.getElementById(id);
+let EV = [], IDX = null, MAXSEQ = 0, T = 0;
+
+function fail(msg) { const b = $("banner"); b.style.display = "block"; b.textContent = "⚠ " + msg; }
+function load(text) {
+  $("banner").style.display = "none";
+  let trace;
+  try { trace = parseTrace(text); } catch (e) { fail(e.message); return; }
+  if (!trace.events.length) { fail("trace contains no events"); return; }
+  EV = trace.events; IDX = buildIndexes(EV);
+  MAXSEQ = EV[EV.length - 1].seq; T = MAXSEQ;
+  $("app").style.display = "block";
+  $("t-prog").textContent = trace.meta ? trace.meta.program : "?";
+  $("t-events").textContent = EV.length.toLocaleString();
+  $("t-peak").textContent = fmtBytes(IDX.peak);
+  const s = $("scrub"); s.max = MAXSEQ; s.value = MAXSEQ;
+  renderChains(); render();
+}
+const fmtBytes = (n) => n >= 1048576 ? (n / 1048576).toFixed(2) + " MiB" : n >= 1024 ? (n / 1024).toFixed(1) + " KiB" : n + " B";
+const hex = (a) => "0x" + a.toString(16);
+
+function render() {
+  $("t-val").textContent = T;
+  const live = liveAt(IDX, T);
+  const bytes = live.reduce((s, l) => s + l.size, 0);
+  $("t-bytes").textContent = fmtBytes(bytes);
+  $("t-blocks").textContent = live.length.toLocaleString();
+  const scopesNow = new Set(); IDX.scopeSpans.forEach(s => { if (s.from <= T && T < s.to) scopesNow.add(s.label); });
+  $("t-scopes").textContent = scopesNow.size ? " in scope: " + [...scopesNow].join(" › ") : "";
+  drawTimeline(live); drawBytes(); renderLiveTable(live);
+}
+
+function drawTimeline(live) {
+  const c = $("timeline"), ctx = c.getContext("2d");
+  const W = c.width = c.clientWidth * devicePixelRatio, H = c.height = 260 * devicePixelRatio;
+  ctx.clearRect(0, 0, W, H);
+  const x = (seq) => 8 + (W - 16) * (seq / Math.max(1, MAXSEQ));
+  // scope bands
+  for (const s of IDX.scopeSpans) {
+    ctx.fillStyle = "rgba(31,111,235,0.10)";
+    const to = s.to === Infinity ? MAXSEQ : s.to;
+    ctx.fillRect(x(s.from), 0, Math.max(2, x(to) - x(s.from)), H);
+  }
+  // lifetime bars (cap lanes displayed; densest traces stay readable)
+  const lanes = Math.min(IDX.lanes, 4000);
+  const laneH = Math.max(1, Math.min(14 * devicePixelRatio, (H - 30) / lanes));
+  for (const l of IDX.lifetimes) {
+    if (l.lane >= lanes) continue;
+    const death = l.deathSeq === Infinity ? MAXSEQ : l.deathSeq;
+    const aliveNow = l.bornSeq <= T && T < l.deathSeq;
+    ctx.fillStyle = l.lineageRoot !== l.addr ? (aliveNow ? "#d29922" : "#6b4d0f")
+                  : (aliveNow ? "#3fb950" : "#1c4428");
+    ctx.fillRect(x(l.bornSeq), 12 + l.lane * laneH, Math.max(2, x(death) - x(l.bornSeq)), Math.max(1, laneH - 1));
+  }
+  // markers
+  ctx.fillStyle = "#bc8cff";
+  for (const m of IDX.markers) { ctx.beginPath(); const mx = x(m.seq); ctx.moveTo(mx, 2); ctx.lineTo(mx + 5 * devicePixelRatio, 9 * devicePixelRatio); ctx.lineTo(mx - 5 * devicePixelRatio, 9 * devicePixelRatio); ctx.fill(); }
+  // scrub cursor
+  ctx.strokeStyle = "#58a6ff"; ctx.lineWidth = 1.5 * devicePixelRatio;
+  ctx.beginPath(); ctx.moveTo(x(T), 0); ctx.lineTo(x(T), H); ctx.stroke();
+}
+
+function drawBytes() {
+  const c = $("bytes"), ctx = c.getContext("2d");
+  const W = c.width = c.clientWidth * devicePixelRatio, H = c.height = 120 * devicePixelRatio;
+  ctx.clearRect(0, 0, W, H);
+  const x = (seq) => 8 + (W - 16) * (seq / Math.max(1, MAXSEQ));
+  const y = (b) => H - 6 - (H - 14) * (b / Math.max(1, IDX.peak));
+  ctx.beginPath(); ctx.moveTo(x(0), y(0));
+  for (const s of IDX.byteSteps) { ctx.lineTo(x(s.seq), y(s.bytes)); }
+  ctx.strokeStyle = "#58a6ff"; ctx.lineWidth = 1.5 * devicePixelRatio; ctx.stroke();
+  ctx.lineTo(x(IDX.byteSteps[IDX.byteSteps.length - 1].seq), y(0)); ctx.closePath();
+  ctx.fillStyle = "rgba(88,166,255,0.10)"; ctx.fill();
+  ctx.strokeStyle = "#e6edf3"; ctx.beginPath(); ctx.moveTo(x(T), 0); ctx.lineTo(x(T), H); ctx.stroke();
+}
+
+function renderChains() {
+  const byRoot = new Map();
+  for (const l of IDX.lifetimes) { if (!byRoot.has(l.lineageRoot)) byRoot.set(l.lineageRoot, []); byRoot.get(l.lineageRoot).push(l); }
+  const chains = [...byRoot.entries()].filter(([, ls]) => ls.length > 1)
+    .sort((a, b) => b[1][b[1].length - 1].size - a[1][a[1].length - 1].size).slice(0, 12);
+  $("chains").innerHTML = chains.length
+    ? "<table><tr><th>lineage root</th><th>growth staircase (bytes)</th><th>steps</th></tr>" +
+      chains.map(([root, ls]) => `<tr><td>${hex(root)}</td><td class="stair">${ls.map(l => l.size).join(" → ")}</td><td>${ls.length}</td></tr>`).join("") + "</table>"
+    : `<span class="dim">no realloc lineages in this trace — note: HashMap grows by alloc-new + free-old, so its growth shows as separate bars, not a chain (that difference is a lesson).</span>`;
+}
+
+function renderLiveTable(live) {
+  const rows = live.sort((a, b) => b.size - a.size).slice(0, 200);
+  $("live-table").innerHTML =
+    `<table><tr><th>addr</th><th>size</th><th>align</th><th>born</th><th>scopes</th></tr>` +
+    rows.map(l => `<tr><td>${hex(l.addr)}</td><td>${fmtBytes(l.size)}</td><td>${l.align}</td><td>${l.bornSeq}</td><td class="dim">${l.scopes.join(" › ") || "—"}</td></tr>`).join("") +
+    `</table>` + (live.length > 200 ? `<div class="dim">…and ${live.length - 200} more</div>` : "");
+}
+
+/* interactions */
+$("scrub").addEventListener("input", (e) => { T = +e.target.value; render(); });
+document.addEventListener("keydown", (e) => {
+  if (!IDX) return;
+  if (e.key === "ArrowRight") { T = Math.min(MAXSEQ, T + 1); $("scrub").value = T; render(); }
+  if (e.key === "ArrowLeft") { T = Math.max(0, T - 1); $("scrub").value = T; render(); }
+});
+$("timeline").addEventListener("click", (e) => {
+  if (!IDX || !IDX.markers.length) return;
+  const rect = e.target.getBoundingClientRect();
+  const seq = ((e.clientX - rect.left - 8) / (rect.width - 16)) * MAXSEQ;
+  let best = IDX.markers[0];
+  for (const m of IDX.markers) if (Math.abs(m.seq - seq) < Math.abs(best.seq - seq)) best = m;
+  const kind = best.kind ? best.kind.toUpperCase() : "LABEL";
+  $("callout").innerHTML = `<b>◆ ${kind}</b> <code>${best.label}</code> at seq ${best.seq} — ` +
+    (best.kind === "move" || best.kind === "borrow"
+      ? `<b>0 bytes allocated.</b> Ownership ${best.kind === "move" ? "transferred" : "lent"} without copying — this absence of heap events is the zero-cost story (R12).`
+      : `a labeled point in the trace.`);
+});
+const drop = $("drop");
+drop.addEventListener("click", () => $("file").click());
+$("file").addEventListener("change", (e) => e.target.files[0] && e.target.files[0].text().then(load));
+drop.addEventListener("dragover", (e) => { e.preventDefault(); drop.classList.add("hover"); });
+drop.addEventListener("dragleave", () => drop.classList.remove("hover"));
+drop.addEventListener("drop", (e) => { e.preventDefault(); drop.classList.remove("hover"); e.dataTransfer.files[0] && e.dataTransfer.files[0].text().then(load); });
+window.addEventListener("resize", () => IDX && render());
+</script>
+</body>
+</html>

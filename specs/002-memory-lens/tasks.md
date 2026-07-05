@@ -95,19 +95,22 @@ exist only for the viewer's JS mirror (2.1.4 → 3.1.1).
 **Deliverable:** one self-contained file; open trace → scrub memory.
 
 ### 3.1 Bolt: JS fold mirror + indexes
-- [ ] 3.1.1 JSONL streaming parse; JS fold mirroring `replay()`; golden-fixture
-      test page must reproduce Rust snapshots bit-for-bit
-- [ ] 3.1.2 Prefix-sum (live bytes) + lifetime interval index (live set / timeline
-      bars) built once at load
+- [x] 3.1.1 JSONL parse; JS fold mirroring `replay()` between extractable
+      markers; `viewer/test-fold.mjs` reproduces all 6 Rust golden snapshots
+      bit-for-bit (node). *Deviation: node test script instead of a test page —
+      same check, runnable in CI.*
+- [x] 3.1.2 Byte-steps prefix series + lifetime table (live set / timeline bars)
+      built once at load; scrub path is a filter over lifetimes
 
 ### 3.2 Bolt: panels + polish (the "great UI/UX" bolt)
-- [ ] 3.2.1 Heap timeline canvas (address-bucket lanes, allocation lifetime bars)
-      + scrubber; live-set table with scope labels at scrub point (R10b)
-- [ ] 3.2.2 Live-bytes area chart with scope bands; collections panel (realloc
-      lineage → capacity staircase) (R9, R5)
-- [ ] 3.2.3 Zero-cost markers with click-through callout (R12); honesty footer (R15)
-- [ ] 3.2.4 R13 check: synthetic 100k-event trace scrubs < 100 ms/step; drag-drop +
-      file input; error banner on malformed traces
+- [x] 3.2.1 Heap timeline canvas (lineage-lane bars) + scrubber + keyboard;
+      live-set table with scope labels at scrub point (R10b)
+- [x] 3.2.2 Live-bytes area chart; scope bands on timeline; collections panel
+      (realloc lineage → capacity staircase, HashMap note) (R9, R5)
+- [x] 3.2.3 Zero-cost ◆ markers with click-through callout (R12); honesty footer (R15)
+- [x] 3.2.4 R13 check: 100k-event synthetic trace scrubs at 1.77 ms/step in the
+      fold test (canvas paint left to the learner's [O] session); drag-drop +
+      file input; error banner with line numbers
 
 ## 4. Operations — the learner session (R9–R13, R14a, R15, L1–L5)
 
