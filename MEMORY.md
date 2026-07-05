@@ -43,6 +43,7 @@
 | 2026-07-05 | Spec 001-hello-rust-lambda (draft, never approved) **removed**; numbering starts at 002 | Learner said "don't make one"; predated pipeline v2 (no intent.md); recoverable at commit 3bba9d5 |
 | 2026-07-05 | Turn-end telemetry (`Stop` hook) removed; capture = session.start + spec/gate events only | Fired every turn → noise events + a telemetry-only commit per reply; turn boundaries derivable from timestamps |
 | 2026-07-05 | Git strategy from 002's close: merge to `main` + tag `spec/NNN-name` at spec close; branch-per-spec (`claude/NNN-*`) thereafter | `main` = sum of approved work; tags = spec-boundary markers for the lake; learner asked for worthwhile fixes to be implemented |
+| 2026-07-05 | **002 reclassified as internal tooling** (intent Addendum): learner sessions are not close gates for infrastructure units; automated browser verification substitutes for visual [O] checks; pedagogy defers to the exercises that use the tool | Learner directive mid-construction |
 | 2026-07-05 | **IaC = AWS CDK v2 with TypeScript** (over SAM/Terraform/Pulumi); CDK app in `infra/` beside the cargo workspace; introduced when the first AWS-deploying spec constructs | Learner decision; conventions to be refined from CDK deep-research report |
 | 2026-07-05 | Research reports live in `research/` as `<topic>.md` (no dates in filenames — date in header, versions via git) | Learner requested a research folder with three reports (best practices / Rust-on-AWS / CDK); learner amended: no date in the name |
 | 2026-07-05 | **Lake reframed: gradebook + lab notebook.** Traces = primary citizen (Parquet/DuckDB where volume is real); learning analytics (mistake ledger) = novel value; process telemetry = plain JSONL forever, curation pipeline killed. Queries must name their consumer doc | Old design borrowed big-data architecture for KB-scale data; insight cards had no reader. Learner approved reframing |
@@ -62,6 +63,21 @@ _(Move items here from `SKILLS.md` when demonstrated, with date and evidence.)_
   want gate notifications live (hook already falls back gracefully without them).
 
 ## Session log
+
+### 2026-07-05 — Session 5 (cont.): 002 CONSTRUCTION COMPLETE — spec closed
+- Full autonomous run of all 8 bolts on "you do all the bolts": memlens crate
+  (tracking allocator, R1 property 256 cases, failure paths, macros),
+  memlens-replay (R2/R3/R10a properties, adversarial validator, goldens),
+  viewer (single-file, JS fold pinned bit-for-bit to Rust goldens, 1.77ms
+  scrub at 100k events), operations (exercise 02, canonical 64-event trace in
+  the lake, overhead 1.20×).
+- **First real shrunk counterexample**: property-auditor (75%) caught a
+  committed untriaged seed — duplicated no-op realloc validly accepted →
+  TEST BUG, strategy fixed, seed kept (triage-log.md). PBT audited the test.
+- Rescoped mid-run per learner: internal tool, no learner gates; Chromium
+  verification 8/8 green (screenshot in _assurance/).
+- Spec CLOSED: merged to main, tagged spec/002-memory-lens. Next: branch-per-
+  spec (claude/NNN-*) for whatever comes next.
 
 ### 2026-07-05 — Session 5: gate 3 approved; construction begins (bolt 1.1 ✅)
 - Learner approved tasks.md (gate 3) — all three 002 gates now passed.
