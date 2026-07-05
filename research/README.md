@@ -9,6 +9,7 @@ file, git history keeps versions).
 | `rust-best-practices-and-big-tech.md` | ✅ 2026-07-05 (24/25 confirmed, 1 refuted) |
 | `rust-on-aws-compute.md` | ✅ 2026-07-05 (24/25 confirmed, 1 refuted) |
 | `typescript-cdk-for-goldeneye.md` | ✅ 2026-07-05 (25/25 confirmed) |
+| `rust-study-materials.md` | ⚠ 2026-07-05 PARTIAL (Fable rate-limit: 2 confirmed, ~30 sourced-but-unverified; re-run backlogged) |
 
 These feed: CLAUDE.md conventions, `SKILLS.md` curriculum, CI gates, and the
 design of AWS-deploying specs. Findings are ranked by confidence; every claim
