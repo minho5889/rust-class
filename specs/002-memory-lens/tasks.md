@@ -55,12 +55,12 @@ emits a valid `memlens.v1` trace into the lake's `dt=` partitions.
       so writer and schema can't drift silently)
 
 ### 1.4 Bolt: teaching macros
-- [ ] 1.4.1 `lens_scope!` (Drop-guard exit), `lens_var!`, `lens_drop!`, `lens_move!`,
+- [x] 1.4.1 `lens_scope!` (Drop-guard exit), `lens_var!`, `lens_drop!`, `lens_move!`,
       `lens_borrow!` emitting labeled/marker events
-- [ ] 1.4.2 R4 [E] fixture tests: scope enter/exit ordering vs inner allocations
+- [x] 1.4.2 R4 [E] fixture tests: scope enter/exit ordering vs inner allocations
       (incl. early-return and panic paths) **and** variable labels + move/borrow
       marker emission; R16 verified by the example's diff
-- [ ] 1.4.3 R5 [E] fixture: `Vec` doubling + `HashMap` rehash traces show
+- [x] 1.4.3 R5 [E] fixture (see requirements changelog: HashMap grows via alloc+dealloc, not realloc): `Vec` doubling + `HashMap` rehash traces show
       reconstructable growth chains via realloc lineage
 
 ## 2. `crates/memlens-replay` — replay engine (R2, R3, R10a)

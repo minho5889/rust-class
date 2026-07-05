@@ -64,6 +64,119 @@ pub struct LensSession {
 
 use std::alloc::{GlobalAlloc, Layout, System};
 
+// ---------- Teaching macros (bolt 1.4) ----------
+//
+// The macros expand to calls on `$crate::__…` helpers that exist in BOTH
+// feature configurations (no-ops when the lens is off), so annotated learner
+// code compiles unchanged either way (R16/R6).
+
+/// Wrap a block in a labeled scope: emits `scope_enter` before and
+/// `scope_exit` after — the exit via a `Drop` guard, so early `return`s and
+/// panics still close the scope. That guard *is* the lesson: deterministic
+/// cleanup is not a convention in Rust, it's the type system running your
+/// destructor on every path out.
+#[macro_export]
+macro_rules! lens_scope {
+    ($label:expr, $body:block) => {{
+        let _lens_guard = $crate::__scope_enter($label);
+        $body
+    }};
+}
+
+/// Label a variable in the trace (`marker`, no kind): ties a human name to
+/// the surrounding events.
+#[macro_export]
+macro_rules! lens_var {
+    ($v:ident) => {
+        $crate::__marker(None, concat!("var:", stringify!($v)))
+    };
+}
+
+/// Explicitly drop a value, marking the spot: the `dealloc` events that
+/// follow this marker are ownership doing its job.
+#[macro_export]
+macro_rules! lens_drop {
+    ($v:ident) => {{
+        $crate::__marker(Some("drop"), concat!("drop:", stringify!($v)));
+        drop($v);
+    }};
+}
+
+/// Mark a move. The marker is the callout: note the **absence** of
+/// allocation events at this seq — ownership transfer copies nothing (R12).
+#[macro_export]
+macro_rules! lens_move {
+    ($e:expr) => {{
+        $crate::__marker(Some("move"), concat!("move:", stringify!($e)));
+        $e
+    }};
+}
+
+/// Mark a borrow — same zero-allocation callout as [`lens_move!`].
+#[macro_export]
+macro_rules! lens_borrow {
+    ($e:expr) => {{
+        $crate::__marker(Some("borrow"), concat!("borrow:", stringify!($e)));
+        $e
+    }};
+}
+
+/// RAII guard returned by [`lens_scope!`]; records `scope_exit` on drop.
+pub struct ScopeGuard {
+    #[cfg(feature = "memlens")]
+    label: String,
+}
+
+#[cfg(feature = "memlens")]
+impl Drop for ScopeGuard {
+    fn drop(&mut self) {
+        record::record_scoped(|seq| {
+            event::TraceEvent::ScopeExit(event::ScopePayload {
+                label: std::mem::take(&mut self.label),
+                kind: None,
+                seq,
+            })
+        });
+    }
+}
+
+#[doc(hidden)]
+#[cfg(feature = "memlens")]
+pub fn __scope_enter(label: &str) -> ScopeGuard {
+    record::record_scoped(|seq| {
+        event::TraceEvent::ScopeEnter(event::ScopePayload {
+            label: label.to_owned(),
+            kind: None,
+            seq,
+        })
+    });
+    ScopeGuard {
+        label: label.to_owned(),
+    }
+}
+
+#[doc(hidden)]
+#[cfg(not(feature = "memlens"))]
+pub fn __scope_enter(_label: &str) -> ScopeGuard {
+    ScopeGuard {}
+}
+
+#[doc(hidden)]
+#[cfg(feature = "memlens")]
+pub fn __marker(kind: Option<&str>, label: &str) {
+    record::record_scoped(|seq| {
+        event::TraceEvent::Marker(event::ScopePayload {
+            label: label.to_owned(),
+            kind: kind.map(str::to_owned),
+            seq,
+        })
+    });
+}
+
+#[doc(hidden)]
+#[cfg(not(feature = "memlens"))]
+pub fn __marker(_kind: Option<&str>, _label: &str) {}
+
 /// A wrapper around any global allocator that (with the `memlens` feature)
 /// records every heap operation as a trace event.
 ///

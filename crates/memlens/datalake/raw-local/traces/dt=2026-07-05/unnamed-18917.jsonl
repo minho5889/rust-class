@@ -1,5 +1,0 @@
-{"event_id":"18917-1","ts":"2026-07-05T09:43:20Z","session_id":"memlens","spec_id":null,"actor":"memlens","event_type":"memlens.alloc","schema_version":1,"payload":{"addr":"0x562fc9fbcb10","size":4,"align":1,"seq":1}}
-{"event_id":"18917-2","ts":"2026-07-05T09:43:20Z","session_id":"memlens","spec_id":null,"actor":"memlens","event_type":"memlens.alloc","schema_version":1,"payload":{"addr":"0x562fc9fbecd0","size":544,"align":8,"seq":2}}
-{"event_id":"18917-3","ts":"2026-07-05T09:43:20Z","session_id":"memlens","spec_id":null,"actor":"memlens","event_type":"memlens.alloc","schema_version":1,"payload":{"addr":"0x562fc9fbebf0","size":3,"align":1,"seq":3}}
-{"event_id":"18917-4","ts":"2026-07-05T09:43:20Z","session_id":"memlens","spec_id":null,"actor":"memlens","event_type":"memlens.dealloc","schema_version":1,"payload":{"addr":"0x562fc9fbebf0","size":3,"align":1,"seq":4}}
-{"event_id":"18917-5","ts":"2026-07-05T09:43:20Z","session_id":"memlens","spec_id":null,"actor":"memlens","event_type":"memlens.dealloc","schema_version":1,"payload":{"addr":"0x562fc9fbcb10","size":4,"align":1,"seq":5}}

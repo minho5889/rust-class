@@ -126,11 +126,7 @@ pub(crate) fn record_realloc(
     exit_lens();
 }
 
-/// Record a scope/marker event (used by the teaching macros, bolt 1.4).
-#[expect(
-    dead_code,
-    reason = "wired up by the lens_scope!/marker macros in bolt 1.4"
-)]
+/// Record a scope/marker event (used by the teaching macros).
 pub(crate) fn record_scoped(make: impl FnOnce(u64) -> TraceEvent) {
     if !enter_lens() {
         return;
@@ -263,6 +259,25 @@ fn write_line(sink: &mut Sink, event: &TraceEvent) -> std::io::Result<()> {
         sink.out.flush()?;
     }
     Ok(())
+}
+
+/// Test support: swap the sink to a fresh file. Needed because in a binary
+/// where the lens IS the global allocator, the test harness allocates (and
+/// lazily initializes the sink at the default path) before any #[test] can
+/// set `MEMLENS_TRACE` — the env var is read too late. Not part of the API.
+#[doc(hidden)]
+pub fn __retarget(path: &std::path::Path) {
+    if !enter_lens() {
+        return;
+    }
+    if let Ok(mut guard) = SINK.lock() {
+        // SAFETY-free but subtle: setting the env BEFORE dropping the old
+        // sink means the re-init below picks up the new path.
+        // (set_var is unsafe in edition 2024 — single-threaded test setup.)
+        unsafe { std::env::set_var("MEMLENS_TRACE", path) };
+        *guard = init_sink();
+    }
+    exit_lens();
 }
 
 /// Open the sink. Path: `MEMLENS_TRACE` env var, else
