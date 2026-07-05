@@ -60,6 +60,24 @@ _(Move items here from `SKILLS.md` when demonstrated, with date and evidence.)_
 
 ## Session log
 
+### 2026-07-05 — Session 4: research triad + conventions hardening
+- Three deep-research workflows (≈320 agents, 3-vote adversarial verification):
+  `research/typescript-cdk-for-goldeneye.md` (25/25 confirmed),
+  `rust-best-practices-and-big-tech.md` (24/25, 1 refuted),
+  `rust-on-aws-compute.md` (24/25, 1 refuted).
+- Adopted into steering/CLAUDE: CDK construct choices + 2 ARM64 explicit-flag
+  traps; tags-over-physical-names; unsafe policy (forbid everywhere, memlens =
+  unsafe classroom); shared release profile (thin LTO/cu=1/panic=abort/strip);
+  clippy::unwrap_used; distroless-static over scratch; no-QEMU cross-compile;
+  Lambda thread-pool sizing rule; Graviton arch-backend checklist.
+- Honest gaps flagged: Lambda MicroVMs / Managed Instances / SnapStart claims
+  did not survive verification; ap-northeast-1 parity unverified. Refuted en
+  route: "ARM64 blocks cargo-fuzz" and AWS's "125 ms because Firecracker is
+  Rust" attribution.
+- 002 tasks.md (still awaiting gate 3) updated pre-gate with the new
+  conventions (1.1.1 release profile + lint gates, 1.2.3 SAFETY comments).
+- IaC decision recorded: TypeScript CDK v2, app in `infra/`.
+
 ### 2026-07-05 — Session 3: spec 002-memory-lens through the pipeline
 - Learner clarified the dashboard idea: **solely** for understanding Rust memory at
   runtime (not workflow observability). IDE cut, voice + non-voice helpers deferred.
