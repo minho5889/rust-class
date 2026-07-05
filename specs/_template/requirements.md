@@ -1,39 +1,37 @@
-# Requirements — <Unit of Work name>
+# Requirements — <NNN short-name>
 
-> **Phase: Inception (Mob Elaboration).** Claude drafts this from the learner's
-> intent, asks clarifying questions, and the learner approves before any design
-> work begins. Status: `draft | approved`.
+> **Doc 2 of 4. Derived from `intent.md` ONLY** — if it can't be written from
+> intent.md alone, intent.md was incomplete. Audited by `spec-auditor` before
+> review (verdict in `_assurance/`). ✋ **Human gate:** loop
+> drafting → awaiting-review → revising until approved.
 
-**Status:** draft
-
-## Intent
-
-_One paragraph: what the learner wants and why (including the learning goal —
-which SKILLS.md items this Unit of Work is meant to exercise)._
+**Status:** drafting
+**Approved:** — · **Assurance verdict:** —
 
 ## User stories
 
 - As a learner, I want <capability>, so that <learning outcome>.
 
-## Acceptance criteria (EARS notation)
+## Acceptance criteria (EARS + verification class)
 
-Use EARS patterns — each requirement must be testable:
+Every requirement carries an ID and a verification tag. **A requirement that fits no
+tag is untestable and must be rewritten before review.**
 
-- **Ubiquitous:** THE SYSTEM SHALL <behavior>.
-- **Event-driven:** WHEN <trigger> THE SYSTEM SHALL <behavior>.
-- **State-driven:** WHILE <state> THE SYSTEM SHALL <behavior>.
-- **Unwanted behavior:** IF <error condition> THEN THE SYSTEM SHALL <behavior>.
+- **[P]** property-testable → becomes a `proptest` property ("for any valid input…")
+- **[E]** example-testable → unit/integration test with chosen examples
+- **[O]** operationally-verified → observed on the real AWS target, recorded in `evidence.md`
 
-### Requirements
-
-1. WHEN … THE SYSTEM SHALL …
-2. IF … THEN THE SYSTEM SHALL …
+| ID | Requirement (EARS) | Tag |
+|---|---|---|
+| R1 | WHEN <trigger> THE SYSTEM SHALL <behavior> | [P] |
+| R2 | IF <error condition> THEN THE SYSTEM SHALL <behavior> | [E] |
+| R3 | THE SYSTEM SHALL <constraint, e.g. run on arm64 / cold-start ≤ X ms> | [O] |
 
 ## Learning requirements
 
-_(What the learner must be able to explain afterward — this is a class.)_
-
-1. The learner SHALL be able to explain <concept> after completing this unit.
+| ID | The learner SHALL be able to explain… |
+|---|---|
+| L1 | <concept>, after completing this unit |
 
 ## Out of scope
 
@@ -42,3 +40,8 @@ _(What the learner must be able to explain afterward — this is a class.)_
 ## Open questions (answered before approval)
 
 - [ ] …
+
+## Changelog
+
+| Date | Change | Trigger (change protocol) | Re-gated? |
+|---|---|---|---|

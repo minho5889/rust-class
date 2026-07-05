@@ -1,28 +1,35 @@
-# Tasks — <Unit of Work name>
+# Tasks — <NNN short-name>
 
-> **Phase: Construction (Mob Construction, part 2).** Derived from the approved
-> design. Tasks are grouped into dependency **waves**: tasks within a wave are
-> independent and can be done in a single bolt; waves run in order. Check tasks
-> off as they complete; note deviations inline.
+> **Doc 4 of 4. Derived from approved `design.md`.** ✋ **Human gate on the plan's
+> shape, once** — bolts then execute without re-asking. Three layers defined by
+> *grain*, not ceremony — **collapse layers for small units** (a small unit may go
+> straight from one main task to action items).
 
-## Wave 1
+**Status:** drafting
+**Approved:** — · **Assurance verdict:** —
 
-- [ ] 1.1 …
-- [ ] 1.2 …
+| Layer | Grain | Done means |
+|---|---|---|
+| Main task `N.` | A deliverable (maps to a design component) | Its part of the system demonstrably works |
+| Sub task `N.M` | One bolt — a single working session | Compiles, tests pass, committable checkpoint |
+| Action item `N.M.K` | One atomic action — one commit's worth | Verifiable in isolation |
 
-## Wave 2 (depends on Wave 1)
+Rules: a parent checks off only when all children are checked. [P] property tests are
+written **before** the code they test (first action items of their sub task). Note
+deviations inline; contradictions with approved docs trigger the change protocol.
 
-- [ ] 2.1 …
+## 1. <Main task — deliverable> (R1, R2)
 
-## Operations checklist (after implementation)
+### 1.1 <Sub task — one bolt>
+- [ ] 1.1.1 Write property test for R1 (per design Properties table)
+- [ ] 1.1.2 …
 
-- [ ] `cargo fmt` and `cargo clippy -- -D warnings` clean
-- [ ] Tests pass locally
-- [ ] Deployed to target and verified with a real invocation
-- [ ] Observed in CloudWatch (logs/metrics) — record the cold start / memory numbers
+## Operations checklist
+
+- [ ] `cargo fmt` + `cargo clippy -- -D warnings` clean
+- [ ] All [P] properties pass (≥256 cases); `proptest-regressions/` committed
+- [ ] All [E] tests pass
+- [ ] All [O] requirements observed on the real AWS target → numbers in `evidence.md`
 - [ ] Torn down (if the resource costs money at idle)
-- [ ] "What you learned" note appended below; `MEMORY.md` and `SKILLS.md` updated
-
-## What you learned
-
-_(Filled in at the end of the Operations phase.)_
+- [ ] `evidence.md` learnings written; `MEMORY.md` + `SKILLS.md` updated
+- [ ] `property-auditor` run: every [P] REQ has a matching passing property

@@ -1,37 +1,50 @@
 # Steering — Repository Structure
 
 ```
-rust-class/
-├── CLAUDE.md              # Constitution: how Claude works here (read first)
+rust-class/  (project: goldeneye)
+├── CLAUDE.md              # Constitution v2: 4-doc pipeline, gates, PBT, telemetry
 ├── MEMORY.md              # Living memory: profile, progress, decisions, session log
 ├── SKILLS.md              # Skill tree / curriculum with mastery tracking
 ├── README.md              # Human-facing overview
 ├── steering/              # Kiro-style always-loaded context
 │   ├── product.md         #   why (goals, non-goals)
-│   ├── tech.md            #   stack, targets, constraints
+│   ├── tech.md            #   stack, targets, testing, data lake, constraints
 │   └── structure.md       #   this file
-├── specs/                 # AI-DLC Units of Work (spec-driven development)
+├── specs/                 # AI-DLC Units of Work (four-doc pipeline)
 │   ├── _template/         #   copy to start a new Unit of Work
-│   │   ├── requirements.md
-│   │   ├── design.md
-│   │   └── tasks.md
-│   └── NNN-short-name/    #   numbered sequentially (001, 002, …)
+│   │   ├── intent.md      #     doc 1 — write-once interpretation contract
+│   │   ├── requirements.md#     doc 2 — EARS + [P]/[E]/[O] tags   ✋ gate
+│   │   ├── design.md      #     doc 3 — shape + Properties table  ✋ gate
+│   │   ├── tasks.md       #     doc 4 — main/sub/action layers    ✋ gate
+│   │   ├── evidence.md    #     append-only report card (no gate)
+│   │   └── _assurance/    #     machine-review sidecar (bots write here only)
+│   └── NNN-short-name/    #   numbered sequentially (002, 003, …)
+├── datalake/              # goldeneye telemetry
+│   ├── schema/            #   envelope.v1.json (schema registry, versioned)
+│   ├── raw-local/         #   dt=YYYY-MM-DD/events.jsonl (v1 raw zone, committed)
+│   └── README.md          #   zones, S3 naming, conventions
+├── .claude/
+│   ├── agents/            #   intent-assurance, spec-auditor, property-auditor
+│   ├── hooks/             #   telemetry.sh, on-doc-write.sh
+│   └── settings.json      #   hook wiring (SessionStart/Stop/PostToolUse)
 ├── playground/            # Throwaway experiments — no spec required
-│   └── NN-topic/          #   small numbered exercises (e.g., 01-ownership)
-└── crates/                # Real Cargo workspace members (created as class progresses)
-    ├── shared/            #   shared types/utilities across deployables
-    └── <deployable>/      #   one crate per deployable unit (lambda fn, service…)
+└── crates/                # Cargo workspace members (created as class progresses)
+    ├── shared/            #   shared types/utilities
+    └── <deployable>/      #   one crate per deployable unit
 ```
 
 ## Conventions
 
-- **Spec directories**: `specs/NNN-kebab-case/`, numbered in creation order. A spec
-  is never deleted; superseded specs get a note at the top pointing to the successor.
-- **Crate names**: kebab-case matching their directory (`hello-rust-lambda`).
-- **Workspace**: root `Cargo.toml` uses `[workspace]` with `members = ["crates/*"]`
-  once the first crate exists. Playground exercises are standalone, excluded from
-  the workspace.
-- **Branches**: work happens on `claude/rust-aws-learning-*` branches.
-- **Commits**: imperative mood, reference the spec (`001: implement handler (task 2.1)`).
-- **Docs style**: explanations for the learner live as doc comments (`///`) in code
-  and as "What you learned" notes appended to each spec after Operations.
+- **Spec directories**: `specs/NNN-kebab-case/`, numbered in creation order starting
+  at 002 (001 was retired before pipeline v2; see MEMORY.md). Specs are never
+  deleted; superseded specs get a note pointing to the successor.
+- **Status lines**: gated docs carry `**Status:** drafting | awaiting-review |
+  revising | approved | superseded` — exact format matters, hooks grep it.
+- **Crate names**: kebab-case matching their directory. AWS resource names:
+  `goldeneye-<purpose>`.
+- **Workspace**: root `Cargo.toml` with `members = ["crates/*"]` once the first
+  crate exists. Playground exercises stay outside the workspace.
+- **Branches**: `claude/rust-aws-learning-*`. **Commits**: imperative mood,
+  reference the spec (`002: implement handler (task 1.1.2)`).
+- **Teaching docs**: `///` doc comments in code; learnings in each spec's
+  `evidence.md`, promoted to `MEMORY.md`/`SKILLS.md`.

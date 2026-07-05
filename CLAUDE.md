@@ -1,84 +1,131 @@
-# CLAUDE.md — Project Constitution
+# CLAUDE.md — Project Constitution (v2)
 
-This repository is a **structured learning environment for Rust on AWS**. The learner
-(Minho) is new to Rust and wants to master it as a systems-engineering language —
-leaning on Rust's memory-management model (ownership, borrowing, zero-cost
-abstractions) — and deploy it across four AWS compute targets:
+Project codename: **goldeneye**. This repository is a structured learning environment
+for **Rust on AWS**. The learner (Minho) is new to Rust and wants to master it as a
+systems-engineering language — leaning on Rust's memory-management model (ownership,
+borrowing, zero-cost abstractions) — and deploy it across four AWS compute targets:
 
 1. **AWS Lambda** (serverless functions, `cargo-lambda`, ARM64/Graviton)
-2. **AWS Lambda MicroVMs** (Firecracker-based isolated stateful sandboxes, announced June 2026)
+2. **AWS Lambda MicroVMs** (Firecracker-based isolated stateful sandboxes, June 2026)
 3. **Amazon ECS on Fargate** (containerized Rust services)
 4. **Amazon EC2** (Rust binaries as long-running systemd services)
 
-## How Claude must operate in this repo
+Regions: **us-east-1** (primary), **ap-northeast-1** (secondary). All AWS resources
+are prefixed `goldeneye-`.
 
-We borrow the **AI-DLC (AI-Driven Development Lifecycle)** methodology from AWS and
-**Kiro-style spec-driven development** — without using the Kiro IDE. AI drives the
-process; the human validates decisions. Read this file first in every session, then:
+## Session ritual
 
-1. **Read `MEMORY.md`** — the learner profile, progress state, and decision log.
-2. **Read `SKILLS.md`** — the curriculum/skill tree; find the current level.
+Read this file first in every session, then:
+
+1. **Read `MEMORY.md`** — learner profile, progress state, decision log.
+2. **Read `SKILLS.md`** — curriculum/skill tree; find the current level.
 3. **Read `steering/`** — `product.md` (why), `tech.md` (stack), `structure.md` (layout).
-4. At the **end of every working session, update `MEMORY.md`** (session log + any new
-   decisions or concepts mastered). This is not optional.
+4. At the **end of every working session, update `MEMORY.md`**. Not optional.
 
-## The AI-DLC workflow (adapted for learning)
+## The four-doc spec pipeline (AI-DLC + Kiro-style, v2)
 
-Every meaningful piece of work is a **Unit of Work** with its own spec directory under
-`specs/NNN-short-name/`. Work moves through three phases with explicit approval gates:
+Every meaningful piece of work is a **Unit of Work** in `specs/NNN-short-name/`
+(copy `specs/_template/`). Each document freezes one kind of decision so that
+disagreements are caught at the cheapest layer: *meaning → behavior → shape → work*.
+Each doc derives **only** from the doc above it.
 
-| Phase | Ritual | Artifact | Gate |
-|---|---|---|---|
-| **Inception** | Mob Elaboration — Claude drafts requirements as EARS notation, asks clarifying questions | `requirements.md` | Learner approves before design |
-| **Construction** | Mob Construction — Claude proposes design, then a task plan, then implements in short **bolts** (hours, not weeks) | `design.md`, `tasks.md` | Learner approves design before tasks; tasks are checked off as completed |
-| **Operations** | Deploy, verify, observe on the real AWS target | notes appended to the spec | Learner confirms it works |
+```
+raw prompt ─► intent.md ─► requirements.md ─► design.md ─► tasks.md ─► bolts
+                 │              ✋ human          ✋ human       ✋ human
+                 └─► intent-assurance bot (audits, never edits)
+                                                          evidence.md (append-only, no gate)
+```
 
-Rules:
+| Doc | Freezes | Gate |
+|---|---|---|
+| `intent.md` | What the learner meant (verbatim prompt, distilled intent, assumptions, rejected readings) | None — audited by the `intent-assurance` subagent, which logs to `_assurance/` and **never edits** the doc |
+| `requirements.md` | What must be true — EARS lines, each tagged **[P]** property-testable / **[E]** example-testable / **[O]** operationally-verified, plus learning requirements | ✋ Human approves (spec-engineer notify/revise loop) |
+| `design.md` | How it works — high-level narrative + detailed design; every element cites REQ IDs; formal **Properties** section for each [P] requirement | ✋ Human approves |
+| `tasks.md` | The work — main task (deliverable) → sub task (one bolt) → action item (one commit); layers may collapse for small units | ✋ Human approves shape once; bolts then execute freely |
+| `evidence.md` | What actually happened — deploys, metrics, counterexamples, learnings | None — append-only |
 
-- **No code before an approved spec** for any non-trivial Unit of Work. Trivial
-  exercises (single-file playground experiments in `playground/`) are exempt.
-- **AI proposes, human disposes.** Claude drafts everything but defers decisions
-  (architecture choices, AWS services, cost trade-offs) to the learner with a clear
-  recommendation.
-- Copy `specs/_template/` to start a new Unit of Work; number them sequentially.
-- Tasks in `tasks.md` use checkboxes and are grouped into dependency **waves** so
-  independent tasks can run in one bolt.
+**Status lifecycle** (in every gated doc's header, exact format matters — hooks grep it):
+`**Status:** drafting | awaiting-review | revising | approved | superseded`
+
+### Pipeline rules
+
+- **Write-once intent.** `intent.md` is never edited after creation. Small
+  clarifications go in its append-only *Addendum* section; a change of meaning
+  supersedes the whole spec (new spec, note at the top of the old one).
+- **Assurance before attention.** Before any doc is set to `awaiting-review`, run the
+  matching fresh-context subagent audit (`.claude/agents/`): `intent-assurance` for
+  intent, `spec-auditor` for requirements/design, `property-auditor` before a spec
+  closes. Verdicts go to `specs/NNN-*/_assurance/`. The human only reviews
+  pre-audited docs; embed the one-line verdict in the review notification.
+- **Change protocol.** When downstream work contradicts an approved doc: halt that
+  item, amend the upstream doc with a changelog entry, re-gate **only the amendment**.
+  Never let code silently diverge from spec.
+- **Fast path.** Small, well-understood units may draft all four docs in one shot and
+  take a single combined approval. Ceremony scales with risk. Trivial playground
+  experiments need no spec at all.
+- **Untestable = unapprovable.** Every EARS requirement must carry a [P]/[E]/[O] tag.
+  If none fits, the requirement is rewritten before review.
+- **AI proposes, human disposes.** Claude drafts everything; architecture, AWS
+  service, and cost decisions go to the learner with a clear recommendation.
+
+### Property-based testing (Kiro-style correctness)
+
+EARS requirements are universal statements — treat them as executable properties:
+
+- Each **[P]** requirement gets a formal property in `design.md` (inputs,
+  preconditions, invariant, generation strategy) and a `proptest` test written
+  **before** the code it tests (first action items of the sub task).
+- Default ≥256 cases; commit `proptest-regressions/` — failing seeds are permanent
+  regression tests.
+- **Counterexample triage** (logged in `_assurance/`): a failing property is a
+  **spec bug** (amend requirements, re-gate), a **code bug** (fix, keep the seed), or
+  a **test bug** (fix the generation strategy). Classify before fixing.
+
+## Telemetry (the goldeneye data lake, v1 capture)
+
+Hooks in `.claude/settings.json` append envelope events (schema:
+`datalake/schema/envelope.v1.json`) to `datalake/raw-local/dt=YYYY-MM-DD/*.jsonl`.
+Spec-doc writes and gate notifications are captured automatically. Rules:
+
+- **Never put secrets/credentials in event payloads.**
+- Telemetry files are committed with normal work commits (this is a private repo;
+  raw prompts in intent events are allowed by the learner's decision, 2026-07-05).
+- S3 zones (`goldeneye-lake` raw/curated, `goldeneye-discovery` insights) are
+  Wave 2 — do not create AWS resources for telemetry until that spec is approved.
 
 ## Teaching rules (this is a class, not just a codebase)
 
-- **Explain while building.** When code uses a Rust concept the learner hasn't
-  mastered yet (per `SKILLS.md`), add a short explanation — in the conversation and,
-  where durable, as doc comments in the code.
-- **Memory management is the through-line.** Whenever ownership, borrowing,
-  lifetimes, `Box`/`Rc`/`Arc`, or allocation behavior shows up, call it out
-  explicitly and relate it to why Rust is efficient on AWS (cold starts, memory
-  footprint, cost).
-- Prefer idiomatic Rust over clever Rust. `cargo fmt` and `cargo clippy -- -D warnings`
-  must pass before any commit.
-- Compare with what the learner may already know (e.g., garbage-collected languages)
-  when introducing new concepts.
+- **Explain while building.** Concepts not yet mastered (per `SKILLS.md`) get a short
+  explanation in conversation and, where durable, as `///` doc comments.
+- **Memory management is the through-line.** Ownership, borrowing, lifetimes,
+  `Box`/`Rc`/`Arc`, allocation — call them out and relate them to AWS efficiency
+  (cold starts, memory footprint, cost).
+- **Properties are teaching tools.** Writing an invariant and reading a shrunk
+  counterexample are both lessons; record notable counterexamples in `evidence.md`.
+- Prefer idiomatic Rust. `cargo fmt` and `cargo clippy -- -D warnings` must pass
+  before any commit. Compare with GC languages when introducing concepts.
 
 ## Rust/AWS conventions
 
-- Cargo **workspace** at the repo root; one crate per deployable unit, shared code in
-  `crates/shared`.
-- Target **ARM64** (Graviton) everywhere — it is cheaper and Lambda MicroVMs are
-  ARM64-only.
+- Cargo **workspace** at repo root; one crate per deployable, shared code in
+  `crates/shared`. Target **ARM64** (Graviton) everywhere.
 - Lambda: `cargo lambda build --release --arm64`; runtime `provided.al2023`.
-- Fargate: multi-stage Dockerfile (`rust:slim` builder → `gcr.io/distroless/cc` or
-  `scratch` runtime image).
-- EC2: release binary + systemd unit file.
-- Errors: `thiserror` for libraries, `anyhow` for binaries. Async: `tokio`.
-- AWS SDK: `aws-sdk-*` crates (official AWS SDK for Rust).
+- Fargate: multi-stage Dockerfile (`rust:slim` → distroless/`scratch`).
+- EC2: release binary + systemd unit.
+- Errors: `thiserror` (libs) / `anyhow` (bins). Async: `tokio`. Tests: built-in +
+  `proptest`. Logging: `tracing`. AWS: official `aws-sdk-*` crates.
 
 ## File map
 
-| File | Purpose |
+| Path | Purpose |
 |---|---|
-| `CLAUDE.md` | This constitution — how to work here |
-| `MEMORY.md` | Living memory: learner profile, progress, decisions, session log |
+| `CLAUDE.md` | This constitution |
+| `MEMORY.md` | Living memory: profile, progress, decisions, session log |
 | `SKILLS.md` | Skill tree / curriculum with mastery tracking |
 | `steering/*.md` | Kiro-style steering: product, tech, structure |
-| `specs/` | Units of Work (requirements/design/tasks per feature) |
-| `playground/` | Throwaway Rust experiments, no spec required |
+| `specs/` | Units of Work (five docs + `_assurance/` sidecar each) |
+| `datalake/` | Telemetry: schema registry + local raw zone (v1) |
+| `.claude/agents/` | Assurance subagents (intent-assurance, spec-auditor, property-auditor) |
+| `.claude/hooks/` | Telemetry capture + gate notification scripts |
+| `playground/` | Throwaway experiments, no spec required |
 | `crates/` | Real workspace crates (created as the class progresses) |

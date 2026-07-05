@@ -9,56 +9,68 @@
 - **Rust experience:** Beginner — no substantial prior Rust knowledge.
 - **Goal:** Learn Rust as a systems-engineering language with a focus on memory
   management and efficiency, deployed on AWS.
-- **Target AWS services:** Lambda, Lambda MicroVMs (new, June 2026), ECS Fargate, EC2.
-- **Methodology preference:** AI-DLC (AWS's AI-Driven Development Lifecycle) +
-  Kiro-style spec-driven development, without the Kiro IDE.
-- **Learning style:** Wants fundamentals prepared first ("the bedrock"), then
-  hands-on building.
+- **Target AWS services:** Lambda, Lambda MicroVMs (June 2026), ECS Fargate, EC2.
+- **Methodology:** AI-DLC + Kiro-style spec-driven development (no Kiro IDE),
+  extended by the learner's own four-doc pipeline design — see `CLAUDE.md` v2.
+- **Learning style:** Fundamentals first ("the bedrock"), then hands-on building;
+  likes process/telemetry thinking (designed the data lake himself).
 
 ## Current state
 
-- **Phase:** 0 — Environment & fundamentals (see `SKILLS.md` Level 0/1).
-- **Active Unit of Work:** none yet. First candidate: `specs/001-hello-rust-lambda`.
-- **Toolchain installed locally:** unknown — verify `rustup`, `cargo-lambda`, Docker,
-  AWS CLI at the start of the first hands-on session.
-- **AWS account/region:** not yet confirmed. Note: Lambda MicroVMs is only available
-  in us-east-1, us-east-2, us-west-2, eu-west-1, ap-northeast-1 (as of launch).
+- **Project codename:** goldeneye. Regions: us-east-1 (primary), ap-northeast-1
+  (secondary).
+- **Phase:** Wave 1 complete (pipeline v2 codified, telemetry v1 live, no AWS yet).
+- **Active Unit of Work:** none. Next spec number is **002** (001 was retired —
+  see decision log). Wave 2 candidate: `002-datalake-v1` (S3 zones + first scan).
+- **Toolchain:** unverified — check `rustup`, `cargo-lambda`, Docker, AWS CLI at the
+  start of the first hands-on session.
 
 ## Decision log
 
 | Date | Decision | Rationale |
 |---|---|---|
-| 2026-07-05 | Adopt AI-DLC three-phase workflow (Inception/Construction/Operations) with Kiro-style specs (`requirements.md`/`design.md`/`tasks.md` + steering files) | Learner explicitly requested borrowing AI-DLC logic and spec-driven development without the Kiro IDE |
-| 2026-07-05 | ARM64/Graviton as default target architecture | Cheaper, faster on Lambda; Lambda MicroVMs is ARM64-only |
-| 2026-07-05 | Curriculum ordered: Rust fundamentals → Lambda → MicroVMs → Fargate → EC2 | Lambda has the shortest feedback loop for a beginner; EC2 requires the most ops knowledge |
+| 2026-07-05 | Adopt AI-DLC three-phase workflow with Kiro-style specs | Learner requested borrowing AI-DLC logic without the Kiro IDE |
+| 2026-07-05 | ARM64/Graviton default everywhere | Cheaper; MicroVMs is ARM64-only |
+| 2026-07-05 | Pipeline v2: four docs (intent → requirements → design → tasks) + gate-less evidence.md; assurance-before-attention subagents; change protocol; fast path; [P]/[E]/[O] verification tags | Learner's design + Claude's improvement suggestions, all approved |
+| 2026-07-05 | Property-based testing via `proptest`, Kiro-style: EARS requirements → properties, test-first, counterexample triage (spec/code/test bug), regressions committed | Spec-as-executable-contract; strong teaching value |
+| 2026-07-05 | Telegram notifications are one-way v1 (notify only); approval = in-session or Status-line edit. Two-way bot deferred (future Rust Lambda UoW) | Avoid listener infrastructure now |
+| 2026-07-05 | goldeneye data lake: hooks → local JSONL (v1, committed to git) → S3 `goldeneye-lake` raw/curated (Wave 2) → `goldeneye-discovery` insight cards (Wave 3). DuckDB default scan engine, Athena optional. No Kinesis/dashboards/Iceberg | Learner's idea; sized for a one-learner repo; doubles as curriculum |
+| 2026-07-05 | Project name **goldeneye**; us-east-1 primary, ap-northeast-1 secondary; raw prompts may be committed (private repo) | Learner decision |
+| 2026-07-05 | Spec 001-hello-rust-lambda (draft, never approved) **removed**; numbering starts at 002 | Learner said "don't make one"; predated pipeline v2 (no intent.md); recoverable at commit 3bba9d5 |
 
 ## Concepts mastered
 
-_(Move items here from `SKILLS.md` as they are demonstrated, with the date and the
-evidence — e.g., "ownership: explained borrow-checker error in 001 task 3 unaided.")_
+_(Move items here from `SKILLS.md` when demonstrated, with date and evidence.)_
 
 - _none yet_
 
 ## Open questions for the learner
 
-- Which AWS region should be the default? (Must be a MicroVMs region if we want all
-  four targets in one region — suggest `us-east-1` or `ap-northeast-1`.)
-- Infrastructure-as-code preference: AWS SAM, CDK (TypeScript or Rust via cdk8s?), or
-  plain CLI first and IaC later? (Recommendation: plain `cargo lambda deploy` + CLI
-  first, introduce IaC in Phase 2.)
-- Local dev environment: does the learner have Docker and an AWS account with
-  credentials configured?
+- AWS credentials: are they configured in this environment? (Blocks Wave 2.)
+- Telegram: provide `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID` as env vars when you
+  want gate notifications live (hook already falls back gracefully without them).
+- IaC preference (SAM vs CDK) — deferred until after Lambda mastery.
 
 ## Session log
 
+### 2026-07-05 — Session 2: Pipeline v2 + goldeneye telemetry (Wave 1)
+- Researched property-based testing and Kiro's correctness feature (EARS → extracted
+  properties → generated cases → shrinking → spec/code/test triage); learner
+  approved all improvement suggestions.
+- Codified pipeline v2: rewrote `CLAUDE.md`; rebuilt `specs/_template/` as five docs
+  with `_assurance/` sidecar; added `.claude/agents/` (intent-assurance,
+  spec-auditor, property-auditor); wired hooks (`settings.json` → telemetry.sh,
+  on-doc-write.sh) — tested in sandbox: valid envelopes, gate detection, template
+  exclusion, Telegram fallback all working.
+- Created `datalake/` (envelope.v1.json schema registry, raw-local zone, README with
+  S3 naming fixed: goldeneye-lake / goldeneye-discovery).
+- Updated steering (tech: proptest conventions, goldeneye identity, data lake;
+  structure: new tree). Removed spec 001 per learner instruction.
+- **Next:** learner reviews Wave 1; then `002-datalake-v1` through the new pipeline
+  (needs AWS credentials), or start SKILLS Level 0/1 with a playground exercise.
+
 ### 2026-07-05 — Session 1: Foundation setup
-- Created repo scaffolding on branch `claude/rust-aws-learning-44il52`: `CLAUDE.md`,
-  `MEMORY.md`, `SKILLS.md`, `steering/` (product/tech/structure), `specs/_template/`,
-  and first draft spec `specs/001-hello-rust-lambda/`.
-- Researched and encoded: AI-DLC methodology (AWS, re:Invent 2025, open-sourced
-  adaptive workflows), Kiro spec-driven development (EARS notation, approval gates,
-  steering files), Lambda MicroVMs launch details (June 22, 2026), current Rust-on-AWS
-  tooling (`cargo-lambda`, Rust GA on Lambda since Nov 2025, Lambda Managed Instances
-  with Rust support since Mar 2026).
-- No code written yet — next session should start with toolchain verification and
-  Level 0/1 of `SKILLS.md`.
+- Created initial scaffolding: CLAUDE.md v1, MEMORY.md, SKILLS.md, steering/,
+  specs/_template (3 docs), spec 001 draft (later removed).
+- Researched: AI-DLC, Kiro spec-driven development, Lambda MicroVMs launch
+  (2026-06-22), Rust-on-AWS tooling (cargo-lambda, Rust GA on Lambda Nov 2025).

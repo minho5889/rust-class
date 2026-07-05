@@ -1,37 +1,50 @@
-# Design — <Unit of Work name>
+# Design — <NNN short-name>
 
-> **Phase: Construction (Mob Construction, part 1).** Claude proposes the technical
-> design; the learner approves before tasks are planned. Status: `draft | approved`.
+> **Doc 3 of 4. Derived from approved `requirements.md`.** Every design element must
+> cite the REQ IDs it satisfies — an element citing none is scope creep made visible.
+> Audited by `spec-auditor` (traceability + completeness) before review.
+> ✋ **Human gate.**
 
-**Status:** draft
+**Status:** drafting
+**Approved:** — · **Assurance verdict:** —
 
-## Overview
+## High-level design (the shape)
 
-_How the solution works, in a few sentences. Reference the approved requirements._
+_A narrative the learner can read alone and veto the approach: what runs where,
+what talks to what, why this shape. Diagram if useful._
 
-## Architecture
+## Detailed design
 
-_Components and their interactions. ASCII/mermaid diagram if useful. Which AWS
-services, which crates, how data flows._
+_Components, interfaces, data flow, failure modes. Each subsection header cites its
+requirements, e.g. "### Handler (R1, R2)"._
 
 ## Key decisions
 
-| Decision | Options considered | Chosen | Why |
-|---|---|---|---|
-| … | … | … | … |
+| Decision | Options considered | Chosen | Why | REQs |
+|---|---|---|---|---|
 
-## Rust concepts in play
+## Properties (one per [P] requirement)
 
-_(Teaching hook: which memory-management/language concepts this design exercises,
-and where they will show up in the code.)_
+| REQ | Property (∀ inputs, precondition ⇒ invariant) | Generation strategy |
+|---|---|---|
+| R1 | For any <input domain> where <precondition>, <invariant> | <proptest strategy: ranges, shapes, edge weights> |
+
+## Rust concepts in play (teaching hook)
+
+_Which ownership/borrowing/allocation lessons this design will surface, and where._
 
 - …
 
 ## Error handling
 
-_What can fail, and how each failure surfaces (Result types, retries, logs)._
+_What can fail and how each failure surfaces (Result types, retries, logs)._
 
-## Testing & verification strategy
+## Verification strategy
 
-_Unit tests, integration tests, and how we verify on the real AWS target during
-the Operations phase._
+_How [P] properties, [E] examples, and [O] operational checks will each be executed;
+what "done" looks like in `evidence.md`._
+
+## Changelog
+
+| Date | Change | Trigger (change protocol) | Re-gated? |
+|---|---|---|---|

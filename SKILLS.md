@@ -36,6 +36,9 @@ e.g., fix a borrow-checker error unaided, or deploy a Lambda from scratch.
 - [ ] Error handling patterns: `?`, `thiserror`, `anyhow`
 - [ ] Modules, visibility, crate organization
 - [ ] Testing: unit tests, integration tests, `cargo test`
+- [ ] **Property-based testing with `proptest`**: properties as invariants,
+      strategies, shrinking, regression seeds — and how EARS requirements
+      become executable properties (our pipeline's [P] tags)
 
 ### 1d. Async Rust (required for all AWS work)
 - [ ] `async`/`.await`, futures, why Rust async is zero-cost
@@ -49,7 +52,7 @@ e.g., fix a borrow-checker error unaided, or deploy a Lambda from scratch.
 - [ ] Handler signatures, `serde` for event payloads, API Gateway events
 - [ ] Cold starts: why Rust lands at ~15 ms; memory sizing vs cost
 - [ ] Structured logging with `tracing` → CloudWatch
-- 📦 Spec: `specs/001-hello-rust-lambda/`
+- 📦 Spec: first hands-on Unit of Work, to be created via pipeline v2
 
 ### 2b. AWS Lambda MicroVMs (new — June 2026)
 - [ ] Concept: Firecracker microVM sandboxes vs regular Lambda functions —
@@ -70,6 +73,15 @@ e.g., fix a borrow-checker error unaided, or deploy a Lambda from scratch.
 - [ ] Build/release pipeline for a systemd-managed Rust daemon
 - [ ] Instance selection (Graviton), user-data bootstrap
 - [ ] Comparing operational burden: EC2 vs Fargate vs Lambda for the same service
+
+### 2e. The goldeneye data lake (cross-cutting, spans 2a–2c)
+- [ ] S3 as a data lake: zones (raw/curated/discovery), Hive partitioning,
+      lifecycle to Glacier
+- [ ] Columnar thinking: JSONL vs Parquet, why scans get 10–20× cheaper
+- [ ] Scanning with DuckDB (local, free) and Athena (serverless SQL)
+- [ ] Rust telemetry ingest Lambda: `serde` streaming, buffer reuse,
+      `bytes::Bytes` zero-copy batching
+- 📦 Specs: `002-datalake-v1` (Wave 2), telemetry ingest + archaeologist (Wave 3)
 
 ## Level 3 — Systems engineering & efficiency (the payoff)
 

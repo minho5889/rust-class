@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "goldeneye/envelope/v1",
+  "title": "goldeneye telemetry event envelope v1",
+  "description": "Every event in the goldeneye data lake is one JSON object per line (JSONL) matching this envelope. Schema evolution is by version bump (envelope.v2.json), never in-place edits. Payloads MUST NOT contain secrets or credentials.",
+  "type": "object",
+  "required": ["event_id", "ts", "session_id", "actor", "event_type", "schema_version", "payload"],
+  "properties": {
+    "event_id": {
+      "type": "string",
+      "description": "Unique id; v1 uses <epoch-nanos>-<pid>-<rand>. Wave 3 (Rust ingest Lambda) upgrades to ULID."
+    },
+    "ts": { "type": "string", "format": "date-time", "description": "UTC, RFC3339" },
+    "session_id": { "type": "string", "description": "Claude session id, or 'unknown'" },
+    "spec_id": {
+      "type": ["string", "null"],
+      "description": "Unit-of-Work directory name (e.g. '002-datalake-v1') when the event belongs to a spec"
+    },
+    "actor": {
+      "type": "string",
+      "description": "Who emitted it: human | claude-main | intent-assurance | spec-auditor | property-auditor | hook"
+    },
+    "event_type": {
+      "type": "string",
+      "description": "Dotted family.name. Families: spec.* (lifecycle: doc_written, status_changed), assurance.* (verdict), gate.* (notified, approved, revised), task.* (started, done, deviation), test.* (pbt_run, counterexample, triage), build.* (build, deploy, coldstart, memory), session.* (start, stop), learning.* (concept_mastered, question)"
+    },
+    "schema_version": { "type": "integer", "const": 1 },
+    "payload": { "type": "object", "description": "Event-family-specific fields" }
+  }
+}
