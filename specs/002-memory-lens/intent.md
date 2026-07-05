@@ -70,4 +70,9 @@ behavior, per the learner's correction.
 
 ## Addendum (append-only)
 
-_(none yet)_
+- **2026-07-05 (learner):** "there is no need of learner's involvement because
+  we are building an internal tool that learner can use later but this itself
+  is not a learning material." → memory-lens is **internal infrastructure**;
+  its pedagogical value is realized later, when class exercises use it. The
+  unit closes without a learner session; learning requirements L1–L5 defer to
+  future exercises (see requirements changelog, same date).

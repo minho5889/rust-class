@@ -232,6 +232,18 @@ proptest! {
             1 => {
                 // Duplicate a heap event, renumbering seqs afterwards:
                 // double alloc / double free / stale realloc.
+                //
+                // Triage 2026-07-05 (test bug, see _assurance/triage-log.md):
+                // an EXACT no-op realloc (old==new addr AND old==new size)
+                // duplicates into a still-valid trace — the universal
+                // "duplication invalidates" claim was unsound at that corner.
+                // Exclude only that corner; in-place reallocs with different
+                // sizes remain valid targets (their duplicate has a stale
+                // old_size and is genuinely invalid).
+                let noop = matches!(&events[i].kind,
+                    EventKind::Realloc { old_addr, new_addr, old_size, new_size, .. }
+                        if old_addr == new_addr && old_size == new_size);
+                prop_assume!(!noop);
                 let dup = events[i].clone();
                 events.insert(i + 1, dup);
                 for (n, e) in events.iter_mut().enumerate() {

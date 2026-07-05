@@ -56,10 +56,38 @@ loss marker, scope ordering on 3 exit paths, growth fixtures).
 _(4.1.4 pending — the learner explains L1–L5 unaided in their session; record
 here, including gaps.)_
 
-## Remaining for the learner (the [O] human half)
+## Corrections (append-only — later entries supersede earlier ones)
 
-- **4.1.2**: run `cargo run --features lens` in `playground/02-collections-lens`,
-  open `viewer/memlens.html`, drop in the trace from
-  `datalake/raw-local/traces/dt=2026-07-05/`, scrub; record observations here.
-- **4.1.4**: explain L1–L5 unaided; record explanations (and gaps) here.
-- Ack the R5 wording clarification (requirements changelog, 2026-07-05).
+- **2026-07-05, post property-audit (verdict 75%, blocking):** the R2 row
+  above ("0 counterexamples … no seeds") became **false** after the
+  operations-bolt full run: proptest found a genuine counterexample in the
+  R2 *adversarial* suite — a duplicated exact-no-op realloc is still valid,
+  so the mutation strategy's "duplication invalidates" claim was unsound.
+  **Triage: TEST BUG** (validator behavior correct); full record in
+  `_assurance/triage-log.md`. Strategy fixed (no-op reallocs excluded from
+  duplication targets), the shrunk seed is kept in
+  `crates/memlens-replay/tests/prop_engine.proptest-regressions` as a
+  permanent regression case, suite re-run green. This is the unit's first
+  real shrunk counterexample — and it caught the *test*, not the code.
+
+- **2026-07-05, scope change (intent Addendum):** the unit is internal
+  tooling, not learning material — learner-session items (old 4.1.2/4.1.4)
+  removed as close gates; L1–L5 defer to future exercises that use the
+  lens. Visual [O] verification (R9/R10b/R12/R15) performed via automated
+  Chromium session instead (see below).
+
+## Automated viewer verification (replaces learner session; 2026-07-05)
+
+Playwright + system Chromium against the canonical exercise-02 trace —
+**8/8 checks PASS**: tiles populated; timeline canvas painted; live-bytes
+canvas painted; collections staircase shows the Vec chain; live table with
+scope labels at mid-scrub (R10b); zero-cost marker callout (R12); honesty
+footer (R15); malformed input → line-numbered error banner, no crash.
+Screenshot: `_assurance/viewer-verification.png`.
+
+## For the learner, whenever you want (not gates)
+
+- Try it: `cd playground/02-collections-lens && cargo run --features lens`,
+  then open `viewer/memlens.html` and drop in the trace from
+  `datalake/raw-local/traces/dt=2026-07-05/`. The six lessons are annotated
+  in `src/main.rs`.

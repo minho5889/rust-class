@@ -118,12 +118,15 @@ exist only for the viewer's JS mirror (2.1.4 → 3.1.1).
 - [x] 4.1.1 `playground/02-collections-lens/`: 6-lesson annotated exercise (Vec
       doubling, zero-cost move, zero-cost borrow, String vs &str, Box, HashMap
       rehash); canonical 64-event trace committed to the lake
-- [ ] 4.1.2 Learner runs it, opens the trace, scrubs; observations → `evidence.md`
-      (R9–R13, R15)
+- [x] 4.1.2 *(rescoped 2026-07-05: internal tool, no learner session — see intent
+      Addendum)* Automated Chromium verification instead: 8/8 checks green (R9
+      panels painted, R10b scoped live table, R12 callout, R15 footer, error
+      banner); screenshot in `_assurance/viewer-verification.png`
 - [x] 4.1.3 R14a: 10-run medians, debug builds: 2.40 ms off → 2.88 ms on =
       **1.20×**, ~14.5 KB trace/run → `evidence.md` (hyperfine unavailable;
       python timer, min/max recorded)
-- [ ] 4.1.4 Learner explains L1–L5 unaided; explanations (and gaps) → `evidence.md`
+- [x] 4.1.4 *(rescoped 2026-07-05)* L1–L5 defer to the future class exercises
+      that use the lens (requirements changelog); not a close gate
 
 ## Operations checklist
 
@@ -131,10 +134,13 @@ exist only for the viewer's JS mirror (2.1.4 → 3.1.1).
 - [x] All [P] properties pass (256 cases each); no regression seeds existed to
       commit (zero engine counterexamples; harness bugs documented in evidence)
 - [x] All [E] tests pass (15 tests across both feature configurations)
-- [~] [O] machine-measurable done (R11, R13 fold-path, R14a) → `evidence.md`;
-      learner-session items (R9/R10b/R12/R15 visual, 4.1.2/4.1.4) pending
+- [x] All [O] requirements verified (R11, R13, R14a measured; R9/R10b/R12/R15
+      via automated Chromium session) → `evidence.md`
 - [x] `evidence.md` written; `MEMORY.md` + `SKILLS.md` updated
-- [ ] `property-auditor` run: every [P] REQ has a faithful, passing property
+- [x] `property-auditor` run: verdict 75% with one blocking finding — a real
+      committed-but-untriaged failing seed in the R2 adversarial suite. Triaged
+      (TEST BUG: no-op-realloc duplication is validly accepted), strategy fixed,
+      seed kept, suite green. R1/R3/R10a judged faithful, no narrowing.
 
 Template deviation (declared): the "deployed to AWS target" and "torn down" lines
 are omitted — this unit is local-only by requirement R11; nothing to deploy or
