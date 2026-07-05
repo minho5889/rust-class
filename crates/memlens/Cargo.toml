@@ -1,0 +1,22 @@
+[package]
+name = "memlens"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "goldeneye memory lens: a teaching tracking allocator that records what a Rust program does on the heap"
+
+[features]
+# The lens is off by default: without this feature, MemLens<A> is a transparent
+# passthrough and no tracing code exists in the binary (requirement R6).
+memlens = ["dep:serde", "dep:serde_json"]
+
+[dependencies]
+serde = { version = "1", features = ["derive"], optional = true }
+serde_json = { version = "1", optional = true }
+
+[lints.rust]
+# This crate is the project's ONE sanctioned home for unsafe code (CLAUDE.md
+# unsafe policy). Inside unsafe fns, each unsafe operation still needs its own
+# unsafe block + SAFETY comment:
+unsafe_op_in_unsafe_fn = "deny"

@@ -4,8 +4,8 @@
 > shape, once** — bolts then execute without re-asking. Constitution rule embedded
 > throughout: **[P] property tests are written before the code they test.**
 
-**Status:** awaiting-review
-**Approved:** — · **Assurance verdict:** tasks 86% → revised per
+**Status:** approved
+**Approved:** 2026-07-05 by Minho · **Assurance verdict:** tasks 86% → revised per
 `_assurance/tasks-review.md` (all MEDIUMs + minors addressed, rev 2)
 
 Layer grain: main task = deliverable (design component) · sub task = one bolt ·

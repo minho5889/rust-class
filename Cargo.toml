@@ -1,0 +1,20 @@
+[workspace]
+resolver = "3"
+members = ["crates/*"]
+
+[workspace.package]
+edition = "2024"
+license = "MIT"
+repository = "https://github.com/minho5889/rust-class"
+
+# Shared release profile (CLAUDE.md Rust conventions, research-verified):
+# - thin LTO: ~10-20% runtime + smaller binaries at modest link cost
+# - codegen-units = 1: better codegen, slower compile (fine for deployables)
+# - panic = "abort": no unwind tables; tests are unaffected (the test harness
+#   ignores this setting and always builds with unwind)
+# - strip = "symbols": debuginfo is auto-stripped since 1.77, symbols are not
+[profile.release]
+lto = "thin"
+codegen-units = 1
+panic = "abort"
+strip = "symbols"
