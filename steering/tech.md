@@ -49,9 +49,12 @@
 
 ## Infrastructure as code
 
-Phase 1: none — `cargo lambda deploy` and AWS CLI, to keep the learning surface
-small. Phase 2 (after Lambda mastery): introduce AWS SAM or CDK — decision deferred
-to the learner (tracked in `MEMORY.md` open questions).
+**AWS CDK v2 with TypeScript** (learner decision, 2026-07-05). Phase 1 still uses
+`cargo lambda deploy` + AWS CLI to keep the learning surface small; CDK enters when
+the first AWS-deploying spec is constructed (candidate constructs: `cargo-lambda-cdk`
+RustFunction, DockerImageAsset for Fargate). CDK app lives in `infra/` beside the
+cargo workspace; conventions to be finalized from the CDK deep-research report in
+`research/`.
 
 ## Constraints
 
