@@ -4,13 +4,14 @@
 > shape, once** — bolts then execute without re-asking. Constitution rule embedded
 > throughout: **[P] property tests are written before the code they test.**
 
-**Status:** drafting
-**Approved:** — · **Assurance verdict:** —
+**Status:** awaiting-review
+**Approved:** — · **Assurance verdict:** tasks 86% → revised per
+`_assurance/tasks-review.md` (all MEDIUMs + minors addressed, rev 2)
 
 Layer grain: main task = deliverable (design component) · sub task = one bolt ·
 action item = one commit. Layers collapse where a deliverable is one bolt.
 
-## 1. `crates/memlens` — capture (R1, R2, R4–R8, R14b, R16)
+## 1. `crates/memlens` — capture (R1, R4–R8, R14b, R16; balance R2 is proven in task 2)
 
 **Deliverable:** any playground program, instrumented with two lines + macros,
 emits a valid `memlens.v1` trace into the lake's `dt=` partitions.
@@ -21,32 +22,45 @@ emits a valid `memlens.v1` trace into the lake's `dt=` partitions.
 - [ ] 1.1.2 R14b compile guard + `trybuild` compile-fail test proving release+feature
       builds die with the teaching message
 - [ ] 1.1.3 `datalake/schema/memlens.v1.json` (envelope-compatible; distinct realloc
-      payload with old→new lineage) + serde event structs; schema round-trip [E] test
+      payload with old→new lineage; `meta` and `loss` shapes included) + serde event
+      structs; schema round-trip [E] test
 
 ### 1.2 Bolt: the tracking allocator (R1 property-first)
 - [ ] 1.2.1 **[P] R1 test first**: proptest ops strategy (`Alloc(1..64KiB, align
       1|2|4|8|16) | Grow(idx, 1..4) | Free(idx)`, valid-by-construction) executing
       against `MemLens<System>`, parsing its own trace — red
 - [ ] 1.2.2 Writer: `Mutex<BufWriter<File>>`, **seq assigned inside the lock**,
-      `MEMLENS_TRACE` env + `dt=` default path, `LensSession` flush guard
+      `MEMLENS_TRACE` env + `dt=` default path; `memlens.meta` header event emitted
+      on session start; flush via `LensSession` drop guard **and** `atexit`-style
+      hook (per design)
 - [ ] 1.2.3 Reentrancy guard: const-init `thread_local!` + `try_with` fallback-to-
       forward; `unsafe impl GlobalAlloc` recording alloc/realloc/dealloc — R1 green
-- [ ] 1.2.4 R7a/b [E] tests: sink on closed/full fd → no panic, loss marker with
-      dropped count; R6 [E] check: feature-off build produces no trace + symbol-
-      absence script (`nm | grep -c memlens == 0`)
+      at ≥256 cases, `proptest-regressions/` committed (may split into two commits:
+      guard, then impl)
 
-### 1.3 Bolt: teaching macros
-- [ ] 1.3.1 `lens_scope!` (Drop-guard exit), `lens_var!`, `lens_drop!`, `lens_move!`,
+### 1.3 Bolt: failure paths + feature-off verification
+- [ ] 1.3.1 R7a/b [E] tests: sink on closed/full fd → no panic, loss marker with
+      dropped count
+- [ ] 1.3.2 R6 [E] check: feature-off build produces no trace + symbol-absence
+      script (`nm | grep -c memlens == 0`)
+- [ ] 1.3.3 R8 [E] end-to-end: a real emitted trace file validates against
+      `memlens.v1.json` (not just struct round-trip)
+
+### 1.4 Bolt: teaching macros
+- [ ] 1.4.1 `lens_scope!` (Drop-guard exit), `lens_var!`, `lens_drop!`, `lens_move!`,
       `lens_borrow!` emitting labeled/marker events
-- [ ] 1.3.2 R4 [E] fixture test: scope enter/exit ordering vs inner allocations
-      (incl. early-return and panic paths); R16 verified by the example's diff
-- [ ] 1.3.3 R5 [E] fixture: `Vec` doubling + `HashMap` rehash traces show
+- [ ] 1.4.2 R4 [E] fixture tests: scope enter/exit ordering vs inner allocations
+      (incl. early-return and panic paths) **and** variable labels + move/borrow
+      marker emission; R16 verified by the example's diff
+- [ ] 1.4.3 R5 [E] fixture: `Vec` doubling + `HashMap` rehash traces show
       reconstructable growth chains via realloc lineage
 
 ## 2. `crates/memlens-replay` — replay engine (R2, R3, R10a)
 
 **Deliverable:** validated, deterministic trace replay — the pure core the viewer
-mirrors. One bolt.
+mirrors. One bolt. Cross-crate mechanism: `memlens-replay` dev-depends on
+`memlens` and regenerates harness traces in-process; checked-in golden fixtures
+exist only for the viewer's JS mirror (2.1.4 → 3.1.1).
 
 ### 2.1 Bolt: properties first, then the fold
 - [ ] 2.1.1 **[P] R2 tests first**: `validate()` accepts all harness-generated
@@ -80,7 +94,7 @@ mirrors. One bolt.
 - [ ] 3.2.4 R13 check: synthetic 100k-event trace scrubs < 100 ms/step; drag-drop +
       file input; error banner on malformed traces
 
-## 4. Operations — the learner session (R9–R15, L1–L5)
+## 4. Operations — the learner session (R9–R13, R14a, R15, L1–L5)
 
 ### 4.1 Bolt: first light
 - [ ] 4.1.1 `playground/02-collections-lens/`: prepared exercise (Vec growth,
@@ -99,3 +113,7 @@ mirrors. One bolt.
 - [ ] All [O] requirements observed → numbers in `evidence.md`
 - [ ] `evidence.md` learnings written; `MEMORY.md` + `SKILLS.md` updated
 - [ ] `property-auditor` run: every [P] REQ has a faithful, passing property
+
+Template deviation (declared): the "deployed to AWS target" and "torn down" lines
+are omitted — this unit is local-only by requirement R11; nothing to deploy or
+tear down.

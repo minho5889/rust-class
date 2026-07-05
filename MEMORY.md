@@ -19,9 +19,13 @@
 
 - **Project codename:** goldeneye. Regions: us-east-1 (primary), ap-northeast-1
   (secondary).
-- **Phase:** Wave 1 complete (pipeline v2 codified, telemetry v1 live, no AWS yet).
-- **Active Unit of Work:** none. Next spec number is **002** (001 was retired —
-  see decision log). Wave 2 candidate: `002-datalake-v1` (S3 zones + first scan).
+- **Phase:** Wave 1 complete; spec 002 in flight through pipeline v2.
+- **Active Unit of Work:** `002-memory-lens` — tracking allocator + trace replay +
+  single-file memory dashboard. Intent audited 90%; requirements approved
+  (gate 1, 2026-07-05); design approved (gate 2, same day, after 2 MAJOR audit
+  fixes); tasks.md rev 2 **awaiting gate 3**. Construction starts on approval.
+- The former "datalake-v1 as 002" plan shifts to a later number; memory-lens
+  took 002 (learner's dashboard idea, scoped to memory-only per correction).
 - **Toolchain:** unverified — check `rustup`, `cargo-lambda`, Docker, AWS CLI at the
   start of the first hands-on session.
 
@@ -52,6 +56,20 @@ _(Move items here from `SKILLS.md` when demonstrated, with date and evidence.)_
 - IaC preference (SAM vs CDK) — deferred until after Lambda mastery.
 
 ## Session log
+
+### 2026-07-05 — Session 3: spec 002-memory-lens through the pipeline
+- Learner clarified the dashboard idea: **solely** for understanding Rust memory at
+  runtime (not workflow observability). IDE cut, voice + non-voice helpers deferred.
+- Full pipeline run: intent.md (write-once, verbatim prompts) → intent-assurance
+  blind audit **90%** → requirements draft → spec-auditor **78%** (compound EARS
+  lines, mis-tagged R10 → became flagship [P] replay property) → rev 2 → **gate 1
+  approved** → design draft → spec-auditor **74%** (2 MAJORs: realloc payload
+  lacked old→new lineage; lock-free seq outside writer lock broke ordering) →
+  rev 2 → **gate 2 approved** → tasks draft → auditor **86%** → rev 2 →
+  gate 3 pending.
+- Assurance-before-attention demonstrably worked: 2 contract-level design bugs and
+  a property-tagging error caught by subagents before human review.
+- gate.approved events recorded in the lake; telemetry hooks live all session.
 
 ### 2026-07-05 — Session 2: Pipeline v2 + goldeneye telemetry (Wave 1)
 - Researched property-based testing and Kiro's correctness feature (EARS → extracted
