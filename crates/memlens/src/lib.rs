@@ -43,7 +43,8 @@ compile_error!(
 #[cfg(feature = "memlens")]
 pub mod event;
 #[cfg(feature = "memlens")]
-mod record;
+#[doc(hidden)] // public only for the crate's own failure-injection tests
+pub mod record;
 #[cfg(feature = "memlens")]
 pub use record::{LensSession, flush, session};
 

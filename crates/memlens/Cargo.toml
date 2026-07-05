@@ -18,6 +18,8 @@ libc = { version = "0.2", optional = true }
 
 [dev-dependencies]
 proptest = "1"
+# Unconditional for tests (the lib's serde_json stays optional/feature-gated).
+serde_json = "1"
 
 [lints.rust]
 # This crate is the project's ONE sanctioned home for unsafe code (CLAUDE.md

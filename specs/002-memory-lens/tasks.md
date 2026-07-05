@@ -30,26 +30,29 @@ emits a valid `memlens.v1` trace into the lake's `dt=` partitions.
       structs; schema round-trip [E] test
 
 ### 1.2 Bolt: the tracking allocator (R1 property-first)
-- [ ] 1.2.1 **[P] R1 test first**: proptest ops strategy (`Alloc(1..64KiB, align
+- [x] 1.2.1 **[P] R1 test first**: proptest ops strategy (`Alloc(1..64KiB, align
       1|2|4|8|16) | Grow(idx, 1..4) | Free(idx)`, valid-by-construction) executing
       against `MemLens<System>`, parsing its own trace — red
-- [ ] 1.2.2 Writer: `Mutex<BufWriter<File>>`, **seq assigned inside the lock**,
+- [x] 1.2.2 Writer: `Mutex<BufWriter<File>>`, **seq assigned inside the lock**,
       `MEMLENS_TRACE` env + `dt=` default path; `memlens.meta` header event emitted
-      on session start; flush via `LensSession` drop guard **and** `atexit`-style
-      hook (per design)
-- [ ] 1.2.3 Reentrancy guard: const-init `thread_local!` + `try_with` fallback-to-
-      forward; `unsafe impl GlobalAlloc` recording alloc/realloc/dealloc, with a
-      `// SAFETY:` comment on every unsafe block — R1 green at ≥256 cases,
-      `proptest-regressions/` committed (may split into two commits: guard, then
-      impl)
+      on session start; flush via `LensSession` drop guard **and** `atexit` hook
+      (libc). *Addition: public `flush()` — harnesses reading a live trace hit
+      torn lines otherwise (found by the red test).*
+- [x] 1.2.3 Reentrancy guard: const-init `thread_local!` + `try_with` fallback-to-
+      forward; `unsafe impl GlobalAlloc` recording alloc/realloc/dealloc, SAFETY
+      comment on every unsafe block — R1 green at 256 cases. *No regression seeds:
+      the only red-phase failures were harness bugs, fixed in-test.*
 
 ### 1.3 Bolt: failure paths + feature-off verification
-- [ ] 1.3.1 R7a/b [E] tests: sink on closed/full fd → no panic, loss marker with
-      dropped count
-- [ ] 1.3.2 R6 [E] check: feature-off build produces no trace + symbol-absence
-      script (`nm | grep -c memlens == 0`)
-- [ ] 1.3.3 R8 [E] end-to-end: a real emitted trace file validates against
-      `memlens.v1.json` (not just struct round-trip)
+- [x] 1.3.1 R7a/b [E] tests: injected sink failure → no panic, exactly one loss
+      marker with dropped count, healed write follows it. *Deviation: failure
+      injection via a doc(hidden) test hook instead of closed/full fd — an fd
+      that never heals can't demonstrate the loss-marker-on-resume path.*
+- [x] 1.3.2 R6 [E] check: feature-off release run produces no trace file; `nm`
+      shows zero memlens symbols
+- [x] 1.3.3 R8 [E] end-to-end: real demo trace validates against
+      `memlens.v1.json`, schema-driven (required lists read from the schema file
+      so writer and schema can't drift silently)
 
 ### 1.4 Bolt: teaching macros
 - [ ] 1.4.1 `lens_scope!` (Drop-guard exit), `lens_var!`, `lens_drop!`, `lens_move!`,
