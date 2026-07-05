@@ -76,8 +76,12 @@ _(Move items here from `SKILLS.md` when demonstrated, with date and evidence.)_
   TEST BUG, strategy fixed, seed kept (triage-log.md). PBT audited the test.
 - Rescoped mid-run per learner: internal tool, no learner gates; Chromium
   verification 8/8 green (screenshot in _assurance/).
-- Spec CLOSED: merged to main, tagged spec/002-memory-lens. Next: branch-per-
-  spec (claude/NNN-*) for whatever comes next.
+- Spec CLOSED (all gates, properties, [O] verifications, triage done).
+  ⚠ merge-to-main + `spec/002-memory-lens` tag are created locally but the
+  remote returned 403 — this session may only push the designated branch.
+  **Deferred**: learner (or a session with push rights) runs
+  `git branch main <head> && git tag spec/002-memory-lens <head> && git push origin main spec/002-memory-lens`.
+  The working branch holds the complete history either way.
 
 ### 2026-07-05 — Session 5: gate 3 approved; construction begins (bolt 1.1 ✅)
 - Learner approved tasks.md (gate 3) — all three 002 gates now passed.
