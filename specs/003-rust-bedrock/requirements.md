@@ -4,7 +4,8 @@
 > before review. ✋ **Human gate.**
 
 **Status:** awaiting-review
-**Approved:** — · **Assurance verdicts:** intent 90% (`_assurance/intent-review.md`)
+**Approved:** — · **Assurance verdicts:** intent 90% · requirements 72% → revised
+rev 2 per `_assurance/requirements-review.md` (all MAJOR/MODERATE addressed)
 
 ## User stories
 
@@ -20,28 +21,43 @@
 
 ### A. `glake` functionality (std-only)
 
+> "Well-formed envelope" = a JSON object carrying every key in the **`required`
+> set of `datalake/schema/envelope.v1.json`** (the single source of truth:
+> `event_id`, `ts`, `session_id`, `actor`, `event_type`, `schema_version`,
+> `payload`; `spec_id` is nullable/optional). v0 checks **key presence only** —
+> it does *not* validate `ts` as RFC3339 or `schema_version == 1` (deliberate;
+> deeper validation is a candidate 004 feature). glake reads the required-key
+> list from the schema file, not a frozen inline copy.
+
 | ID | Requirement (EARS) | Tag |
 |---|---|---|
-| R1 | WHEN `glake validate <path>` runs over a lake dir or file THE SYSTEM SHALL report each JSONL line that is not a well-formed envelope (missing any of `event_id`,`ts`,`session_id`,`event_type`,`schema_version`,`payload`), naming file and line number, and exit non-zero if any are found | [E] |
-| R2 | WHEN `glake stats <path>` runs THE SYSTEM SHALL print counts of events grouped by `event_type` and by `dt=` day, plus the total | [E] |
-| R3 | WHEN the input path is a directory THE SYSTEM SHALL recurse into `dt=*/` partitions and process every `*.jsonl` file; WHEN it is a single file, process just that file | [E] |
-| R4 | THE SYSTEM SHALL use **only the Rust standard library** for its functionality — no external crates for parsing, CLI, or serialization (the in-repo `memlens` crate behind an off-by-default feature is the sole exception, see R7) | [P] |
-| R5 | IF a line is empty or whitespace THEN THE SYSTEM SHALL skip it without counting it as malformed | [E] |
+| R1a | WHEN `glake validate <path>` finds a JSONL line that is not a well-formed envelope (any required key absent, per the schema registry) THE SYSTEM SHALL report it naming the file and 1-based line number | [E] |
+| R1b | WHEN `glake validate <path>` completes THE SYSTEM SHALL exit non-zero if and only if at least one malformed line was found | [E] |
+| R2 | WHEN `glake stats <path>` runs THE SYSTEM SHALL print counts of events grouped by `event_type` and, separately, by `dt=` day, plus the grand total | [E] |
+| R3a | WHEN the input path is a directory THE SYSTEM SHALL recurse into `dt=*/` partitions and process every `*.jsonl` file within | [E] |
+| R3b | WHEN the input path is a single file THE SYSTEM SHALL process just that file | [E] |
+| R5 | IF a line is empty or whitespace-only THEN THE SYSTEM SHALL skip it — neither counted as an event nor reported as malformed | [E] |
 | R6 | IF the path does not exist or cannot be read THEN THE SYSTEM SHALL print a clear error to stderr and exit non-zero, without panicking | [E] |
 
 ### B. Correctness properties (hand-rolled parser)
 
 | ID | Requirement (EARS) | Tag |
 |---|---|---|
-| R8 | THE minimal JSON-value extraction glake uses SHALL, for any input string, either return the requested top-level string/number field or a "not found / not that type" result — never panic and never read past the input | [P] |
-| R9 | WHEN `stats` counts events THE SYSTEM SHALL report a per-`event_type` total whose sum equals the grand total of valid events (no double-counting, no drops) | [P] |
+| R8 | THE minimal JSON-value extraction glake uses SHALL, for any input string, either return the requested top-level string field or a "not found / not that type" result — never panicking and never reading past the input | [P] |
+| R9 | WHEN `stats` counts events THE per-`event_type` totals AND the per-`dt=`-day totals SHALL each sum to the grand total of valid events (no double-count, no drop, on either grouping axis) | [P] |
 
-### C. Instrumentation & learning
+### C. Instrumentation & operational
 
 | ID | Requirement (EARS) | Tag |
 |---|---|---|
-| R7 | WHERE the `lens` cargo feature is enabled THE SYSTEM SHALL install `memlens` as its global allocator and emit a trace; WHERE disabled, glake SHALL contain no memlens code (default) — resolving the std-only/instrumentation tension: std-only is the functional rule, the lens is opt-in and in-repo | [E] |
-| R10 | THE SYSTEM SHALL be usable as `glake stats datalake/raw-local` against the repo's real lake and produce correct counts cross-checked against `datalake/queries/scan.sh` | [O] |
+| R4 | THE default-feature dependency tree SHALL contain no external crates — only `std`; a check (e.g. `cargo tree`) SHALL fail if any is added; `memlens` SHALL appear only under `--features lens` | [O] |
+| R7a | WHERE the `lens` cargo feature is enabled THE SYSTEM SHALL install `memlens` as its global allocator and emit a trace | [E] |
+| R7b | WHERE the `lens` feature is disabled (default) THE SYSTEM SHALL compile out all memlens code — no memlens symbols in the binary | [O] |
+| R10 | THE SYSTEM SHALL run as `glake stats datalake/raw-local` against the repo's real lake and produce counts cross-checked equal to `datalake/queries/scan.sh` | [O] |
+
+> Note (std-only vs the lens): std-only is the *functional* rule (R4). The lens
+> is the sole, in-repo, off-by-default exception (R7a/b) — it observes, never
+> changes glake's behavior.
 
 ## Learning requirements
 
@@ -55,7 +71,14 @@ learner session required, per the 002 precedent):
 | L2 | `&str` vs `String`: parsing borrows slices of the input line (`&str`) rather than allocating, and where an owned `String` is genuinely needed |
 | L3 | `enum` + `match`: event kinds / parse outcomes modeled as enums, exhaustively matched |
 | L4 | `Option`/`Result` + `?`: fallible steps returning `Result`, no `unwrap` in the tool's logic paths |
-| L5 | iterators: counting/grouping expressed as iterator chains over borrowed data |
+| L5 | iterators + `HashMap`: counting/grouping expressed as iterator chains over borrowed data, aggregated via `HashMap::entry` |
+| L6 | **memory observed**: glake run under `--features lens`; evidence.md notes what the trace reveals about `&str`-vs-`String` and `Vec`/`HashMap` growth in parse→count (ties L2/L5 to real allocation behavior — the reason R7 exists) |
+
+> SKILLS note (per requirements audit MODERATE-5): L5 exercises **iterators** and
+> **`HashMap`** — both std, both usable without authoring traits/generics, so no
+> 003/004 boundary crossing — but neither is currently an enumerated Level-1b
+> line item (only `Vec` is). Curriculum bookkeeping: add them to SKILLS 1b at
+> close, or track here. Not a scope defect, just an unlisted std skill.
 
 ## Out of scope
 
@@ -76,3 +99,4 @@ learner session required, per the 002 precedent):
 | Date | Change | Trigger | Re-gated? |
 |---|---|---|---|
 | 2026-07-05 | Initial draft; intent advisories resolved (R7 lens tension; filter deferred) | intent audit 90% | first gate |
+| 2026-07-05 | Rev 2: R1 now validates against the schema registry's required set incl. **`actor`** (was missing — would have passed malformed lines) and references the registry not an inline copy; R4 retagged [P]→[O] (build constraint, not a property); R3→R3a/R3b and R7→R7a/R7b (compound EARS split, R7b→[O]); R9 extended to conserve the by-day axis too; added L6 (observe memory in the lens) + SKILLS note on L5/HashMap | spec-auditor 72% (MAJOR-1/2, MODERATE-3/4/5, MINOR-6) | pre-gate revision |
