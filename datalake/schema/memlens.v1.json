@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "goldeneye/memlens/v1",
+  "title": "goldeneye memlens trace event payloads v1",
+  "description": "Payload shapes for memlens.* trace events (envelope.v1 carries them; envelope actor is 'memlens'). One JSONL line per event; seq is assigned under the writer lock so file order equals seq order. Addresses are opaque per-run strings (ASLR). Source of truth for field names: crates/memlens/src/event.rs (round-trip tested).",
+  "$defs": {
+    "memlens.alloc": {
+      "type": "object",
+      "required": ["addr", "size", "align", "seq"],
+      "properties": {
+        "addr": { "type": "string", "pattern": "^0x[0-9a-f]+$" },
+        "size": { "type": "integer", "minimum": 1 },
+        "align": { "type": "integer", "minimum": 1 },
+        "seq": { "type": "integer", "minimum": 1 },
+        "label": { "type": "string" }
+      }
+    },
+    "memlens.dealloc": { "$ref": "#/$defs/memlens.alloc" },
+    "memlens.realloc": {
+      "type": "object",
+      "required": ["old_addr", "new_addr", "old_size", "new_size", "align", "seq"],
+      "properties": {
+        "old_addr": { "type": "string" },
+        "new_addr": { "type": "string" },
+        "old_size": { "type": "integer", "minimum": 1 },
+        "new_size": { "type": "integer", "minimum": 1 },
+        "align": { "type": "integer", "minimum": 1 },
+        "seq": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "memlens.scope_enter": {
+      "type": "object",
+      "required": ["label", "seq"],
+      "properties": {
+        "label": { "type": "string" },
+        "kind": { "enum": ["move", "borrow", "drop"] },
+        "seq": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "memlens.scope_exit": { "$ref": "#/$defs/memlens.scope_enter" },
+    "memlens.marker": { "$ref": "#/$defs/memlens.scope_enter" },
+    "memlens.loss": {
+      "type": "object",
+      "required": ["dropped", "seq"],
+      "properties": {
+        "dropped": { "type": "integer", "minimum": 1 },
+        "seq": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "memlens.meta": {
+      "type": "object",
+      "required": ["program", "pid", "started_at", "version"],
+      "properties": {
+        "program": { "type": "string" },
+        "pid": { "type": "integer" },
+        "started_at": { "type": "string", "format": "date-time" },
+        "version": { "type": "string" }
+      }
+    }
+  }
+}

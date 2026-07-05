@@ -17,14 +17,15 @@ action item = one commit. Layers collapse where a deliverable is one bolt.
 emits a valid `memlens.v1` trace into the lake's `dt=` partitions.
 
 ### 1.1 Bolt: workspace, skeleton, build guard
-- [ ] 1.1.1 Root `Cargo.toml` workspace (`members = ["crates/*"]`) with shared
+- [x] 1.1.1 Root `Cargo.toml` workspace (`members = ["crates/*"]`) with shared
       `[profile.release]` (thin LTO, codegen-units=1, panic=abort, strip — per
       CLAUDE.md Rust conventions); `crates/memlens` skeleton with `memlens`
       feature flag, `#![deny(unsafe_op_in_unsafe_fn)]`; passthrough `MemLens<A>`
       (feature off)
-- [ ] 1.1.2 R14b compile guard + `trybuild` compile-fail test proving release+feature
-      builds die with the teaching message
-- [ ] 1.1.3 `datalake/schema/memlens.v1.json` (envelope-compatible; distinct realloc
+- [x] 1.1.2 R14b compile guard + compile-fail test proving release+feature builds
+      die with the teaching message. *Deviation: cargo-invoking test instead of
+      trybuild — trybuild can't vary build profiles, and the profile is the point.*
+- [x] 1.1.3 `datalake/schema/memlens.v1.json` (envelope-compatible; distinct realloc
       payload with old→new lineage; `meta` and `loss` shapes included) + serde event
       structs; schema round-trip [E] test
 

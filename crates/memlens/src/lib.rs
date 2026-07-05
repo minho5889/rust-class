@@ -40,6 +40,9 @@ compile_error!(
      release/bench builds. Trace in debug builds; benchmark without the lens."
 );
 
+#[cfg(feature = "memlens")]
+pub mod event;
+
 use std::alloc::{GlobalAlloc, Layout, System};
 
 /// A wrapper around any global allocator that (with the `memlens` feature)

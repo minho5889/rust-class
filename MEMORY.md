@@ -63,6 +63,21 @@ _(Move items here from `SKILLS.md` when demonstrated, with date and evidence.)_
 
 ## Session log
 
+### 2026-07-05 — Session 5: gate 3 approved; construction begins (bolt 1.1 ✅)
+- Learner approved tasks.md (gate 3) — all three 002 gates now passed.
+- **First Rust in the repo.** Bolt 1.1 complete, three commits: (1.1.1)
+  workspace + shared release profile + `MemLens<A>` passthrough allocator with
+  per-block SAFETY contracts + feature-off integration test; (1.1.2) R14b
+  compile guard proven by a cargo-invoking test (deviation from trybuild noted —
+  trybuild can't vary profiles); (1.1.3) `memlens.v1.json` schema + serde
+  payload structs with round-trip tests. fmt/clippy/tests green in both feature
+  configurations. Toolchain: rustc 1.94.1, edition 2024.
+- Concepts introduced (not yet learner-verified): `GlobalAlloc` + unsafe
+  contracts, const fn constructors for allocator statics, integration-test
+  binaries as the only place to install `#[global_allocator]`.
+- **Next: bolt 1.2** — the tracking allocator proper, R1 property test FIRST
+  (red), then writer (seq under lock) + reentrancy guard to make it green.
+
 ### 2026-07-05 — Session 4: research triad + conventions hardening
 - Three deep-research workflows (≈320 agents, 3-vote adversarial verification):
   `research/typescript-cdk-for-goldeneye.md` (25/25 confirmed),
