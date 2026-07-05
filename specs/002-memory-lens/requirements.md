@@ -3,16 +3,18 @@
 > **Doc 2 of 4. Derived from `intent.md` ONLY.** Audited by `spec-auditor` before
 > review. ✋ **Human gate.**
 
-**Status:** drafting
-**Approved:** — · **Assurance verdict:** intent 90% (see `_assurance/intent-review.md`)
+**Status:** awaiting-review
+**Approved:** — · **Assurance verdicts:** intent 90% · requirements 78% → revised per
+`_assurance/requirements-review.md` (all MAJOR/MEDIUM findings addressed, rev 2)
 
 ## User stories
 
 - As a learner, I want to run any of my Rust programs with instrumentation and then
   *watch* what it did in memory, so that ownership, allocation, and drop become
   visible phenomena instead of compiler abstractions.
-- As a learner, I want collection types' behavior (growth, reallocation) shown
-  explicitly, so that I understand what `Vec::push` or `String::from` really costs.
+- As a learner, I want collection types' behavior (growth, reallocation, rehashing)
+  shown explicitly, so that I understand what `Vec::push`, `String::from`, or
+  `HashMap::insert` really costs.
 - As a learner, I want the *absence* of allocations to be visible too (moves,
   borrows), so that I see why Rust is efficient where GC languages are not.
 
@@ -23,39 +25,47 @@
 | ID | Requirement (EARS) | Tag |
 |---|---|---|
 | R1 | WHEN an instrumented program performs a heap allocation, reallocation, or deallocation THE SYSTEM SHALL record a trace event with operation kind, address, size, alignment, and monotonic sequence number | [P] |
-| R2 | THE SYSTEM SHALL produce traces that balance: every deallocation event matches a prior allocation of the same address and size, and live-bytes computed from the trace never goes negative | [P] |
-| R3 | WHEN tracing ends THE SYSTEM SHALL report final live bytes equal to (total allocated − total freed) computed from the event stream | [P] |
-| R4 | WHEN a scope or variable annotated with a memlens teaching macro is created or dropped THE SYSTEM SHALL record a labeled scope/drop event at the correct sequence position | [E] |
-| R5 | WHEN a `Vec<T>` grows beyond capacity inside a traced region THE trace SHALL contain the corresponding reallocation events showing the capacity growth pattern | [E] |
-| R6 | WHILE the `memlens` feature flag is disabled THE SYSTEM SHALL add zero code to the binary (no trace output, no allocator wrapping) | [E] |
-| R7 | IF the trace sink cannot be written (e.g., disk full) THEN THE SYSTEM SHALL not panic the traced program; it SHALL drop events and record a single loss marker | [E] |
+| R2 | WHEN a deallocation or reallocation event is recorded THE SYSTEM SHALL have previously recorded a matching allocation of the same address and size (trace balance; live-bytes non-negativity follows as a corollary) | [P] |
+| R3 | WHEN live bytes are computed at any prefix of the trace THE SYSTEM SHALL yield exactly (bytes allocated − bytes freed) over that prefix | [P] |
+| R4 | WHEN a scope or variable annotated with a memlens teaching macro is created or dropped THE SYSTEM SHALL record a labeled event ordered consistently with the allocation events inside that scope (creation before them, drop after them) | [E] |
+| R5 | WHEN a `Vec<T>` or `HashMap<K,V>` grows beyond capacity inside a traced region THE SYSTEM SHALL record the corresponding reallocation events from which the growth pattern is reconstructable | [E] |
+| R6 | WHERE the `memlens` cargo feature is disabled THE SYSTEM SHALL leave the program unchanged by observable checks: no trace output is produced, the global allocator is not replaced, and no memlens symbols appear in the release binary | [E] |
+| R7a | IF the trace sink cannot be written (e.g., disk full) THEN THE SYSTEM SHALL NOT panic or abort the traced program | [E] |
+| R7b | IF trace events are dropped due to a sink failure THEN THE SYSTEM SHALL record a single loss marker once writing resumes or at trace end | [E] |
 | R8 | THE SYSTEM SHALL write traces as envelope-compatible JSONL (family `memlens.*`, schema registered in `datalake/schema/`) so traces land in the goldeneye lake | [E] |
+| R16 | WHEN instrumenting a playground exercise THE SYSTEM SHALL require only: adding the crate dependency, one global-allocator declaration, and macros at the sites the learner chooses to annotate — no other program changes | [E] |
 
-### B. Dashboard (the memory lens viewer)
+### B. Replay engine + dashboard (the memory lens viewer)
 
 | ID | Requirement (EARS) | Tag |
 |---|---|---|
 | R9 | WHEN the learner opens a trace file in the viewer THE SYSTEM SHALL render, from the same trace at once: a scrubbable heap timeline, a live-bytes graph, and a collections panel showing capacity growth | [O] |
-| R10 | WHEN the learner scrubs to any point in the timeline THE SYSTEM SHALL show the set of live allocations at that instant with their scope labels | [O] |
+| R10a | WHEN a trace is replayed to any sequence point t THE SYSTEM SHALL compute a live-allocation set identical to the result of applying events 1..t in order (replay determinism — the headless engine the viewer sits on) | [P] |
+| R10b | WHEN the learner scrubs to any point in the timeline THE viewer SHALL display the R10a live set with its scope labels | [O] |
 | R11 | THE viewer SHALL run fully client-side from a single self-contained file (no server, no AWS dependency) | [O] |
-| R12 | WHEN a traced region contains a move or borrow annotated via macro THE viewer SHALL make the absence of allocation events at that point explicit (the "zero-cost" callout) | [O] |
-| R13 | THE viewer SHALL remain responsive (scrub without visible lag) for traces from the class's playground exercises, sized ≤ 100k events | [O] |
+| R12 | WHEN a traced region contains a move or borrow annotated via macro THE viewer SHALL render an explicit zero-allocation marker at that point (the "zero-cost" callout) | [O] |
+| R13 | WHEN the learner scrubs a trace of ≤ 100k events THE viewer SHALL update the display within 100 ms per scrub step | [O] |
 
 ### C. Honesty constraints
 
 | ID | Requirement (EARS) | Tag |
 |---|---|---|
-| R14 | THE SYSTEM SHALL document measured tracing overhead, and tracing SHALL never be enabled in benchmark or production builds | [O] |
+| R14a | THE SYSTEM SHALL have its tracing overhead measured and documented in this spec's `evidence.md` | [O] |
+| R14b | IF the `memlens` feature is enabled in a release or benchmark build profile THEN the build SHALL fail with a compile error (guard in the crate itself) | [E] |
 | R15 | THE viewer SHALL label what it cannot see (stack frames, non-annotated borrows) rather than implying the heap trace is the whole memory story | [O] |
 
 ## Learning requirements
+
+Verified at spec close: the learner explains each item unaided; the explanation (or
+its gaps) is recorded in `evidence.md`.
 
 | ID | The learner SHALL be able to explain… |
 |---|---|
 | L1 | what the `GlobalAlloc` trait is, why implementing it requires `unsafe`, and what invariants the implementer promises |
 | L2 | why moves and borrows produce no allocation events, and what that means for Rust vs GC languages |
-| L3 | `Vec`'s growth strategy as observed in a real trace (amortized doubling), and `String` vs `&str` allocation behavior |
+| L3 | `Vec`'s growth strategy and `HashMap`'s rehashing as observed in real traces; `String` vs `&str` allocation behavior |
 | L4 | why every allocation in a trace has a deterministic matching free (ownership + `Drop`), with a real trace as evidence |
+| L5 | stack vs heap: which variables in an annotated exercise never appear in the heap trace, and why `Box<T>` moves a value to the heap |
 
 ## Out of scope
 
@@ -63,19 +73,22 @@
 - Voice or chat interfaces (deferred; possible late-stage unit).
 - Workflow/pipeline observability dashboards (explicitly rejected in intent).
 - Async/`tokio` allocation attribution (later unit — sync programs first).
+- `Rc`/`Arc` refcount visualization (deferred to a later unit; needs wrapper types,
+  not just the allocator).
 - Production-grade profiling accuracy (dhat/bytehound exist; this is a teaching lens).
 - Hosting the viewer on AWS (later; v0 is a local file).
 
 ## Open questions (answered before approval)
 
-- [ ] From intent audit: confirm the IDE cut and voice-bot deferral (proceeded on
-      "Lets go" but never explicitly re-confirmed).
+- [ ] From intent audit: confirm the IDE cut and voice-bot deferral — and the
+      narrower nuance: should v0 include any *non-voice* interactive helper
+      (e.g., a "explain this allocation" text panel), or is that deferred too?
 - [ ] From intent audit: confirm v0 audience = the learner running programs locally
       (not other users, not deployed AWS workloads).
-- [ ] R13 threshold: is 100k events the right v0 bound, or should we target bigger
-      traces from day one?
+- [ ] R13 threshold: is 100k events / 100 ms the right v0 bound?
 
 ## Changelog
 
 | Date | Change | Trigger (change protocol) | Re-gated? |
 |---|---|---|---|
+| 2026-07-05 | Rev 2: split R2/R7/R14, R10→R10a[P]+R10b[O], R6 rewritten as WHERE-pattern with observables, added R16 (ergonomics), R14b compile guard, HashMap in R5/L3, added L5 (Box/stack-vs-heap), Rc/Arc explicitly deferred, vague phrases concretized | spec-auditor findings 1–6 (78%) | pre-gate revision, no approval yet |
