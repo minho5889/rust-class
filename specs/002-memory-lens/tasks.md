@@ -19,7 +19,7 @@ emits a valid `memlens.v1` trace into the lake's `dt=` partitions.
 ### 1.1 Bolt: workspace, skeleton, build guard
 - [ ] 1.1.1 Root `Cargo.toml` workspace (`members = ["crates/*"]`) with shared
       `[profile.release]` (thin LTO, codegen-units=1, panic=abort, strip — per
-      steering/tech.md 2026-07-05); `crates/memlens` skeleton with `memlens`
+      CLAUDE.md Rust conventions); `crates/memlens` skeleton with `memlens`
       feature flag, `#![deny(unsafe_op_in_unsafe_fn)]`; passthrough `MemLens<A>`
       (feature off)
 - [ ] 1.1.2 R14b compile guard + `trybuild` compile-fail test proving release+feature

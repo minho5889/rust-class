@@ -45,6 +45,7 @@
 | 2026-07-05 | Git strategy from 002's close: merge to `main` + tag `spec/NNN-name` at spec close; branch-per-spec (`claude/NNN-*`) thereafter | `main` = sum of approved work; tags = spec-boundary markers for the lake; learner asked for worthwhile fixes to be implemented |
 | 2026-07-05 | **IaC = AWS CDK v2 with TypeScript** (over SAM/Terraform/Pulumi); CDK app in `infra/` beside the cargo workspace; introduced when the first AWS-deploying spec constructs | Learner decision; conventions to be refined from CDK deep-research report |
 | 2026-07-05 | Research reports live in `research/` as `<topic>.md` (no dates in filenames — date in header, versions via git) | Learner requested a research folder with three reports (best practices / Rust-on-AWS / CDK); learner amended: no date in the name |
+| 2026-07-05 | **`steering/` deleted; consolidated into CLAUDE.md v3** (product/tech/structure merged, conventions + file maps deduplicated). Doc set = CLAUDE.md + MEMORY.md + SKILLS.md + research/ | Steering was a Kiro mechanism reimplemented atop Claude Code's native auto-loaded CLAUDE.md; caused real drift (same facts maintained in two places twice in one day). Learner: "yes do it" |
 
 ## Concepts mastered
 

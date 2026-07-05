@@ -32,8 +32,8 @@ metrics) streams into the **goldeneye data lake** (`datalake/`) for pattern mini
 | [`CLAUDE.md`](CLAUDE.md) | The constitution — how the AI assistant works in this repo |
 | [`MEMORY.md`](MEMORY.md) | Living memory — learner profile, progress, decisions, session log |
 | [`SKILLS.md`](SKILLS.md) | The curriculum — a skill tree from Rust fundamentals to a four-target cost benchmark |
-| [`steering/`](steering/) | Always-on context: product goals, tech stack, repo structure |
 | [`specs/`](specs/) | Units of Work — five-doc template in `_template/`, numbering starts at 002 |
+| [`research/`](research/) | Verified deep-research reports feeding conventions and curriculum |
 | [`datalake/`](datalake/) | Workflow telemetry: envelope schema + local raw zone (S3 zones come in Wave 2) |
 
 ## The four compute targets
