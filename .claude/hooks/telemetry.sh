@@ -14,7 +14,9 @@ mkdir -p "$DIR" || exit 0
 STDIN_JSON="$(cat 2>/dev/null || true)"
 PAYLOAD='{}'
 if [ -n "$STDIN_JSON" ] && command -v jq >/dev/null 2>&1; then
-  PAYLOAD="$(printf '%s' "$STDIN_JSON" | jq -c '.' 2>/dev/null || echo '{}')"
+  # Drop bulky duplicated conversation content; the transcript is the record of
+  # what was said — the lake records that/when it happened.
+  PAYLOAD="$(printf '%s' "$STDIN_JSON" | jq -c 'del(.last_assistant_message)' 2>/dev/null || echo '{}')"
 fi
 
 TS="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
