@@ -3,9 +3,10 @@
 > **Doc 2 of 4. Derived from `intent.md` ONLY.** Audited by `spec-auditor` before
 > review. ✋ **Human gate.**
 
-**Status:** awaiting-review
-**Approved:** — · **Assurance verdicts:** intent 90% · requirements 78% → revised per
-`_assurance/requirements-review.md` (all MAJOR/MEDIUM findings addressed, rev 2)
+**Status:** approved
+**Approved:** 2026-07-05 by Minho ("All correct move on") · **Assurance verdicts:**
+intent 90% · requirements 78% → revised per `_assurance/requirements-review.md`
+(all MAJOR/MEDIUM findings addressed, rev 2)
 
 ## User stories
 
@@ -80,12 +81,10 @@ its gaps) is recorded in `evidence.md`.
 
 ## Open questions (answered before approval)
 
-- [ ] From intent audit: confirm the IDE cut and voice-bot deferral — and the
-      narrower nuance: should v0 include any *non-voice* interactive helper
-      (e.g., a "explain this allocation" text panel), or is that deferred too?
-- [ ] From intent audit: confirm v0 audience = the learner running programs locally
-      (not other users, not deployed AWS workloads).
-- [ ] R13 threshold: is 100k events / 100 ms the right v0 bound?
+- [x] IDE cut and voice-bot deferral confirmed; non-voice interactive helper also
+      deferred (not in these requirements) — learner, 2026-07-05 ("All correct").
+- [x] v0 audience = the learner running programs locally — confirmed 2026-07-05.
+- [x] R13 bound (100k events / 100 ms) confirmed — 2026-07-05.
 
 ## Changelog
 
