@@ -110,7 +110,8 @@ Spec-doc writes and gate notifications are captured automatically. Rules:
 - Cargo **workspace** at repo root; one crate per deployable, shared code in
   `crates/shared`. Target **ARM64** (Graviton) everywhere.
 - Lambda: `cargo lambda build --release --arm64`; runtime `provided.al2023`.
-- Fargate: multi-stage Dockerfile (`rust:slim` → distroless/`scratch`).
+- Fargate: multi-stage Dockerfile (`rust:slim` → `distroless-static` or
+  `chainguard-static`; not bare `scratch`), musl static binaries.
 - EC2: release binary + systemd unit.
 - Errors: `thiserror` (libs) / `anyhow` (bins). Async: `tokio`. Tests: built-in +
   `proptest`. Logging: `tracing`. AWS: official `aws-sdk-*` crates.

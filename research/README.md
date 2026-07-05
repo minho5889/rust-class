@@ -8,7 +8,7 @@ re-running a topic updates the file, git history keeps the versions).
 | Report | Status |
 |---|---|
 | `rust-best-practices-and-big-tech.md` | ✅ 2026-07-05 (24/25 confirmed, 1 refuted) |
-| `rust-on-aws-compute.md` | ⏳ in progress |
+| `rust-on-aws-compute.md` | ✅ 2026-07-05 (24/25 confirmed, 1 refuted) |
 | `typescript-cdk-for-goldeneye.md` | ✅ 2026-07-05 (25/25 claims confirmed) |
 
 These feed: steering conventions, `SKILLS.md` curriculum, CI gates, and the

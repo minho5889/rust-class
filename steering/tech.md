@@ -53,8 +53,20 @@ Conventions adopted 2026-07-05 from `research/rust-best-practices-and-big-tech.m
 |---|---|---|---|
 | Lambda | `cargo-lambda` (`build --release --arm64`, `deploy`) | `provided.al2023` | Rust GA on Lambda since Nov 2025; ~15 ms cold starts |
 | Lambda MicroVMs | `aws-sdk` lifecycle calls + console/CLI | Firecracker microVM | Launched 2026-06-22; ARM64 only; ≤16 vCPU / 32 GB / 32 GB disk / 8 h |
-| ECS Fargate | Docker multi-stage (`rust:slim` → distroless/`scratch`), ECR | container | Static musl builds preferred for `scratch` |
-| EC2 | release binary + systemd unit, user-data bootstrap | Graviton instance | Compare ops burden vs the managed options |
+| ECS Fargate | Docker multi-stage (`rust:slim` builder → `distroless-static`/`chainguard-static`), ECR | container | musl static binaries (verify with `ldd`); never build ARM64 images under QEMU — `cargo-zigbuild` + `--platform=$BUILDPLATFORM` or native ARM runners |
+| EC2 | release binary + systemd unit, user-data bootstrap | Graviton instance | `aarch64-unknown-linux-gnu` is Rust Tier 1; `-Ctarget-cpu=neoverse-n1` when Graviton-only |
+
+## Graviton/Lambda rules (from `research/rust-on-aws-compute.md`, 2026-07-05)
+
+- **Thread pools on Lambda**: size from the memory-derived vCPU count
+  (1,769 MB ≈ 1 vCPU, 10,240 MB ≈ 6), never `available_parallelism()` — the
+  sandbox over-reports.
+- **Arch-backend check**: any crate doing crypto/hash/SIMD work must have its
+  ARM64 hardware backend verified active (the sha2 lesson: 4–5× swing).
+- **Binary budget**: `aws-sdk-*` adds ~10 MB+ (aws-lc-rs ~4 MB); check with
+  `cargo-bloat` in deployable specs.
+- MicroVMs / Managed Instances specifics are **unverified** — their specs start
+  with primary-source verification.
 
 ## Data lake (goldeneye telemetry)
 
