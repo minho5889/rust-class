@@ -1,102 +1,112 @@
 # Requirements — 003 rust-bedrock
 
-> **Doc 2 of 4. Derived from `intent.md` ONLY.** Audited by `spec-auditor`
-> before review. ✋ **Human gate.**
-
 **Status:** awaiting-review
-**Approved:** — · **Assurance verdicts:** intent 90% · requirements 72% → revised
-rev 2 per `_assurance/requirements-review.md` (all MAJOR/MODERATE addressed)
+**Approved:** — · **Assurance:** intent 90%, requirements 72% → revised (rev 2)
 
-## User stories
+---
 
-- As the learner, I want to build a real CLI over goldeneye's own data lake, so
-  that my first Rust program is a tool I'll actually reuse — not a toy.
-- As the learner, I want to write JSONL parsing and stats **by hand with std
-  only**, so that ownership, borrowing, and `String`/`&str` are muscles I build
-  rather than crates that hide them.
-- As the learner, I want `glake` instrumented so I can watch its memory in the
-  lens, so that Level-1b concepts are visible on my own code.
+## In plain words
 
-## Acceptance criteria (EARS + verification class)
+We're building **`glake`** — a small command-line tool that reads goldeneye's
+own data lake (the `.jsonl` files under `datalake/raw-local/`) and tells you two
+things: *is it well-formed?* and *what's in it?*
 
-### A. `glake` functionality (std-only)
+It's written with **the Rust standard library only** — no `serde`, no `clap`, no
+crates. That's on purpose: hand-writing the parsing and counting is how you build
+the ownership and borrowing instincts this whole class is about. It's also a tool
+you'll actually reuse, so it's not throwaway practice.
 
-> "Well-formed envelope" = a JSON object carrying every key in the **`required`
-> set of `datalake/schema/envelope.v1.json`** (the single source of truth:
-> `event_id`, `ts`, `session_id`, `actor`, `event_type`, `schema_version`,
-> `payload`; `spec_id` is nullable/optional). v0 checks **key presence only** —
-> it does *not* validate `ts` as RFC3339 or `schema_version == 1` (deliberate;
-> deeper validation is a candidate 004 feature). glake reads the required-key
-> list from the schema file, not a frozen inline copy.
+## What it does
 
-| ID | Requirement (EARS) | Tag |
-|---|---|---|
-| R1a | WHEN `glake validate <path>` finds a JSONL line that is not a well-formed envelope (any required key absent, per the schema registry) THE SYSTEM SHALL report it naming the file and 1-based line number | [E] |
-| R1b | WHEN `glake validate <path>` completes THE SYSTEM SHALL exit non-zero if and only if at least one malformed line was found | [E] |
-| R2 | WHEN `glake stats <path>` runs THE SYSTEM SHALL print counts of events grouped by `event_type` and, separately, by `dt=` day, plus the grand total | [E] |
-| R3a | WHEN the input path is a directory THE SYSTEM SHALL recurse into `dt=*/` partitions and process every `*.jsonl` file within | [E] |
-| R3b | WHEN the input path is a single file THE SYSTEM SHALL process just that file | [E] |
-| R5 | IF a line is empty or whitespace-only THEN THE SYSTEM SHALL skip it — neither counted as an event nor reported as malformed | [E] |
-| R6 | IF the path does not exist or cannot be read THEN THE SYSTEM SHALL print a clear error to stderr and exit non-zero, without panicking | [E] |
+- **`glake validate <path>`** — checks every line is a proper envelope event and
+  points at any that aren't (by file + line number). Exits with an error code if
+  it found problems, so scripts can rely on it.
+- **`glake stats <path>`** — counts events, broken down by type and by day, with
+  a grand total.
+- Point it at **a folder** and it walks every `dt=…/*.jsonl` inside; point it at
+  **one file** and it reads just that. Blank lines are ignored. A bad path gives
+  a clear error, never a crash.
 
-### B. Correctness properties (hand-rolled parser)
+## What we're *not* building yet (on purpose)
 
-| ID | Requirement (EARS) | Tag |
-|---|---|---|
-| R8 | THE minimal JSON-value extraction glake uses SHALL, for any input string, either return the requested top-level string field or a "not found / not that type" result — never panicking and never reading past the input | [P] |
-| R9 | WHEN `stats` counts events THE per-`event_type` totals AND the per-`dt=`-day totals SHALL each sum to the grand total of valid events (no double-count, no drop, on either grouping axis) | [P] |
+- No filtering by type/day — that's the first feature of spec 004.
+- No traits, generics, or custom error types — also 004.
+- No async, no network, no S3 — specs 005 and 007.
+- No `serde`/`clap` — the whole point is to do it by hand first.
 
-### C. Instrumentation & operational
+## What you'll learn building it
 
-| ID | Requirement (EARS) | Tag |
-|---|---|---|
-| R4 | THE default-feature dependency tree SHALL contain no external crates — only `std`; a check (e.g. `cargo tree`) SHALL fail if any is added; `memlens` SHALL appear only under `--features lens` | [O] |
-| R7a | WHERE the `lens` cargo feature is enabled THE SYSTEM SHALL install `memlens` as its global allocator and emit a trace | [E] |
-| R7b | WHERE the `lens` feature is disabled (default) THE SYSTEM SHALL compile out all memlens code — no memlens symbols in the binary | [O] |
-| R10 | THE SYSTEM SHALL run as `glake stats datalake/raw-local` against the repo's real lake and produce counts cross-checked equal to `datalake/queries/scan.sh` | [O] |
+Each of these shows up in the code and gets a short note in `evidence.md` at the
+end (no live session needed — this is internal tooling, same as 002):
 
-> Note (std-only vs the lens): std-only is the *functional* rule (R4). The lens
-> is the sole, in-repo, off-by-default exception (R7a/b) — it observes, never
-> changes glake's behavior.
+- **Ownership & moves** — where a value moves versus gets borrowed as data flows
+  parse → count.
+- **`&str` vs `String`** — the parser *borrows* slices of each line instead of
+  copying them; you'll see where an owned `String` is genuinely needed and where
+  it isn't.
+- **Enums + `match`** — event kinds and parse outcomes as enums, matched
+  exhaustively.
+- **`Option` / `Result` / `?`** — fallible steps return `Result`; no `unwrap` in
+  the tool's real logic.
+- **Iterators + `HashMap`** — counting and grouping as iterator chains, tallied
+  with `HashMap`.
+- **Seeing the memory** — run glake under the lens (`--features lens`) and note
+  what the trace reveals about all of the above. This is why the lens exists.
 
-## Learning requirements
+---
 
-Verified at close (this is internal tooling per project norms — "verified" =
-demonstrated in code/tests + a short written note in `evidence.md`; no live
-learner session required, per the 002 precedent):
+## Precise acceptance criteria
 
-| ID | The code SHALL demonstrate, and evidence.md SHALL note… |
-|---|---|
-| L1 | ownership & moves: where values move vs are borrowed in the parse→count pipeline |
-| L2 | `&str` vs `String`: parsing borrows slices of the input line (`&str`) rather than allocating, and where an owned `String` is genuinely needed |
-| L3 | `enum` + `match`: event kinds / parse outcomes modeled as enums, exhaustively matched |
-| L4 | `Option`/`Result` + `?`: fallible steps returning `Result`, no `unwrap` in the tool's logic paths |
-| L5 | iterators + `HashMap`: counting/grouping expressed as iterator chains over borrowed data, aggregated via `HashMap::entry` |
-| L6 | **memory observed**: glake run under `--features lens`; evidence.md notes what the trace reveals about `&str`-vs-`String` and `Vec`/`HashMap` growth in parse→count (ties L2/L5 to real allocation behavior — the reason R7 exists) |
+> *Skim this unless you're writing the design or the tests.* Each row is one
+> testable fact. Tags: **[P]** = property test (holds for all inputs) · **[E]** =
+> example test (specific cases) · **[O]** = checked by running it / the build.
+>
+> "Well-formed envelope" means: a JSON object with every key the schema registry
+> (`datalake/schema/envelope.v1.json`) marks required — `event_id`, `ts`,
+> `session_id`, `actor`, `event_type`, `schema_version`, `payload` (`spec_id` is
+> optional). v0 checks *keys are present*, not that `ts` is a real date. glake
+> reads that key list from the schema file, so the two can't drift apart.
 
-> SKILLS note (per requirements audit MODERATE-5): L5 exercises **iterators** and
-> **`HashMap`** — both std, both usable without authoring traits/generics, so no
-> 003/004 boundary crossing — but neither is currently an enumerated Level-1b
-> line item (only `Vec` is). Curriculum bookkeeping: add them to SKILLS 1b at
-> close, or track here. Not a scope defect, just an unlisted std skill.
+**Validate**
+- **[E] R1a** — a line missing any required key is reported with its file and line number.
+- **[E] R1b** — the command exits non-zero exactly when at least one line was malformed.
 
-## Out of scope
+**Stats**
+- **[E] R2** — prints counts grouped by `event_type`, counts grouped by `dt=` day, and a grand total.
+- **[P] R9** — the per-type totals and the per-day totals each add up to the grand total (nothing double-counted or dropped, on either axis).
 
-- Traits, generics, custom error types / `thiserror` (spec 004).
-- Async, tokio, any network or S3 (specs 005/007).
-- `serde`, `clap`, or any external functional dependency (deliberate — R4).
-- Writing to the lake, a query DSL, or DuckDB integration (004/007).
-- Deployment of any kind (006+).
+**Reading input**
+- **[E] R3a** — a folder path is walked recursively through `dt=…/` into every `*.jsonl`.
+- **[E] R3b** — a single-file path reads just that file.
+- **[E] R5** — blank / whitespace-only lines are skipped (not counted, not flagged).
+- **[E] R6** — a missing or unreadable path prints a clear stderr error and exits non-zero, no panic.
 
-## Open questions (answered before approval)
+**The parser (properties)**
+- **[P] R8** — the tiny JSON field-reader, given *any* string, returns either the field or a clean "not found / wrong type" — it never panics and never reads past the end.
 
-- [x] memlens vs std-only — resolved by R7 (opt-in, in-repo, off by default).
-- [x] filter in v0? — **deferred to 004**; v0 is validate + stats only (a
-      `--type`/`--day` filter is a natural first 004 trait-based feature).
+**Std-only & the lens**
+- **[O] R4** — with default features, the dependency tree is std-only; a check fails if any crate is added. `memlens` shows up only under `--features lens`.
+- **[E] R7a** — under `--features lens`, glake installs `memlens` as its allocator and writes a trace.
+- **[O] R7b** — with the lens off (default), no memlens code is in the binary.
+- **[O] R10** — `glake stats datalake/raw-local` on the real lake matches the counts from `datalake/queries/scan.sh`.
 
-## Changelog
+---
 
-| Date | Change | Trigger | Re-gated? |
-|---|---|---|---|
-| 2026-07-05 | Initial draft; intent advisories resolved (R7 lens tension; filter deferred) | intent audit 90% | first gate |
-| 2026-07-05 | Rev 2: R1 now validates against the schema registry's required set incl. **`actor`** (was missing — would have passed malformed lines) and references the registry not an inline copy; R4 retagged [P]→[O] (build constraint, not a property); R3→R3a/R3b and R7→R7a/R7b (compound EARS split, R7b→[O]); R9 extended to conserve the by-day axis too; added L6 (observe memory in the lens) + SKILLS note on L5/HashMap | spec-auditor 72% (MAJOR-1/2, MODERATE-3/4/5, MINOR-6) | pre-gate revision |
+<details><summary>Audit trail & changelog</summary>
+
+Intent advisories (90%) resolved: memlens is opt-in behind `--features lens`
+(R4/R7); filter deferred to 004.
+
+Requirements audit (72%, `_assurance/requirements-review.md`) → rev 2:
+- **MAJOR** — "well-formed" now uses the schema registry's required set including
+  **`actor`** (rev 1 omitted it — would have passed malformed lines) and reads
+  the list from the file instead of hardcoding it.
+- **MAJOR** — R4 (std-only) retagged [P]→[O]: it's a build constraint, not a property.
+- Compound lines split (R3→R3a/b, R7→R7a/b, R7b→[O]); R9 extended to the by-day
+  axis; added the "seeing the memory" learning goal; noted that iterators and
+  `HashMap` aren't yet tracked SKILLS 1b items (reconcile at close).
+
+SKILLS note: L5 uses iterators + `HashMap` (both std, no traits/generics — no
+004 boundary crossing) — add them to SKILLS 1b at close, or track here.
+
+</details>

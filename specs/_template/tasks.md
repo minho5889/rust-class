@@ -8,6 +8,11 @@
 **Status:** drafting
 **Approved:** — · **Assurance verdict:** —
 
+## In plain words
+
+_2–3 sentences: what gets built in what order, and roughly how many sittings.
+The reviewer approves the *shape* of the plan here, not every checkbox._
+
 | Layer | Grain | Done means |
 |---|---|---|
 | Main task `N.` | A deliverable (maps to a design component) | Its part of the system demonstrably works |

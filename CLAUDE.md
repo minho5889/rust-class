@@ -70,6 +70,13 @@ raw prompt ─► intent.md ─► requirements.md ─► design.md ─► tasks
 - **Fast path.** Small well-understood units may draft all four docs in one shot,
   one combined approval. Trivial playground experiments need no spec.
 - **Untestable = unapprovable.** Every EARS line carries [P]/[E]/[O] or is rewritten.
+- **Human-readable first.** A gated doc must open with plain English a non-Rust
+  reader can approve from in a minute ("In plain words" / "What it does" / "What
+  we're not building" / "What you'll learn"). The precise tagged/testable criteria
+  go in a clearly-marked section *below* (reviewers skim; the design step and
+  auditors use it); audit trail and changelog go in a collapsed block at the end.
+  The gate is only real if the reviewer can actually read the doc — jargon walls
+  break it. Applies to all four docs; `_template/` shows the shape.
 - **AI proposes, human disposes.** Architecture, AWS service, and cost decisions go
   to the learner with a clear recommendation.
 

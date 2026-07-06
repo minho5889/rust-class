@@ -1,47 +1,61 @@
 # Requirements — <NNN short-name>
 
-> **Doc 2 of 4. Derived from `intent.md` ONLY** — if it can't be written from
-> intent.md alone, intent.md was incomplete. Audited by `spec-auditor` before
-> review (verdict in `_assurance/`). ✋ **Human gate:** loop
-> drafting → awaiting-review → revising until approved.
-
 **Status:** drafting
-**Approved:** — · **Assurance verdict:** —
+**Approved:** — · **Assurance:** —
 
-## User stories
+> **Readability rule (see CLAUDE.md):** lead with plain English anyone can read in
+> a minute and approve from. Keep the precise, tagged, testable criteria in a
+> clearly-marked section *below* — reviewers skim it, the design step and
+> auditors use it. Push audit trail/changelog into the collapsed block at the end.
 
-- As a learner, I want <capability>, so that <learning outcome>.
+---
 
-## Acceptance criteria (EARS + verification class)
+## In plain words
 
-Every requirement carries an ID and a verification tag. **A requirement that fits no
-tag is untestable and must be rewritten before review.**
+_2–5 sentences, no jargon: what we're building, what it does for the user, and
+the one design choice that matters most. A non-Rust reader should get it._
 
-- **[P]** property-testable → becomes a `proptest` property ("for any valid input…")
-- **[E]** example-testable → unit/integration test with chosen examples
-- **[O]** operationally-verified → observed on the real AWS target, recorded in `evidence.md`
+## What it does
 
-| ID | Requirement (EARS) | Tag |
-|---|---|---|
-| R1 | WHEN <trigger> THE SYSTEM SHALL <behavior> | [P] |
-| R2 | IF <error condition> THEN THE SYSTEM SHALL <behavior> | [E] |
-| R3 | THE SYSTEM SHALL <constraint, e.g. run on arm64 / cold-start ≤ X ms> | [O] |
+- _Plain-English bullets of user-facing behavior. Normal sentences, not
+  WHEN/SHALL. This is the part that gets read._
 
-## Learning requirements
+## What we're *not* building yet (on purpose)
 
-| ID | The learner SHALL be able to explain… |
-|---|---|
-| L1 | <concept>, after completing this unit |
+- _Scope walls, plain language, each with the spec that will pick it up._
 
-## Out of scope
+## What you'll learn building it
 
-- …
+- _Plain list of the concepts this unit exercises (maps to SKILLS). This is a
+  class — say what the learner gets, in normal words._
 
-## Open questions (answered before approval)
+---
 
-- [ ] …
+## Precise acceptance criteria
 
-## Changelog
+> *Skim unless you're writing the design or the tests.* Each item is one testable
+> fact. Tags: **[P]** property (holds for all inputs) · **[E]** example (specific
+> cases) · **[O]** operational (checked by running it / the build). An item that
+> fits no tag is untestable — rewrite it before review.
+>
+> _Define any shared term (e.g. "well-formed X") once, here, pointing at the
+> single source of truth — never a hardcoded copy._
 
-| Date | Change | Trigger (change protocol) | Re-gated? |
+**<group name, plain>**
+- **[P|E|O] R1** — <one behavior, as plainly as precision allows>
+- **[E] R2** — …
+
+**Learning (verified in `evidence.md`)**
+- **L1** — <concept the code must demonstrate>
+
+---
+
+<details><summary>Audit trail & changelog</summary>
+
+_Intent advisories resolved; requirements-audit findings and each revision.
+Keep it here, out of the reader's way._
+
+| Date | Change | Trigger | Re-gated? |
 |---|---|---|---|
+
+</details>

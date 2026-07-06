@@ -8,6 +8,15 @@
 **Status:** drafting
 **Approved:** — · **Assurance verdict:** —
 
+> **Readability rule (CLAUDE.md):** open with the plain-English shape a reviewer
+> can veto from; keep detailed interfaces/properties below; audit trail collapsed
+> at the end.
+
+## In plain words
+
+_2–4 sentences: how the solution works, at a level someone could sanity-check
+without reading the detail. Name the pieces and how they connect._
+
 ## High-level design (the shape)
 
 _A narrative the learner can read alone and veto the approach: what runs where,
