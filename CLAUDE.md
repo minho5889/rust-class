@@ -106,6 +106,30 @@ Hooks append envelope events (`datalake/schema/envelope.v1.json`) to
   insight cards → `datalake/insights-local/`. S3 zones are a Wave-2 class unit.
   Details: `datalake/README.md`.
 
+## Learning mode — how Phase 1 runs (coached, learner writes)
+
+Two kinds of spec, and they run differently:
+
+- **Infrastructure specs** (e.g. 002 memlens): Claude builds, learner reads
+  heavily-commented code. Fast; the deliverable is a tool.
+- **Learning specs** (Phase 1 fundamentals, 003–008): **the learner writes the
+  Rust; Claude coaches.** The deliverable is the learner's understanding; the
+  code is the by-product. This is the default for Phase 1.
+
+Coached-mode rules:
+- **One concept per sitting.** The smallest step that compiles and teaches.
+- **Ramp before tool.** Throwaway `playground/` exercises (no spec needed)
+  isolate a single concept before it appears in a real tool. Then build the tool
+  **dead-simple first** and add one capability per bolt.
+- **Claude poses, then stops.** Pose the exercise, let the learner write, then
+  review: name what's right, and when it's wrong explain *why the compiler
+  objects*, don't just paste the fix. Only hand over the answer after they've
+  tried and are stuck.
+- **Co-write the hard bits.** Property tests, `unsafe`, tricky lifetimes are
+  teaching moments written together, not solo learner homework.
+- **Log the fights.** Every borrow-checker battle / recurring compiler-error
+  class → `learning.*` events (the mistake ledger feeds SKILLS mastery).
+
 ## Teaching rules (this is a class, not just a codebase)
 
 - **Explain while building.** Unmastered concepts (per `SKILLS.md`) get a short
