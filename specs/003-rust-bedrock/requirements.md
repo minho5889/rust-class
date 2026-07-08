@@ -7,87 +7,123 @@
 
 ## In plain words
 
-We're building **`glake`** — a small command-line tool that reads goldeneye's
-own data lake (the `.jsonl` files under `datalake/raw-local/`) and tells you two
-things: *is it well-formed?* and *what's in it?*
+This is the first spec where you write real Rust. You build **`glake`** (short for
+"goldeneye lake") — a small terminal tool that reads the telemetry files this
+project has been quietly collecting all along: the `.jsonl` files under
+`datalake/`. `glake` answers two questions about them — **"is this data valid?"**
+and **"what's in it?"**
 
-It's written with **the Rust standard library only** — no `serde`, no `clap`, no
-crates. That's on purpose: hand-writing the parsing and counting is how you build
-the ownership and borrowing instincts this whole class is about. It's also a tool
-you'll actually reuse, so it's not throwaway practice.
+Here's the whole tool, from your side:
+
+```console
+$ glake stats datalake/raw-local
+3 files · 214 events
+
+by type
+  spec.doc_written      86
+  research.finding      29
+  gate.notified          9
+  …
+
+by day
+  dt=2026-07-05        214
+
+$ glake validate datalake/raw-local
+datalake/raw-local/dt=2026-07-05/events.jsonl:41  missing key "actor"
+1 malformed line
+$ echo $?
+1
+```
+
+That's it — count things, or flag broken lines. Simple on purpose.
+
+**Why this is spec 003 and not something flashier:** the tool is an excuse. Its
+real job is to teach Rust's core — ownership, borrowing, `&str` vs `String`,
+enums, `Result` — by making you *hand-write* the parts a real project would grab
+a crate for. So `glake` uses **the standard library only**: no `serde` to parse
+the JSON for you, no `clap` for the command-line arguments. You write those
+yourself, feel exactly where Rust's borrow checker pushes back, and watch the
+whole thing run in the memory lens you built in spec 002. Spec 004 then lets you
+refactor it *with* the nice crates — but only after you've earned the intuition
+by doing it the hard way once.
 
 ## What it does
 
-- **`glake validate <path>`** — checks every line is a proper envelope event and
-  points at any that aren't (by file + line number). Exits with an error code if
-  it found problems, so scripts can rely on it.
-- **`glake stats <path>`** — counts events, broken down by type and by day, with
-  a grand total.
-- Point it at **a folder** and it walks every `dt=…/*.jsonl` inside; point it at
-  **one file** and it reads just that. Blank lines are ignored. A bad path gives
-  a clear error, never a crash.
+- **`glake validate <path>`** — reads every line, checks each is a proper event
+  record, and prints any that aren't with the file name and line number. Exits
+  with an error code if it found problems (so a script or CI can trust it).
+- **`glake stats <path>`** — counts events, grouped by their type and by their
+  day, with a grand total.
+- Give it **a folder** → it walks every `dt=…/*.jsonl` file inside. Give it **one
+  file** → it reads just that. Blank lines are ignored. A path that doesn't exist
+  gives a clear error message, never a crash.
 
-## What we're *not* building yet (on purpose)
+## What we're *not* building yet (and where it goes)
 
-- No filtering by type/day — that's the first feature of spec 004.
-- No traits, generics, or custom error types — also 004.
-- No async, no network, no S3 — specs 005 and 007.
-- No `serde`/`clap` — the whole point is to do it by hand first.
+- **Filtering** (`--type gate.notified`, `--since …`) → the first feature of **004**.
+- **Traits, generics, custom error types** → **004** (that spec's whole point).
+- **`serde` / `clap` / any crate** → deliberately withheld here; **004** brings them in.
+- **Async, network, S3, anything cloud** → **005** (async) and **007** (S3).
 
 ## What you'll learn building it
 
-Each of these shows up in the code and gets a short note in `evidence.md` at the
-end (no live session needed — this is internal tooling, same as 002):
+`glake` is small, but every piece of it is a fundamentals lesson. Each shows up
+in the code and gets a one-line note in `evidence.md` when we're done:
 
-- **Ownership & moves** — where a value moves versus gets borrowed as data flows
-  parse → count.
-- **`&str` vs `String`** — the parser *borrows* slices of each line instead of
-  copying them; you'll see where an owned `String` is genuinely needed and where
-  it isn't.
-- **Enums + `match`** — event kinds and parse outcomes as enums, matched
-  exhaustively.
-- **`Option` / `Result` / `?`** — fallible steps return `Result`; no `unwrap` in
-  the tool's real logic.
-- **Iterators + `HashMap`** — counting and grouping as iterator chains, tallied
-  with `HashMap`.
-- **Seeing the memory** — run glake under the lens (`--features lens`) and note
-  what the trace reveals about all of the above. This is why the lens exists.
+- **Ownership & moves** — as a line flows *parse → count*, you'll see where a
+  value is handed off (moved) versus just looked at (borrowed).
+- **`&str` vs `String`** — the parser reads *slices* of each line (`&str`, no
+  copying) instead of allocating new strings; you'll see the few places an owned
+  `String` is genuinely needed, and the many where it isn't.
+- **Enums + `match`** — "what kind of event is this?" and "did parsing succeed?"
+  become enums the compiler forces you to handle completely.
+- **`Result` and `?`** — anything that can fail returns a `Result`; the `?`
+  operator threads errors up cleanly, with no `unwrap` in the real logic.
+- **Iterators + `HashMap`** — the counting is an iterator chain tallied into a
+  `HashMap`, not a pile of manual loops.
+- **Seeing the memory** — run `glake --features lens`, open the trace in the
+  spec-002 viewer, and *watch* the `&str`-vs-`String` choices above as real
+  allocations. This is the payoff of having built the lens first.
 
 ---
 
 ## Precise acceptance criteria
 
 > *Skim this unless you're writing the design or the tests.* Each row is one
-> testable fact. Tags: **[P]** = property test (holds for all inputs) · **[E]** =
-> example test (specific cases) · **[O]** = checked by running it / the build.
+> testable fact. Tags: **[P]** = property (must hold for *all* inputs, tested by
+> generating thousands) · **[E]** = example (specific cases) · **[O]** =
+> operational (checked by running the tool or the build).
 >
-> "Well-formed envelope" means: a JSON object with every key the schema registry
-> (`datalake/schema/envelope.v1.json`) marks required — `event_id`, `ts`,
-> `session_id`, `actor`, `event_type`, `schema_version`, `payload` (`spec_id` is
-> optional). v0 checks *keys are present*, not that `ts` is a real date. glake
-> reads that key list from the schema file, so the two can't drift apart.
+> **"A proper event record"** = a JSON object containing every key the schema
+> registry (`datalake/schema/envelope.v1.json`) marks required: `event_id`,
+> `ts`, `session_id`, `actor`, `event_type`, `schema_version`, `payload`
+> (`spec_id` is optional). v0 checks the *keys are present* — not that `ts` is a
+> real date (that can come in 004). glake reads this key list *from the schema
+> file*, so the tool and the schema can never disagree.
 
 **Validate**
 - **[E] R1a** — a line missing any required key is reported with its file and line number.
 - **[E] R1b** — the command exits non-zero exactly when at least one line was malformed.
 
 **Stats**
-- **[E] R2** — prints counts grouped by `event_type`, counts grouped by `dt=` day, and a grand total.
-- **[P] R9** — the per-type totals and the per-day totals each add up to the grand total (nothing double-counted or dropped, on either axis).
+- **[E] R2** — prints counts by `event_type`, counts by `dt=` day, and a grand total.
+- **[P] R9** — the by-type totals and the by-day totals each add up to the grand total (nothing double-counted or dropped, on either axis).
 
 **Reading input**
-- **[E] R3a** — a folder path is walked recursively through `dt=…/` into every `*.jsonl`.
+- **[E] R3a** — a folder is walked recursively through `dt=…/` into every `*.jsonl` file.
 - **[E] R3b** — a single-file path reads just that file.
 - **[E] R5** — blank / whitespace-only lines are skipped (not counted, not flagged).
-- **[E] R6** — a missing or unreadable path prints a clear stderr error and exits non-zero, no panic.
+- **[E] R6** — a missing or unreadable path prints a clear stderr error and exits non-zero — no panic.
 
-**The parser (properties)**
-- **[P] R8** — the tiny JSON field-reader, given *any* string, returns either the field or a clean "not found / wrong type" — it never panics and never reads past the end.
+**The hand-written parser (this is the property-tested heart)**
+- **[P] R8** — the tiny JSON field-reader, given *any* string whatsoever, returns
+  either the field it was asked for or a clean "not found / wrong type" — it never
+  panics and never reads past the end of the input.
 
 **Std-only & the lens**
-- **[O] R4** — with default features, the dependency tree is std-only; a check fails if any crate is added. `memlens` shows up only under `--features lens`.
+- **[O] R4** — with default features the dependency tree is std-only; a check fails if any crate is added. `memlens` appears only under `--features lens`.
 - **[E] R7a** — under `--features lens`, glake installs `memlens` as its allocator and writes a trace.
-- **[O] R7b** — with the lens off (default), no memlens code is in the binary.
+- **[O] R7b** — with the lens off (the default), no memlens code is in the binary.
 - **[O] R10** — `glake stats datalake/raw-local` on the real lake matches the counts from `datalake/queries/scan.sh`.
 
 ---
@@ -95,18 +131,22 @@ end (no live session needed — this is internal tooling, same as 002):
 <details><summary>Audit trail & changelog</summary>
 
 Intent advisories (90%) resolved: memlens is opt-in behind `--features lens`
-(R4/R7); filter deferred to 004.
+(R4/R7); filtering deferred to 004.
 
 Requirements audit (72%, `_assurance/requirements-review.md`) → rev 2:
-- **MAJOR** — "well-formed" now uses the schema registry's required set including
-  **`actor`** (rev 1 omitted it — would have passed malformed lines) and reads
-  the list from the file instead of hardcoding it.
+- **MAJOR** — "proper record" now uses the schema registry's required set
+  including **`actor`** (rev 1 omitted it — it would have passed malformed lines)
+  and reads the list from the file instead of hardcoding it.
 - **MAJOR** — R4 (std-only) retagged [P]→[O]: it's a build constraint, not a property.
 - Compound lines split (R3→R3a/b, R7→R7a/b, R7b→[O]); R9 extended to the by-day
-  axis; added the "seeing the memory" learning goal; noted that iterators and
-  `HashMap` aren't yet tracked SKILLS 1b items (reconcile at close).
+  axis; added the "seeing the memory" learning goal; noted iterators + `HashMap`
+  aren't yet tracked SKILLS 1b items (reconcile at close).
 
-SKILLS note: L5 uses iterators + `HashMap` (both std, no traits/generics — no
-004 boundary crossing) — add them to SKILLS 1b at close, or track here.
+SKILLS note: L5 uses iterators + `HashMap` (both std, no traits/generics — no 004
+boundary crossing) — add them to SKILLS 1b at close.
+
+Readability rev (2026-07-05): rewrote the prose to lead with a concrete worked
+example after the first pass read as an under-explained bullet list. Criteria
+unchanged.
 
 </details>

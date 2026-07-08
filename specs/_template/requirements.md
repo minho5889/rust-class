@@ -12,8 +12,13 @@
 
 ## In plain words
 
-_2–5 sentences, no jargon: what we're building, what it does for the user, and
-the one design choice that matters most. A non-Rust reader should get it._
+_What are we building, concretely? Lead with a **worked example** where possible —
+the actual command and its output, or a before/after — because showing what the
+thing *is* lands faster than describing it. Then: what it does for the user, the
+one design choice that matters most, and (if it's not obvious) why this is this
+spec and not a later one. A non-Rust reader should finish this section knowing
+exactly what gets built and why. Don't undershoot into a thin bullet list —
+substance readably, not brevity for its own sake._
 
 ## What it does
 
