@@ -1,0 +1,73 @@
+# relay v0 — spec 005 reference implementation ("answer key").
+#
+# Course reference — lives OUTSIDE the cargo workspace on purpose (the
+# learner's own relay will be crates/relay). The empty [workspace] table
+# below is the opt-out that keeps `cargo` from walking up to the repo root.
+
+[package]
+name = "relay"
+version = "0.1.0"
+edition = "2024"
+
+[workspace]
+
+[features]
+# Same optional-dep pattern as glake (004 F11 / 005 A10): memlens only
+# enters the dependency tree with `--features lens`. With default features,
+# `cargo tree` shows no memlens at all.
+lens = ["dep:memlens", "memlens/memlens"]
+
+[dependencies]
+# The A8 allow-list, and nothing else:
+# tokio — the async runtime. Feature-picking is part of the lesson: we name
+# exactly what we use instead of "full" (rt-multi-thread = the scheduler,
+# macros = #[tokio::main]/#[tokio::test], signal = ctrl_c, sync = mpsc,
+# fs = async file I/O for the writer task, io-util = the AsyncWriteExt
+# extension trait that gives File its write_all/flush, time = timeouts).
+tokio = { version = "1", features = [
+    "rt-multi-thread",
+    "macros",
+    "signal",
+    "sync",
+    "fs",
+    "io-util",
+    "time",
+] }
+# axum — the web framework. Router + extractors; serve() drives the runtime.
+axum = "0.8"
+clap = { version = "4", features = ["derive"] }
+serde_json = "1"
+# thiserror for the library-side error (the door's Rejection); anyhow only
+# at the binary surface (main's `?` catch-all) — the constitution's split.
+thiserror = "2"
+anyhow = "1"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", default-features = false, features = [
+    "fmt",
+] }
+# The 004 payoff: validation comes from the learner's OWN glake library
+# (path dep). The relay is glake's first external caller — drift impossible.
+glake = { path = "../../../004-glake-traits/_reference/glake" }
+memlens = { path = "../../../../crates/memlens", optional = true }
+
+[dev-dependencies]
+proptest = "1"
+# tower's ServiceExt::oneshot lets tests call the Router as a plain async
+# function — no sockets, no ports (A1–A5 run entirely in-process).
+tower = { version = "0.5", features = ["util"] }
+
+[lints.clippy]
+# A9, mechanized: the first deployable-shaped crate bans unwrap()/expect()
+# outright (the Cloudflare Nov-2025 lesson — a panicking handler takes the
+# whole service down). Tests re-allow it at module level: a test that can't
+# unwrap is just noisy, and a panicking test is a FAILING test, which is fine.
+unwrap_used = "deny"
+expect_used = "deny"
+
+[lib]
+name = "relay"
+path = "src/lib.rs"
+
+[[bin]]
+name = "relay"
+path = "src/main.rs"

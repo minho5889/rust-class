@@ -1,0 +1,6 @@
+# build output
+/target
+# runtime exhaust: running `cargo run` from this crate dir with the default
+# --lake (or a lens session) would create a stray local lake here — real
+# lakes live at the repo root, never inside the crate.
+/datalake
