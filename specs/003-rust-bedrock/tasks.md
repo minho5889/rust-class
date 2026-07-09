@@ -1,83 +1,85 @@
 # Tasks — 003 rust-bedrock (`glake` v0)
 
 **Status:** awaiting-review
-**Approved:** — · **Assurance:** —
+**Approved:** — · **Assurance:** design+tasks 68% → rev 2 (with design.md)
 
 ---
 
 ## In plain words
 
-Seven ramp steps (already underway in `playground/ramp/`), then **six sittings**
-to build glake — each sitting is one concept-cluster, one working session, one
-commit. **You write the code; Claude coaches** (poses the step, reviews, explains
-compiler errors — never pastes the answer first). The two property tests are
-co-written, per the constitution. At ~10 h/week this is roughly two weeks.
+Eight ramp steps (underway in `playground/ramp/`), then **six sittings** to
+build glake — each one concept-cluster, one working session. **You write the
+code; Claude coaches.** Property tests are co-written and come **before** the
+code they test. Commit grain: at least one commit per sitting; a sitting that
+lands a property test and its implementation makes two. At ~10 h/week this is
+roughly two weeks.
 
-**Done means:** you can run `glake stats datalake/raw-local` on the real lake,
-the numbers match `scan.sh`, all tests are green, and you've watched your own
-tool's memory in the lens.
+**Done means:** `glake stats datalake/raw-local` matches `scan.sh` on the real
+lake, all tests green, and you've watched your own tool's memory in the lens.
 
 ---
 
 ## 0. The ramp (`playground/ramp/`, no spec, in progress)
 
-- [ ] 0.1 Steps 1–7, one concept each (`fn main`/`let` → ownership → borrowing →
-      `&str` vs `String` → `enum`+`match` → `Result`+`?` → read a file).
-      One commit per step: `ramp: step N — <concept>`. **Step 1 is posed and
-      waiting.** Rustlings/100-Exercises bound as optional warm-ups
-      (`research/rust-study-materials.md`).
+- [ ] 0.1 Steps 1–8, one concept each (now includes **step 8: lifetimes-lite** —
+      just enough `<'a>` for the scanner). One commit per step
+      (`ramp: step N — <concept>`). **Step 1 is posed and waiting.**
 
 ## 1. glake, one sitting at a time (learner writes, Claude coaches)
 
-### Sitting A — a program that reads a file
-- [ ] 1.1 `cargo new` in `crates/glake` (joins the workspace); read one `.jsonl`
-      path from `std::env::args`, print how many lines it has. Uses ramp steps
-      1–3 and 7. *(commit: `003: sitting A — count lines`)*
+### Sitting A — a program that reads a file *(ramp 1–3, 7)*
+- [ ] 1.1 `cargo new` in `crates/glake`; read one `.jsonl` path from
+      `std::env::args`; print its line count.
 
-### Sitting B — commands and folders
-- [ ] 1.2 Add the `validate`/`stats` command argument (`match` on it; unknown →
-      usage message, exit 2). Folder paths: walk `dt=*/` recursively collecting
-      `*.jsonl` (design's `jsonl_files`); single files still work. (R3a, R3b,
-      R6 groundwork.) *(commit: `003: sitting B — args + walk`)*
+### Sitting B — commands, folders, and failing well *(R3a, R3b, R6)*
+- [ ] 1.2 `validate`/`stats` argument (`match`; unknown → usage on stderr, exit
+      2). Folder → recursive `dt=*/` walk (`jsonl_files`); file → just it.
+      **All R6 error paths land here**: missing/unreadable path → clear stderr,
+      exit 2, no panic — with example tests.
 
-### Sitting C — the scanner (the heart)
-- [ ] 1.3 Write `has_key` / `get_str` — the ~40-line character scanner. Claude
-      coaches through quotes/escapes edge cases; you drive. Blank-line skipping
-      (R5). *(commit: `003: sitting C — scanner`)*
-- [ ] 1.4 **Co-write the R8 property test** (never panics, any input; garbage +
-      JSON-ish strategies; seeds committed). Your first proptest — walked
-      through together, then it hammers *your* scanner with thousands of cases.
-      *(commit: `003: sitting C2 — scanner property (R8)`)*
+### Sitting C — the scanner, test-first *(R8; ramp 8 recap)*
+- [ ] 1.3 **Co-write the R8 property test first** against stub signatures
+      (`get_str<'a>`/`has_key` returning `todo!()`) — red. Your first proptest,
+      walked through together; garbage + JSON-ish strategies per the design's
+      Properties table. *(commit: `003: sitting C — R8 property, red`)*
+- [ ] 1.4 Write the **flat scanner** (no escape handling yet) until R8 passes on
+      the simple strategy + your scanner-correctness `#[test]` table (known
+      lines → expected answers, incl. top-level-only). Blank-line skip (R5).
+      *(commit: `003: sitting C — flat scanner green`)*
 
-### Sitting D — validate
-- [ ] 1.5 Read the required-key list from `datalake/schema/envelope.v1.json`
-      (dogfooding your own scanner); `classify` each line (the `Line` enum);
-      `validate` reports `file:line missing key "…"`, exits 1 iff any (R1a,
-      R1b). Example tests from small fixtures — you write these.
-      *(commit: `003: sitting D — validate`)*
+### Sitting D — hardening + validate *(R1a, R1b; `Line<'a>`)*
+- [ ] 1.5 Harden the scanner: escaped quotes `\"`, backslashes, multibyte —
+      driven by turning the R8 strategy up to full and adding correctness rows.
+- [ ] 1.6 `REQUIRED_KEYS` constant + **schema drift test** (reads
+      `envelope.v1.json`, asserts the constant matches — the rev-3 design).
+      `classify` → `Line<'a>` (the stretch lesson, ramp 8 paying off);
+      `validate` reports `file:line missing key`, exits 1 iff any; fixture
+      tests. *(commits: one per item)*
 
-### Sitting E — stats
-- [ ] 1.6 `stats`: tally by type and by day (`HashMap::entry`; day = `&ts[0..10]`
-      slice) + grand total (R2). Clear stderr + exit codes for bad paths (R6).
-      **Co-write the R9 conservation property** (both axes sum to total).
-      *(commit: `003: sitting E — stats + R9`)*
+### Sitting E — stats, test-first *(R2, R9)*
+- [ ] 1.7 **Co-write the R9 conservation property first** (generator emits its
+      own expected counts; both axes; short/multibyte `ts` included) — red.
+- [ ] 1.8 Implement the tallies (`HashMap::entry`; `day = ts.get(0..10)` with
+      the `bad-ts` bucket) + output formatting until R9 and the R2 fixtures
+      pass. *(commits: red, then green)*
 
-### Sitting F — proof and the payoff
-- [ ] 1.7 Machine checks (Claude drives, you watch): R4 `cargo tree` std-only
-      check; R7a/b lens feature wired exercise-02-style, feature-off symbol
-      check; R10 cross-check vs `scan.sh`; fmt/clippy clean.
-- [ ] 1.8 **The lens moment (L6):** run `glake stats` under `--features lens`,
-      open the trace in `viewer/memlens.html`, and see the scanner's zero-copy
-      borrowing (few allocations) vs the `HashMap` tallies (real ones). Notes →
-      `evidence.md`. *(commit: `003: sitting F — verified + lens evidence`)*
+### Sitting F — proof and the payoff *(R4, R7a/b, R10, L6)*
+- [ ] 1.9 Machine checks (Claude drives, you watch and ask): R4 `cargo tree`
+      std-only check; lens as **optional dep** (`lens = ["dep:memlens",
+      "memlens/memlens"]`, allocator under `#[cfg(feature = "lens")]`); R7b
+      symbol check; R10 cross-check vs `scan.sh`; fmt/clippy both configs.
+- [ ] 1.10 **The lens moment (L6) — you drive, Claude navigates:** run
+      `glake stats` under `--features lens`, open the trace in
+      `viewer/memlens.html`, find the scanner's near-zero allocations vs the
+      `HashMap`'s real ones. Your observations → `evidence.md`.
 
 ## 2. Close-out (Claude, machine work)
 
-- [ ] 2.1 `evidence.md`: L1–L6 notes, property outcomes, R10 numbers, mistake-
-      ledger summary (`learning.*` events accumulated during coaching).
-- [ ] 2.2 property-auditor pre-close run; SKILLS 1a/1b updates (iterators +
-      `HashMap` added as line items, statuses moved on demonstrated mastery);
-      MEMORY session log; `main` fast-forward + `spec-close/003-rust-bedrock`
+- [ ] 2.1 `evidence.md`: L1–L6 notes, property outcomes, R10 numbers,
+      mistake-ledger summary from the coaching sessions.
+- [ ] 2.2 property-auditor pre-close run; SKILLS updates (add iterators +
+      `HashMap` + lifetimes-lite as 1b items, statuses per demonstrated
+      mastery); MEMORY log; `main` fast-forward + `spec-close/003-rust-bedrock`
       marker branch.
 
 ---
@@ -85,8 +87,9 @@ tool's memory in the lens.
 ## Operations checklist
 
 - [ ] `cargo fmt` + `cargo clippy -- -D warnings` clean (both feature configs)
-- [ ] R8 + R9 properties pass (≥256 cases), seeds committed if any fail
-- [ ] All example tests pass; R4/R7b/R10 operational checks recorded
+- [ ] R8 + R9 properties pass (≥256 cases), written before their code, seeds
+      committed if any failure occurred
+- [ ] Scanner-correctness examples + all fixtures pass; R4/R7b/R10 recorded
 - [ ] `evidence.md` written; `MEMORY.md` + `SKILLS.md` updated
 - [ ] property-auditor: every [P] REQ has a faithful, passing property
 
@@ -99,6 +102,7 @@ tool's memory in the lens.
 
 | Date | Change | Trigger | Re-gated? |
 |---|---|---|---|
-| 2026-07-09 | Initial draft (fast path with design.md); sittings sized for coached mode | requirements approved | this gate |
+| 2026-07-09 | Initial draft (fast path with design.md) | requirements approved | — |
+| 2026-07-09 | Rev 2 per combined audit (68%): properties reordered test-FIRST (C and E now start red — MAJOR-4); scanner split flat→hardened across C/D (MODERATE); R6 error paths consolidated into B (MODERATE); ramp step 8 added and cited (MAJOR-5); lens optional-dep + correctness-example items added (MAJOR-1/MODERATE); commit-grain phrasing fixed; 1.10 driver named (MINORs) | design+tasks audit | this combined gate |
 
 </details>

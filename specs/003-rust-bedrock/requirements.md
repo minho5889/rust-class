@@ -71,18 +71,18 @@ by doing it the hard way once.
 `glake` is small, but every piece of it is a fundamentals lesson. Each shows up
 in the code and gets a one-line note in `evidence.md` when we're done:
 
-- **Ownership & moves** — as a line flows *parse → count*, you'll see where a
-  value is handed off (moved) versus just looked at (borrowed).
-- **`&str` vs `String`** — the parser reads *slices* of each line (`&str`, no
+- **L1 · Ownership & moves** — as a line flows *parse → count*, you'll see where
+  a value is handed off (moved) versus just looked at (borrowed).
+- **L2 · `&str` vs `String`** — the parser reads *slices* of each line (`&str`, no
   copying) instead of allocating new strings; you'll see the few places an owned
   `String` is genuinely needed, and the many where it isn't.
-- **Enums + `match`** — "what kind of event is this?" and "did parsing succeed?"
+- **L3 · Enums + `match`** — "what kind of event is this?" and "did parsing succeed?"
   become enums the compiler forces you to handle completely.
-- **`Result` and `?`** — anything that can fail returns a `Result`; the `?`
+- **L4 · `Result` and `?`** — anything that can fail returns a `Result`; the `?`
   operator threads errors up cleanly, with no `unwrap` in the real logic.
-- **Iterators + `HashMap`** — the counting is an iterator chain tallied into a
+- **L5 · Iterators + `HashMap`** — the counting is an iterator chain tallied into a
   `HashMap`, not a pile of manual loops.
-- **Seeing the memory** — run `glake --features lens`, open the trace in the
+- **L6 · Seeing the memory** — run `glake --features lens`, open the trace in the
   spec-002 viewer, and *watch* the `&str`-vs-`String` choices above as real
   allocations. This is the payoff of having built the lens first.
 
@@ -99,8 +99,12 @@ in the code and gets a one-line note in `evidence.md` when we're done:
 > registry (`datalake/schema/envelope.v1.json`) marks required: `event_id`,
 > `ts`, `session_id`, `actor`, `event_type`, `schema_version`, `payload`
 > (`spec_id` is optional). v0 checks the *keys are present* — not that `ts` is a
-> real date (that can come in 004). glake reads this key list *from the schema
-> file*, so the tool and the schema can never disagree.
+> real date (that can come in 004). The key list lives in glake as a constant
+> **verified against the schema file by a test** — if the schema ever changes,
+> the test fails and the constant must follow. (Amended from "read at startup":
+> runtime parsing of a pretty-printed schema needs an array-capable multi-line
+> scanner v0 doesn't have — test-time sync keeps one source of truth with none
+> of that complexity.)
 
 **Validate**
 - **[E] R1a** — a line missing any required key is reported with its file and line number.
@@ -149,5 +153,11 @@ boundary crossing) — add them to SKILLS 1b at close.
 Readability rev (2026-07-05): rewrote the prose to lead with a concrete worked
 example after the first pass read as an under-explained bullet list. Criteria
 unchanged.
+
+Rev 3 (2026-07-09, design-audit feedback, combined-gate amendment): schema key
+list = compile-time constant + drift test instead of runtime file read (design
+audit MAJOR-2: the v0 scanner can't parse a pretty-printed array; test-time
+sync preserves one-source-of-truth). Learning goals labeled L1–L6 (they were
+cited downstream but unlabeled here).
 
 </details>

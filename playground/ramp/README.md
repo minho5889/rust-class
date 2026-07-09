@@ -15,9 +15,10 @@ use when we build the real tool, so nothing is wasted.
 | 4 | `&str` vs `String` | tell a borrowed string slice from an owned one |
 | 5 | `enum` + `match` | model "one of several kinds" and handle every case |
 | 6 | `Result` + `?` | write code that can fail without crashing |
-| 7 | read a file, iterate lines | the last piece before glake |
+| 7 | read a file, iterate lines | read real data from disk |
+| 8 | lifetimes-lite (`<'a>`) | say "this returned slice borrows from that input" — just enough for glake's scanner |
 
-When steps 1–7 feel solid, we start `glake` for real — dead-simple first
+When steps 1–8 feel solid, we start `glake` for real — dead-simple first
 (count the lines in one file), then one capability per sitting.
 
 Status: **step 1 in progress.**
