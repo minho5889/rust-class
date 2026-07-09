@@ -1,7 +1,7 @@
 # Design — 003 rust-bedrock (`glake` v0)
 
-**Status:** awaiting-review
-**Approved:** — · **Assurance:** design+tasks 68% → rev 2 (all MAJORs fixed, see
+**Status:** approved
+**Approved:** 2026-07-09 by Minho (combined fast-path gate) · **Assurance:** design+tasks 68% → rev 2 (all MAJORs fixed, see
 collapsed trail)
 
 ---

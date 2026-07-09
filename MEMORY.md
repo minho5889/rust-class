@@ -91,6 +91,21 @@ Bedrock-from-Rust agent core · 011 Fargate/EC2 + cost capstone.
 
 ## Session log
 
+### 2026-07-09 — Session 6: spec 003 fully gated; coached construction begins
+- Learner approved requirements ("proceed"), then the combined design+tasks
+  fast-path gate ("approve"). All three 003 gates closed same-day.
+- Combined audit (68%) caught 5 MAJORs pre-gate: lens dep pattern would have
+  failed R4's own check; schema-at-runtime undesigned (→ constant + drift
+  test, requirements rev 3); &ts[0..10] latent panic (→ .get + bad-ts bucket);
+  properties were scheduled after code (→ test-first, red commits); lifetimes
+  un-ramped (→ ramp step 8 added).
+- Terminology: ramp exercises = "steps" (never "rungs"). Git strategy
+  reconciled: trunk + main mirror + spec-close/NNN marker branches (remote
+  refuses tags & deletes). Branch-map artifact published.
+- **State: waiting on the learner's ramp step 1** (first Rust program at
+  play.rust-lang.org). Everything else is unblocked and done.
+
+
 ### 2026-07-05 — Session 5 (cont.): 002 CONSTRUCTION COMPLETE — spec closed
 - Full autonomous run of all 8 bolts on "you do all the bolts": memlens crate
   (tracking allocator, R1 property 256 cases, failure paths, macros),
