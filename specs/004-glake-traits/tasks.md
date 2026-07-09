@@ -54,7 +54,8 @@ if you're reading this at the gate, they exist.
       reshapes it into F8a/F8b (the planned spec-bug lesson).
 - [ ] 1.6 `EventParser` trait + `ClassifiedLine`; `HandParser` wrapping your
       scanner (owned only at the boundary); the generic pipeline
-      (`fn run<P: EventParser>`) + monomorphized unit tests (F13); F8a green
+      (`fn tally_filtered<P: EventParser + ?Sized>`) + monomorphized unit
+      tests (F13); F8a green
       for hand-vs-hand. *(commits: red, trait+hand)*
 - [ ] 1.7 `SerdeParser`; `--parser` via `Box<dyn …>` in the bin only; the
       naive property meets its real, shrunk counterexample → **spec-bug
@@ -93,6 +94,7 @@ if you're reading this at the gate, they exist.
 | Date | Change | Trigger | Re-gated? |
 |---|---|---|---|
 | 2026-07-09 | Initial fast-path draft | Part-3 directive | pending combined ack |
+| 2026-07-09 | Rev 2.2 per materials critic (88%): 1.6's ghost `fn run<P>` renamed to `tally_filtered` (the rev-2.1 rename missed this line and two step-10 mentions) | materials critic | this combined gate |
 | 2026-07-09 | Rev 2.1 (materials reconciliation): 1.1 reworded — A–F leavers already own the split, G audits/generalizes; 1.5/1.7 reworded to the naive-property→counterexample→F8a/F8b dramaturgy the guides and NOTES actually teach; "debugger" → shrunk inputs + pinned arms | sitting-guide authoring | this combined gate |
 | 2026-07-09 | Rev 2 per design+tasks audit (62%): materials claim made truthful-at-gate (MAJOR-3); sitting J restructured for F8a/F8b + F13 (trait→hand→generic tests→serde→divergence walk); hygiene task 1.8 owns F11/F12; sitting I uses `verdict` + validate-rejects-filters test | 004 audits | this combined gate |
 

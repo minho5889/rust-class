@@ -9,7 +9,7 @@
 Runs in this folder — create `traits.rs` here, then:
 `rustc --edition 2024 traits.rs -o traits && ./traits`
 
-This step is sitting J at toy scale: in glake v1 (spec 004) you'll define `EventParser` — one trait, two signers (your hand scanner, then `serde_json`) — and a property test will prove both honor the contract identically. Today the contract is smaller: "this thing can describe itself."
+This step is sitting J at toy scale: in glake v1 (spec 004) you'll define `EventParser` — one trait, two signers (your hand scanner, then `serde_json`) — and a property test will prove exactly where the two agree — and fence off where they legitimately may not (sitting J's best plot twist; no spoilers). Today the contract is smaller: "this thing can describe itself."
 
 1. Above `main`, declare the contract: `trait Describe { fn describe(&self) -> String; }`. Look hard at that line: the signature ends in `;` where a function would grow a body. A trait promises nothing about *how* — it only fixes *what*: any signer must offer `describe`, taking `&self` (step 3's lesson baked into a signature: describing only requires looking) and returning an owned `String`.
 2. Two lake-flavored types below it: `struct JsonlFile { path: String, events: usize }` (one file of the lake) and `struct Event { kind: String, day: String }` (one line of it). Same field syntax as step 5's struct-like variants, just standing alone.

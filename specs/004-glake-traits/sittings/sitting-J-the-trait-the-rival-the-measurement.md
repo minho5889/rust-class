@@ -159,8 +159,10 @@ All commands from the repo root.
      ```
 
      Inside, I's double-classify disappears: `.map(|line|
-     parser.classify(line, required))` once, `.inspect` counts events,
-     `.filter` applies the verdict, `tally` eats what survives. Say what
+     parser.classify(line, required))` once, `.inspect` counts events
+     (`inspect` is new: a peek-without-consuming adapter — think `map` that
+     hands the item back untouched), `.filter` applies the verdict, `tally`
+     eats what survives. Say what
      `?Sized` buys before you need it (move 6 will show you the error that
      demands it — or add it now and explain it to Claude instead).
    - **`Filter::verdict` migrates** to `&ClassifiedLine` — same arms, owned
@@ -289,7 +291,9 @@ All commands from the repo root.
    guards nothing."* Delete the stale `proptest-regressions` entries for the
    old test; F8a/F8b must pass clean at 512, and `proptest-regressions/`
    stays absent for this file **by design** (the committed-seeds house rule
-   is for genuine failures of *living* tests).
+   is for genuine failures of *living* tests — which is why I's F3 seed
+   stays: that test kept its name and its seed still replays through it;
+   yours died in the rename).
 
    Then make the rivalry user-visible (F7): `ParserChoice` in `cli.rs` —
    `#[derive(ValueEnum)]`, variants `Hand`/`Serde`, `#[default] Hand` — as a
@@ -591,5 +595,5 @@ Read, don't copy — take the shape, close the file, write yours:
 - `specs/004-glake-traits/_reference/glake/src/cli.rs` — `ParserChoice` and
   `build()` (the one `dyn` seam).
 - `specs/004-glake-traits/_reference/NOTES.md` — the full divergence
-  write-up, the ten build decisions, and the validation-day F9 numbers this
-  worksheet quotes.
+  write-up, the eleven build decisions, and the validation-day F9 numbers
+  this worksheet quotes.

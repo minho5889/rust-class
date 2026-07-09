@@ -11,7 +11,7 @@ glake grows up. Three things change, and each one is a lesson:
 
 ```console
 $ glake stats datalake/raw-local --type gate.approved --since 2026-07-06
-2 files · 9 events (filtered from 221)
+5 files · 2 events (filtered from 288)
 ...
 
 $ glake stats datalake/raw-local --parser serde
@@ -85,7 +85,7 @@ malformed lines have no `event_type` or day to filter on)*
 
 **CLI & hygiene**
 - **[E] F10** — args via `clap` derive; usage/help auto-generated; bad usage still exits 2.
-- **[O] F11** — dependency policy: `clap`, `serde`, `serde_json`, `thiserror` now allowed; still nothing async; lens stays optional-dep; verified by a recorded `cargo tree` check.
+- **[O] F11** — dependency policy: `clap`, `serde_json` (which brings `serde` transitively — not a direct dep), `thiserror` now allowed; still nothing async; lens stays optional-dep; verified by a recorded `cargo tree` check.
 - **[O] F12** — the crate is split lib + thin bin, and the lib's public API is reviewed against C-COMMON-TRAITS (Debug/Clone/PartialEq where applicable).
 
 ---
@@ -95,6 +95,7 @@ malformed lines have no `event_type` or day to filter on)*
 | Date | Change | Trigger | Re-gated? |
 |---|---|---|---|
 | 2026-07-09 | Initial fast-path draft (with design+tasks); 003 audit lessons partially pre-applied (properties in design, test-first, optional-dep lens; the "no compound EARS" claim proved false — see rev 2) | Part-3 directive | pending combined ack |
+| 2026-07-09 | Rev 2.2 per materials critic (88%): F11 corrected — `serde` is transitive via `serde_json`, never a direct dep (sittings matched reality; the doc didn't); worked-example numbers made real (validation-day 288-event lake) | materials critic | this combined gate |
 | 2026-07-09 | Rev 2 per requirements audit (70%) + design audit (62%): F13 added (static dispatch had zero coverage — MAJOR-1); day/bad-ts rule defined normatively (MAJOR-2, the hole 003 deferred here); F8 split into F8a equivalence + F8b divergence containment (design MAJOR-1: exact equivalence unsatisfiable — lenient/raw-escape scanner vs strict/unescaping serde); duplicate keys declared unspecified input (design MAJOR-2: old triage plan incoherent); F2/F5 de-compounded, exit codes normative-for-v1, `#[from]`→`#[source]`+path (unimplementable as drafted); filters stats-only (validate has nothing to filter); F12 owns the lib/bin split | 004 audits | this combined gate |
 
 </details>

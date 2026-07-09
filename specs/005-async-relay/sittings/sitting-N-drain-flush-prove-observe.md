@@ -241,12 +241,14 @@ hygiene sweep, evidence.
 
      Two things to interrogate: `tower` and `proptest` are missing — where
      are they? (`-e normal` again: dev-dependencies never ship — F's
-     false-alarm lesson.) And `tracing-subscriber`: the A8 allow-list says
-     "tracing" — is the subscriber a violation? It's tracing's output half,
-     bin-side only, and the reference ships it too — but the honest answer
-     is that A8's text doesn't *name* it. Record the question in
-     `evidence.md` for the close-out gate rather than hand-waving it; specs
-     get amended by exactly this kind of noticing. (F's paper cut, recalled
+     false-alarm lesson.) And `tracing-subscriber`: notice it's on the list
+     A8 names — but it wasn't always. Pre-rev-2.2, A8 said only "tracing",
+     and the subscriber (tracing's output half, bin-side only) was a real
+     allow-list gap. Open requirements.md's changelog and read the rev 2.2
+     entry: the question "does the list match reality" was asked during
+     authoring and answered by amendment — the same teaching beat as J's F8
+     story. Specs get amended by exactly this kind of noticing; here the
+     paper trail *is* the lesson. (F's paper cut, recalled
      before it bites: `grep -c` prints `0` *and exits 1* — fine at the
      prompt, fatal in a future `set -e` script.)
    - **The full gate, both configs** (lens test runs get the trace

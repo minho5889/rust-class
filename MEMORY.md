@@ -91,6 +91,35 @@ Bedrock-from-Rust agent core · 011 Fargate/EC2 + cost capstone.
 
 ## Session log
 
+### 2026-07-09 — Session 7: Parts 3 & 4 authored ahead (specs 004 + 005)
+- Learner: "great can you make 2 more parts further?" → full materials-ahead
+  build of **004 glake-traits** (Part 3) and **005 async-relay** (Part 4).
+- Fast-path spec docs drafted for both → six assurance audits (intents
+  93%/95%; 004 reqs 70%, 004 design+tasks 62%, 005 reqs 68%, 005 design+tasks
+  72%) → rev 2 fixed every MAJOR. Headline catches: exact hand/serde
+  equivalence **unsatisfiable** (lenient raw-escape scanner vs strict
+  unescaping serde) → F8 split into F8a equivalence + F8b divergence
+  containment; static dispatch had zero coverage → new F13; the drop-tx
+  shutdown deadlock footgun; `join_all`-over-oneshot isn't concurrency.
+- References built + validated: **004 glake v1** 47/47 tests both configs
+  (F3/F8a/F8b at 512 cases; real lake hand≡serde byte-identical; F9 measured:
+  737 vs 7,148 allocs, ≈9.7× — the cost-of-abstraction lesson is real) and
+  **005 relay** 14/14 both configs (A4/A5 at 256 cases on a multi-thread
+  runtime, real-SIGINT shutdown test, glake cross-check agrees; ≈103
+  allocs/accepted event; two-write append empirically tore ~170/200 lines).
+- Ramp steps 9–13 authored + validated (every claimed compiler error
+  provoked for real; steps 12–13 switch to cargo for tokio). Sitting guides
+  G–J and K–N authored, every checkpoint verified against the references.
+- Materials critic (executed, not eyeballed): **88%**, 2 MAJOR / 3 MODERATE /
+  7 minor — all reconciliation misses, all fixed same-session (rev 2.x
+  changelogs); every executed checkpoint reproduced verbatim.
+- ⚠ Pending learner acks: (1) 003 rev-4 amendments (carried over), (2) 004
+  combined gate (requirements/design/tasks rev 2.2), (3) 005 combined gate
+  (rev 2.2). All docs `awaiting-review`.
+- **State: Parts 1–4 fully built** — ramp 1–13, sittings A–N, three validated
+  references. The trail now runs from `fn main` to a graceful async service;
+  006 (hello-lambda) deploys relay's handler next.
+
 ### 2026-07-09 — Session 6 (cont.): the whole course authored ahead
 - Learner directive: develop ALL materials in advance for self-paced follow-
   along. CLAUDE.md learning-mode gained the materials-ahead model.

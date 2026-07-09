@@ -89,7 +89,9 @@ against the strawman — shutdown-mid-queue is where it visibly loses events.
 
 ## How we verify
 
-- A4/A5 proptests (≥256 cases, seeds committed) written before the writer task.
+- A4 proptest (≥256 cases, seeds committed) written before the writer task;
+  A5 immediately after it, per the honest-red protocol (the red budget is
+  spent on A4 — A5 going green first try is expected and said aloud).
 - [E]s: A1/A2/A3 as `#[tokio::test]` via `oneshot`; **A6a/A6b via a
   `CARGO_BIN_EXE` child process sent a real SIGINT** (`kill -INT <pid>`),
   asserting refused-late-request, exit 0, and 202'd-events-on-disk — the
@@ -105,6 +107,7 @@ against the strawman — shutdown-mid-queue is where it visibly loses events.
 | Date | Change | Trigger | Re-gated? |
 |---|---|---|---|
 | 2026-07-09 | Initial fast-path draft | Part-4 directive | pending combined ack |
+| 2026-07-09 | Rev 2.2 per materials critic (88%): verify line reconciled — A4 red-first before the writer, A5 immediately after (its green-first-try is expected and stated) | materials critic | this combined gate |
 | 2026-07-09 | Rev 2 per design+tasks audit (72%): drop-tx deadlock footgun named + made sitting-N checkpoint (MAJOR-2); A4 concurrency fixed to multi-thread runtime + spawn-per-request, strawman-may-hold honesty promoted from fallback to the plan (MAJOR-1); A6 verified via real child + SIGINT; bounded-channel and writer-I/O decision rows added; 202-means-enqueued aligned with requirements rev 2; lens wiring, A9 lint element, multi-day generator domain, glake API surface named | 005 audits | this combined gate |
 
 </details>

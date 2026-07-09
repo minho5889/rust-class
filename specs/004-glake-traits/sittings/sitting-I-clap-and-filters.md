@@ -277,8 +277,9 @@ All commands from the repo root.
    with one good event and one whose `ts` can't yield a day (the reference
    uses `"ts":"soon"`) — and write the [E] tests in `tests/cli.rs`, asserting
    against **your own hand-count** (E's rule: `contains` on load-bearing
-   fragments). For calibration, the reference's fixture lake (5 valid events,
-   one bad-ts, one malformed, one blank, three partitions) prints, verbatim:
+   fragments). For calibration, the reference's fixture lake (5 events total — one of
+   them bad-ts — plus one malformed line and one blank, across three
+   partitions) prints, verbatim:
 
    ```console
    glake stats tests/fixtures/lake --type gate.approved
@@ -419,8 +420,11 @@ expected; the partition law holds for *every* (lines, filter) pair anyway.
 <details><summary>Hint 2 — verdict, arm by arm</summary>
 
 The reference's order, as prose: (1) `let Line::Event { kind, day } = line
-else { return Verdict::Keep };` — non-events flow through (let-else, D's
-friend). (2) If a wanted kind is set and doesn't equal `kind` → `Skip`,
+else { return Verdict::Keep };` — non-events flow through. (New syntax:
+**let-else** — "destructure this pattern or run the `else` block, which must
+leave the function." It's exactly the step-5 `match` with a happy arm and an
+early-return arm, folded into one line; write it as a `match` first if you
+prefer — the reference's shape is a refactor away.) (2) If a wanted kind is set and doesn't equal `kind` → `Skip`,
 immediately — this is what reserves `SkipBadTs`. (3) Match on
 `self.since.as_deref()`: `None` → `Keep`; `Some(_)` while `day == "bad-ts"`
 → `SkipBadTs`; `Some(since)` → `Keep` iff `day >= since` else `Skip`. Five
