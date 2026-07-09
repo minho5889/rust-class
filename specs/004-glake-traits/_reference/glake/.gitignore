@@ -1,0 +1,5 @@
+# Exhaust from `cargo test --features lens`: the main.rs test harness is
+# built with the lens allocator, which records unconditionally and drops a
+# trace at the memlens default relative path (a stray crate-local datalake/).
+# Real traces belong in the repo-root lake; these are meaningless — ignore.
+/datalake/

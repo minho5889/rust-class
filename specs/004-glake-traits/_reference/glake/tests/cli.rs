@@ -14,6 +14,11 @@ fn glake(args: &[&str]) -> Output {
     Command::new(env!("CARGO_BIN_EXE_glake"))
         .args(args)
         .current_dir(env!("CARGO_MANIFEST_DIR"))
+        // Under `--features lens` every spawned binary opens a memlens
+        // session; without this, test runs would litter a stray
+        // `datalake/` inside the crate. Real F9 runs happen from the repo
+        // root, where traces belong in the real lake.
+        .env("MEMLENS_TRACE", "/dev/null")
         .output()
         .expect("binary runs")
 }

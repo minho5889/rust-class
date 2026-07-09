@@ -89,6 +89,13 @@ Triage per the pipeline's counterexample protocol:
    call it with `&HandParser`/`&SerdeParser` (monomorphized), the binary
    with `&*Box<dyn EventParser>` (the crate's only dyn seam).
 10. **Version bumped to 0.2.0** to mark v1 (the 003 reference stays 0.1.0).
+11. **Lens test exhaust is contained**: under `--features lens` the memlens
+    allocator records unconditionally, so even the (empty) main.rs test
+    harness drops a trace at memlens' default relative path — a stray
+    crate-local `datalake/`. The cli tests route spawned binaries'
+    `MEMLENS_TRACE` to `/dev/null`; the harness's own trace is covered by
+    the crate `.gitignore` (`/datalake/`). Real traces belong in the
+    repo-root lake, where F9 runs happen.
 
 ## F11 — dependency policy check (`cargo tree`, recorded 2026-07-09)
 
