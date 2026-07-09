@@ -2,7 +2,7 @@
 //! Kept as a pure function over lines so the R9 conservation property can
 //! hammer it without touching the filesystem.
 
-use crate::classify::{Line, classify};
+use crate::classify::{Line, REQUIRED_KEYS, classify};
 use std::collections::HashMap;
 
 #[derive(Debug, Default, PartialEq, Eq)]
@@ -18,7 +18,7 @@ pub struct Stats {
 pub fn tally<'a>(lines: impl IntoIterator<Item = &'a str>) -> Stats {
     let mut stats = Stats::default();
     for line in lines {
-        match classify(line) {
+        match classify(line, &REQUIRED_KEYS) {
             Line::Blank => {}
             Line::Malformed { .. } => stats.malformed += 1,
             Line::Event { kind, day } => {

@@ -33,7 +33,7 @@ test is written **before** it (test-first, like everything here).
 | Part | What it does | Rust you learn | REQs |
 |---|---|---|---|
 | **args** | `validate`/`stats` + a path from `std::env::args`; anything else → usage on stderr, exit 2 | `String` vs `&str`, `match`, exit codes | R6 (usage/exit discipline) |
-| **walk** | one file → just it; folder → every `dt=*/` `*.jsonl`; unreadable path → clear stderr line, exit 2, no panic | `Result` + `?`, recursion, `PathBuf` | R3a, R3b, R6 |
+| **walk** | one file → just it; folder → every `*.jsonl` beneath it, recursively (`dt=` partitions and `traces/` alike — rev 3); unreadable path → clear stderr line, exit 2, no panic | `Result` + `?`, recursion, `PathBuf` | R3a, R3b, R6 |
 | **scan** (the heart) | `has_key(line, k)` / `get_str(line, k)` — a character-stepping scanner over one line, quote/escape-aware, top level only | `&str` slices (borrowed returns — zero copies), `Option`, `chars`, scanner-state enum, **explicit `<'a>` on `get_str`** (ramp step 8) | R8, feeds R1a |
 | **classify** | each line → `Line<'a>` enum: `Blank`, `Malformed{missing}`, `Event{kind, day}`. `day = ts.get(0..10).unwrap_or("bad-ts")` — **never a slice-index panic**; short/odd `ts` lands in a visible `bad-ts` bucket | enums + exhaustive `match`; `Line<'a>` borrows from the line (lifetimes, met in ramp 8, deepened here) | R5, R1a |
 | **count / report** | stats: `HashMap<&str, u32>` tallies by kind and by day + grand total; validate: `file:line missing key "…"`, exit 1 iff any | `HashMap::entry`, iterator chains, formatting | R2, R9, R1a, R1b |
@@ -81,7 +81,8 @@ fn classify<'a>(line: &'a str, required: &[&'a str]) -> Line<'a>;
 // walk.rs
 fn jsonl_files(path: &Path) -> io::Result<Vec<PathBuf>>;
 
-// stats.rs / validate.rs — folds over (file, line_no, Line<'a>)
+// tally.rs — pure fold over lines (property-testable); validate/stats are
+// thin functions in main.rs that own I/O and exit codes (rev 3 layout)
 ```
 
 `Line<'a>` is the design's deliberate stretch lesson: the enum borrows from the
@@ -96,6 +97,7 @@ already written one explicit `<'a>` on `get_str` in Sitting C.
 | Date | Change | Trigger | Re-gated? |
 |---|---|---|---|
 | 2026-07-09 | Initial draft (fast path with tasks.md) | requirements approved | — |
+| 2026-07-09 | Rev 3 (materials-critic M1/m13, change protocol): walk row covers the whole lake incl. `traces/` (matches R3a rev 4 + the reconciliation R10); module layout corrected to tally.rs-pure-fold + thin main.rs (what the sittings and reference actually build) | materials review | flagged for learner ack |
 | 2026-07-09 | Rev 2 per combined audit (68%): lens dep → optional (MAJOR-1); schema dogfood → constant+drift-test w/ requirements rev-3 amendment (MAJOR-2); `ts.get(0..10)`+bad-ts bucket (MAJOR-3); test-first ordering asserted here & in tasks (MAJOR-4); lifetime claims corrected to C/D + ramp step 8 added (MAJOR-5); Key-decisions & Properties tables added, REQ citations per part, scanner-correctness examples added (MODERATEs) | design+tasks audit | this combined gate |
 
 </details>

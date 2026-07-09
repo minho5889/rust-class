@@ -2,7 +2,7 @@
 //! No unwrap/expect anywhere in the logic (L4): everything fallible returns
 //! Result and is handled at this boundary.
 
-use glake::classify::{Line, classify};
+use glake::classify::{Line, REQUIRED_KEYS, classify};
 use glake::tally::tally;
 use glake::walk::jsonl_files;
 use std::path::Path;
@@ -52,7 +52,7 @@ fn validate(files: &[std::path::PathBuf]) -> ExitCode {
             }
         };
         for (n, line) in content.lines().enumerate() {
-            if let Line::Malformed { missing } = classify(line) {
+            if let Line::Malformed { missing } = classify(line, &REQUIRED_KEYS) {
                 println!("{}:{}  missing key \"{missing}\"", file.display(), n + 1);
                 bad += 1;
             }

@@ -27,7 +27,7 @@ by type
   …
 
 by day
-  dt=2026-07-05        214
+  2026-07-05           214
 
 $ glake validate datalake/raw-local
 datalake/raw-local/dt=2026-07-05/events.jsonl:41  missing key "actor"
@@ -55,7 +55,7 @@ by doing it the hard way once.
   with an error code if it found problems (so a script or CI can trust it).
 - **`glake stats <path>`** — counts events, grouped by their type and by their
   day, with a grand total.
-- Give it **a folder** → it walks every `dt=…/*.jsonl` file inside. Give it **one
+- Give it **a folder** → it walks every `.jsonl` file beneath it (daily partitions and memlens traces alike). Give it **one
   file** → it reads just that. Blank lines are ignored. A path that doesn't exist
   gives a clear error message, never a crash.
 
@@ -115,7 +115,7 @@ in the code and gets a one-line note in `evidence.md` when we're done:
 - **[P] R9** — the by-type totals and the by-day totals each add up to the grand total (nothing double-counted or dropped, on either axis).
 
 **Reading input**
-- **[E] R3a** — a folder is walked recursively through `dt=…/` into every `*.jsonl` file.
+- **[E] R3a** — a folder is walked recursively into every `*.jsonl` file beneath it — `dt=` partitions and `traces/` alike (the lake is both; amended rev 4).
 - **[E] R3b** — a single-file path reads just that file.
 - **[E] R5** — blank / whitespace-only lines are skipped (not counted, not flagged).
 - **[E] R6** — a missing or unreadable path prints a clear stderr error and exits non-zero — no panic.
@@ -129,7 +129,7 @@ in the code and gets a one-line note in `evidence.md` when we're done:
 - **[O] R4** — with default features the dependency tree is std-only; a check fails if any crate is added. `memlens` appears only under `--features lens`.
 - **[E] R7a** — under `--features lens`, glake installs `memlens` as its allocator and writes a trace.
 - **[O] R7b** — with the lens off (the default), no memlens code is in the binary.
-- **[O] R10** — `glake stats datalake/raw-local` on the real lake matches the counts from `datalake/queries/scan.sh`.
+- **[O] R10** — on the real lake, `glake stats datalake/raw-local`'s grand total **reconciles** with `datalake/queries/scan.sh`: glake's total = scan.sh's process-event count + the lines of memlens trace files (glake walks the whole lake; scan.sh reads only `dt=*/events.jsonl`). Verified at authoring: 221 = 157 + 64 (amended rev 4 from "matches" — the tools measure different scopes by design).
 
 ---
 
@@ -153,6 +153,13 @@ boundary crossing) — add them to SKILLS 1b at close.
 Readability rev (2026-07-05): rewrote the prose to lead with a concrete worked
 example after the first pass read as an under-explained bullet list. Criteria
 unchanged.
+
+Rev 4 (2026-07-09, materials-critic M1/M4, change protocol): R3a walk scope
+made explicit (whole lake incl. `traces/`, matching the built walk) and R10
+changed from "matches" to the reconciliation identity (221 = 157 + 64 at
+authoring) — the two tools measure different scopes by design. Worked example's
+by-day output corrected to bare days (`2026-07-05`, no `dt=` prefix), matching
+the built output. Flagged for learner ack at next gate contact.
 
 Rev 3 (2026-07-09, design-audit feedback, combined-gate amendment): schema key
 list = compile-time constant + drift test instead of runtime file read (design
