@@ -198,8 +198,18 @@ rust-class/ (goldeneye)
 
 - **Specs**: numbered from 002 (001 retired pre-pipeline); never deleted —
   superseded specs point to their successor.
-- **Branches/merges** (effective from 002's close): branch per spec
-  (`claude/NNN-short-name`; current `claude/rust-aws-learning-44il52` carries
-  through 002). At spec close: merge to `main`, tag `spec/NNN-short-name`.
-- **Commits**: imperative, spec-referenced (`002: implement handler (task 1.2.3)`).
+- **Branches/merges** (reconciled 2026-07-09 to this remote's real limits — it
+  accepts branch creates/updates only: **no tag pushes, no branch deletes**):
+  - `claude/rust-aws-learning-44il52` — the designated **active dev branch**;
+    all ongoing work commits here (the harness/PR tracks it). Our trunk.
+  - `main` — mirror of the trunk, fast-forwarded at each spec close. Pushed.
+  - **Spec boundaries** are marked with `spec-close/NNN-name` **branches** (not
+    tags — tags can't push here). `git diff spec-close/002-… spec-close/003-…`
+    shows exactly what a spec added.
+  - Retired: per-spec dev branches (redundant with the designated branch for a
+    solo repo) and tag markers (unpushable). A stray `claude/003-rust-bedrock`
+    lingers on the remote from a permissions probe — deletes are refused, so
+    ignore it.
+- **Commits**: imperative, spec/rung-referenced (`003: implement handler`,
+  `ramp: rung 2 review`). One commit per learner rung in coached mode.
 - Crate and spec names: kebab-case. Playground stays outside the workspace.
