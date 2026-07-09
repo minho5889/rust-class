@@ -1,7 +1,8 @@
 # Requirements — 003 rust-bedrock
 
-**Status:** awaiting-review
-**Approved:** — · **Assurance:** intent 90%, requirements 72% → revised (rev 2)
+**Status:** approved
+**Approved:** 2026-07-09 by Minho ("proceed to the next spec") · **Assurance:**
+intent 90%, requirements 72% → revised (rev 2)
 
 ---
 
