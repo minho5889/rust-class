@@ -10,7 +10,9 @@
 Three new ramp steps (9–11: traits, generics/dyn, closures+adapters), then
 **four sittings** (G→J) evolving your own `crates/glake`. Same rules as Part 2:
 you write, worksheets steer, properties come red-first, one commit per move.
-All materials pre-authored and validated against the 004 reference.
+Materials (step 9–11 worksheets + sitting guides G–J) are authored and
+validated against the 004 reference **before this gate is presented** —
+if you're reading this at the gate, they exist.
 
 **Done means:** filters work, errors are designed, both parsers agree under a
 512-case property, and you've *measured* hand vs serde in the lens.
@@ -38,34 +40,44 @@ All materials pre-authored and validated against the 004 reference.
 
 ### Sitting I — clap + filters, test-first *(F1–F4, F10; T5)*
 - [ ] 1.3 **F3 partition property first** (red) — reusing your R9 generator.
-- [ ] 1.4 `clap` derive CLI; `Filter` struct + closure predicate; `--type`,
-      `--since` (+ bad-ts exclusion note); `(filtered from M)` output; property
-      + fixtures green. *(commits: red, clap, green)*
+- [ ] 1.4 `clap` derive CLI (filter flags rejected on `validate`, usage test);
+      `Filter` struct + `verdict` method; `--type`, `--since` (+ bad-ts
+      excluded count, F2b); `(filtered from M)` output; property + fixtures
+      green. *(commits: red, clap, green)*
 
-### Sitting J — the trait, the rival, the measurement *(F7–F9; T1, T2, T6)*
-- [ ] 1.5 **F8 equivalence property first** (red): both-parsers-agree, against
-      stubs.
-- [ ] 1.6 `EventParser` trait; `HandParser` wrapping your scanner (owned at the
-      boundary); `SerdeParser`; `--parser` via `Box<dyn …>`; property green —
-      expect and triage the duplicate-key counterexample (planned lesson).
-      *(commits: red, hand, serde+green)*
-- [ ] 1.7 **The measurement (L→evidence):** stats on the real lake under
+### Sitting J — the trait, the rival, the measurement *(F7–F9, F13; T1, T2, T6)*
+- [ ] 1.5 **F8a equivalence property first** (red): both-parsers-agree on
+      well-formed input, against stub parsers (`todo!()`).
+- [ ] 1.6 `EventParser` trait + `ClassifiedLine`; `HandParser` wrapping your
+      scanner (owned only at the boundary); the generic pipeline
+      (`fn run<P: EventParser>`) + monomorphized unit tests (F13); F8a green
+      for hand-vs-hand. *(commits: red, trait+hand)*
+- [ ] 1.7 `SerdeParser`; `--parser` via `Box<dyn …>` in the bin only; F8a
+      green; then **co-write F8b** (divergence containment) and walk its three
+      classes — leniency, escapes, duplicate keys — in the debugger of your
+      choice: shrunk inputs. Any *unclassifiable* divergence → normal triage.
+      *(commits: serde+F8a green, F8b)*
+- [ ] 1.8 Hygiene sweep (Claude drives): F11 `cargo tree` check, F12
+      C-COMMON-TRAITS rubric review, fmt/clippy both configs — outputs
+      recorded for evidence.
+- [ ] 1.9 **The measurement (F9 → evidence):** stats on the real lake under
       `--features lens`, once per parser; open both traces in the viewer;
       allocation counts + deltas → `evidence.md`. You drive.
 
 ## 2. Close-out (Claude, machine work)
 
-- [ ] 2.1 evidence.md (T1–T6 notes, F9 numbers, property outcomes, triage log);
-      property-auditor run; SKILLS 1c updates; MEMORY; main FF +
+- [ ] 2.1 evidence.md (T1–T6 notes, F9 numbers, property outcomes, triage log
+      if any); property-auditor run; SKILLS 1c updates; MEMORY; main FF +
       `spec-close/004-glake-traits` marker.
 
 ---
 
 ## Operations checklist
 
-- [ ] fmt + clippy clean (both feature configs); F3/F8 ≥256 cases, red-first,
-      seeds committed on failure; fixtures green; F6/F12 rubric + F9 numbers in
-      evidence; property-auditor pass.
+- [ ] fmt + clippy clean (both feature configs); F3/F8a/F8b ≥256 cases,
+      red-first, seeds committed on genuine failure; F13 monomorphized tests +
+      fixtures green (incl. `validate --type` → exit 2); F6/F11/F12 records +
+      F9 numbers in evidence; property-auditor pass.
 
 *Deviation declared: no AWS deploy/teardown — local-only unit.*
 
@@ -76,5 +88,6 @@ All materials pre-authored and validated against the 004 reference.
 | Date | Change | Trigger | Re-gated? |
 |---|---|---|---|
 | 2026-07-09 | Initial fast-path draft | Part-3 directive | pending combined ack |
+| 2026-07-09 | Rev 2 per design+tasks audit (62%): materials claim made truthful-at-gate (MAJOR-3); sitting J restructured for F8a/F8b + F13 (trait→hand→generic tests→serde→divergence walk); hygiene task 1.8 owns F11/F12; sitting I uses `verdict` + validate-rejects-filters test | 004 audits | this combined gate |
 
 </details>

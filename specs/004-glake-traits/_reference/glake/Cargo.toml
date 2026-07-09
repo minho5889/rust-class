@@ -1,0 +1,34 @@
+[package]
+name = "glake"
+version = "0.2.0" # glake v1 (spec 004) — evolved from the 003 reference (0.1.0)
+edition = "2024"
+
+# Course reference implementation — lives outside the workspace on purpose.
+# The learner's own glake is crates/glake; this one exists to validate
+# every worksheet checkpoint before the learner reaches it.
+[workspace]
+
+[features]
+# The lens stays opt-in (F11, carried over from 003 R4/R7): memlens is an
+# OPTIONAL dependency that only enters the tree with --features lens.
+lens = ["dep:memlens", "memlens/memlens"]
+
+[dependencies]
+# 004 is where the crates arrive, on trial (F11): clap for the CLI,
+# serde_json for the rival parser backend, thiserror for the error enum.
+# None of them are optional — they ARE the v1 deliverable. Still nothing async.
+clap = { version = "4", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+memlens = { path = "../../../../crates/memlens", optional = true }
+
+[dev-dependencies]
+proptest = "1"
+
+[lib]
+name = "glake"
+path = "src/lib.rs"
+
+[[bin]]
+name = "glake"
+path = "src/main.rs"
