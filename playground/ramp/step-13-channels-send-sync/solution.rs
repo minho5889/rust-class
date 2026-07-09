@@ -6,7 +6,7 @@
 //
 // --- Honest first producers (does NOT compile) ── E0382 ────────────────
 //
-//     for id in 1..=3u64 {
+//     for id in 1..=3 {
 //         tokio::spawn(async move { ... tx.send(msg).await ... });
 //     }
 //
@@ -94,17 +94,17 @@ async fn main() -> Result<(), tokio::task::JoinError> {
     // bumps a counter — the String itself is never copied.
     let station = Arc::new(String::from("goldeneye ground station"));
 
-    for id in 1..=3u64 {
+    for id in 1..=3 {
         // teach: E0382's fix — each producer owns its OWN Sender clone (and
         // its own Arc handle). Clones made out here, then moved in.
         let tx = tx.clone();
         let station = Arc::clone(&station);
         tokio::spawn(async move {
             for n in 1..=4 {
-                // teach: pace-setter — each producer runs at its own tempo,
-                // so the collected lines interleave visibly and the ORDER
-                // differs run to run. The COUNT never does.
-                sleep(Duration::from_millis(id * 3)).await;
+                // teach: the breather — all three producers wake at the same
+                // tempo, so every round is a genuine three-way race and the
+                // ORDER shuffles run to run. The COUNT never does.
+                sleep(Duration::from_millis(2)).await;
                 let msg = format!("producer {id} via {station}: event {n}");
                 // teach: send() MOVES msg — after this line the producer no
                 // longer has the data (that was the second E0382). Err means
