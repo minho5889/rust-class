@@ -210,6 +210,8 @@ rust-class/ (goldeneye)
     solo repo) and tag markers (unpushable). A stray `claude/003-rust-bedrock`
     lingers on the remote from a permissions probe — deletes are refused, so
     ignore it.
-- **Commits**: imperative, spec/rung-referenced (`003: implement handler`,
-  `ramp: rung 2 review`). One commit per learner rung in coached mode.
+- **Commits**: imperative, spec/step-referenced (`003: implement handler`,
+  `ramp: step 2 review`). One commit per learner step in coached mode.
+  (Terminology: ramp exercises are called **steps** — never "rungs", learner
+  preference 2026-07-09.)
 - Crate and spec names: kebab-case. Playground stays outside the workspace.
