@@ -106,9 +106,11 @@ call your public API is you.
 **Concurrency & conservation**
 - **[P] A4** — acceptance conservation: for any generated mix of valid and
   invalid events fired **concurrently** (temp lake), after shutdown the
-  multiset of lines on disk equals the multiset of bodies that received 202 —
-  nothing torn, merged, lost, or invented; duplicate submissions yield
-  duplicate lines (by design); rejected bodies appear nowhere.
+  multiset of lines on disk equals the multiset of bodies that received 202,
+  compared as parsed JSON values — the relay re-serializes each accepted body
+  to one compact line, since a raw body may legally span lines. Nothing torn,
+  merged, lost, or invented; duplicate submissions yield duplicate lines (by
+  design); rejected bodies appear nowhere.
 - **[P] A5** — partition correctness: every line lands in the `dt=` folder
   matching its own `ts` day, and `glake stats` over the resulting temp lake
   agrees with the relay's accepted count.
@@ -140,6 +142,7 @@ call your public API is you.
 | Date | Change | Trigger | Re-gated? |
 |---|---|---|---|
 | 2026-07-09 | Initial fast-path draft (with design+tasks) | Part-4 directive | pending combined ack |
+| 2026-07-09 | Rev 2.1: A4 equality defined on parsed JSON values + compact re-serialization rule (a raw body may span lines; byte-equality was unimplementable) | reference design | this combined gate |
 | 2026-07-09 | Rev 2 per requirements audit (68%): the door check defined once (glake key-presence + comparable day; explicitly weaker than the JSON Schema, stricter than glake-the-reader — MAJOR-1); A3 pinned to quiescent consistency (MAJOR-2); A4 rewritten as multiset equality + explicit no-dedup policy (MAJOR-3); A2 gets a fixed first-problem order + 413 note; A6 split into A6a/A6b with late-request behavior; cross-process hook coexistence + temp-lake rule stated; A1 fixture = real hook envelope | 005 audits | this combined gate |
 
 </details>
