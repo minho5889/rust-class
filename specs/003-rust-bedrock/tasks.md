@@ -21,11 +21,18 @@ lake, all tests green, and you've watched your own tool's memory in the lens.
 
 ## 0. The ramp (`playground/ramp/`, no spec, in progress)
 
-- [ ] 0.1 Steps 1–8, one concept each (now includes **step 8: lifetimes-lite** —
-      just enough `<'a>` for the scanner). One commit per step
-      (`ramp: step N — <concept>`). **Step 1 is posed and waiting.**
+- [ ] 0.1 Steps 1–8, one concept each (incl. **step 8: lifetimes-lite**). One
+      commit per step (`ramp: step N — <concept>`), your code in
+      `my-solution.rs`. **All eight worksheets are pre-authored and validated**
+      (materials-ahead directive 2026-07-09; solutions compile-swept, critic
+      verdict 78%→96% after fixes) — start anytime at
+      `playground/ramp/step-01-hello/`.
 
 ## 1. glake, one sitting at a time (learner writes, Claude coaches)
+
+> All six sitting guides are pre-authored and validated against the reference
+> implementation (`_reference/glake`, 17/17 tests green): open
+> `sittings/sitting-A-count-lines.md` when the ramp is done.
 
 ### Sitting A — a program that reads a file *(ramp 1–3, 7)*
 - [ ] 1.1 `cargo new` in `crates/glake`; read one `.jsonl` path from

@@ -91,6 +91,23 @@ Bedrock-from-Rust agent core · 011 Fargate/EC2 + cost capstone.
 
 ## Session log
 
+### 2026-07-09 — Session 6 (cont.): the whole course authored ahead
+- Learner directive: develop ALL materials in advance for self-paced follow-
+  along. CLAUDE.md learning-mode gained the materials-ahead model.
+- Built + validated reference glake (`specs/003-rust-bedrock/_reference/`):
+  17/17 tests, R8/R9 properties at 512 cases, clippy clean both configs,
+  std-only tree, R10 reconciliation verified (221 = 157 + 64).
+- Workflow-authored 8 ramp worksheets (each solution compile-swept) + 6
+  sitting guides; adversarial critic 78% → fixes (2 MAJORs: sitting F vs
+  approved R10/walk text → change-protocol amendments requirements rev 4 /
+  design rev 3; reference classify vs frozen interface → reference fixed) →
+  re-verify **96%**, residues cleaned to 100% of findings addressed.
+- ⚠ Pending learner ack (change protocol): R3a whole-lake walk scope + R10
+  reconciliation amendment + design layout note (tally.rs).
+- **State: the entire trail is built.** Learner starts at
+  playground/ramp/step-01-hello/ whenever ready; Claude reviews submissions.
+
+
 ### 2026-07-09 — Session 6: spec 003 fully gated; coached construction begins
 - Learner approved requirements ("proceed"), then the combined design+tasks
   fast-path gate ("approve"). All three 003 gates closed same-day.

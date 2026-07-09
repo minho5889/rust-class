@@ -27,6 +27,7 @@ Runs at [play.rust-lang.org](https://play.rust-lang.org) — no local setup need
 - You provoked E0277 and can say, without notes, what `?` expands to: *match; on `Err`, return it from the enclosing function; on `Ok`, unwrap and continue.*
 - The refactored `parse_day` body is three lines with two `?`s and behaves identically to the `match` staircase.
 - Say this out loud and mean it: *"errors are values in the return type; `?` is an early return, not an exception."*
+- Save what YOU wrote: paste your playground code into `my-solution.rs` next to this README, then commit — `ramp: step 6 — Result and the ? operator`.
 
 ## Hints (open one at a time)
 
@@ -48,7 +49,7 @@ The refactored body is exactly three statements. The first is one chained line �
 let day_str = s.get(8..10).ok_or_else(|| format!("..."))?;
 ```
 
-The second is the parse wearing the same shape — `.parse()`, then `.map_err(|e| ...)`, then `?`, bound with a `: u32` annotation. The third wraps the number in the success variant and returns it (last expression, no semicolon — step 1).
+The second is the parse wearing the same shape — `.parse()`, then `.map_err(|e| ...)`, then `?`, bound with a `: u32` annotation. The third wraps the number in the success variant and returns it (last expression, no semicolon — step 5, where the `match` *was* the function body).
 
 Each `?` reads as: "if this is `Err`, return it from `parse_day` right now; otherwise hand me the value and keep going."
 

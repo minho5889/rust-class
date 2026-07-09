@@ -7,7 +7,7 @@ terminal looking like the requirements' worked example.
 **Requirements:** R9 (the conservation property), R2 (stats output) — tasks
 1.7–1.8.
 **Ramp you'll use:** steps 2 (ownership & move), 4 (`&str` vs `String`), 5
-(enum + `match`). `HashMap` and iterator chains are **new here** — this
+(enum + `match`). `HashMap` and iterator chains are **new here** (L5) — this
 sitting introduces them (they join SKILLS as 1b items at spec close).
 
 ## Where you are
@@ -142,7 +142,7 @@ red first, green second.
 5. **Think before you type.** The fold is yours alone (the co-writing was for
    the test). Settle these on paper first:
 
-   - **The key-type decision, this sitting's heart (ramp 4, lesson L2).**
+   - **The key-type decision, this sitting's heart (ramp 4, lessons L1 + L2).**
      `classify` hands you `kind: &'a str` and `day: &'a str` — borrowed from
      the line. Do your maps key on `&str` (zero-copy, the design's instinct)
      or on owned `String`? Work out what each costs and what each *forces*:
@@ -154,7 +154,7 @@ red first, green second.
    - **One event, two maps.** The same event updates `by_kind` *and*
      `by_day`. If your keys are owned, can one `String` serve both maps?
      What does ramp 2 say happens to it after the first insertion?
-   - **The counting idiom.** Look up `HashMap::entry` in the std docs —
+   - **The counting idiom (L5).** Look up `HashMap::entry` in the std docs —
      specifically what `entry(k).or_insert(0)` *returns*. It's not a number.
      What do you have to do to it before `+= 1` works?
    - **Your move-1 prediction.** Wherever the day extraction lives after
@@ -163,7 +163,7 @@ red first, green second.
      0..10" with an `Option` instead of a panic?
 
 6. **Implement the fold until R9 goes green.** In `tally.rs`: one `match` on
-   `classify(line)` with three arms (ramp 5) — `Blank` does nothing,
+   `classify(line, &REQUIRED_KEYS)` with three arms (ramp 5) — `Blank` does nothing,
    `Malformed` bumps one counter, `Event` bumps three things. Work in the
    rhythm:
 
@@ -213,10 +213,15 @@ red first, green second.
    `tests/fixtures/lake`, and assert against truth you compute **by hand** —
    open your fixture files and count: valid events, events per type, events
    per day, remembering C's planted blanks and D's malformed line count
-   nowhere. Assert the grand-total line, at least one by-type line, both
-   `dt=` days, and exit code 0. B's advice still stands: assert with
-   `contains` on the load-bearing fragments, not whole-output equality —
-   your formatting may still evolve.
+   nowhere. Days come from each line's `ts` — and B move 3 made you align
+   every fixture line's `ts` with its partition, so the two days the output
+   must show are `2026-07-01` and `2026-07-02`. Assert the grand-total line,
+   at least one by-type line, both of those days **as bare days** (that's how
+   the output prints them — no `dt=` prefix), and exit code 0. If a day
+   assertion fails, check the fixture lines' `ts` values before suspecting
+   the fold. B's advice still stands: assert with `contains` on the
+   load-bearing fragments, not whole-output equality — your formatting may
+   still evolve.
 
 9. **Gate and close green.** The full ritual:
 
@@ -252,19 +257,19 @@ error but a runtime panic the property will shrink for you.
   copy — and noticing that "one event costs two owned keys" is exactly the
   observation Sitting F's lens will let you verify.
 - **`error[E0106]: missing lifetime specifier`** — if you chose borrowed keys:
-  a struct holding `HashMap<&str, u32>` must declare whose lifetime that is
+  a struct holding `HashMap<&str, u64>` must declare whose lifetime that is
   (`Stats<'a>`), and then **`error[E0597]: `content` does not live long
   enough`** follows in `main` if a file's `String` drops while the maps still
-  borrow from it. This pair *is* the borrowed-vs-owned trade-off, spoken in
-  compiler; wrestle it honestly before deciding whether to switch camps.
+  borrow from it. This pair *is* the borrowed-vs-owned trade-off (L1), spoken
+  in compiler; wrestle it honestly before deciding whether to switch camps.
 - **`error[E0368]: binary assignment operation `+=` cannot be applied to type
-  `&mut u32`** — `entry(k).or_insert(0)` hands back a mutable *reference* to
+  `&mut u64`** — `entry(k).or_insert(0)` hands back a mutable *reference* to
   the counter, not the counter. One `*` fixes it; understanding why (you're
   writing through the reference into the map's own storage — no lookup twice,
   no copy out) is the entire Entry-API lesson.
 - **`error[E0282]: type annotations needed`** — `.values().sum()` in the
   conservation assertion. `sum` can produce many numeric types and the
-  compiler won't guess; annotate or turbofish (`sum::<u32>()`).
+  compiler won't guess; annotate or turbofish (`sum::<u64>()`).
 - **Runtime panic, property-caught: `byte index 10 is not a char boundary`**
   (the 🦀 arm) and its sibling **`byte index 10 is out of bounds`** (the
   `"2026"` arm) — if the day extraction still slices `ts` with `[0..10]`.
@@ -316,7 +321,7 @@ cargo run -p glake -- stats datalake/raw-local
 <details><summary>Hint 1 — a nudge: the fold, and who owns what</summary>
 
 The whole of `tally` is: start from an empty `Stats`, loop over the lines,
-`match classify(line)` — three arms, three behaviors (nothing / one counter /
+`match classify(line, &REQUIRED_KEYS)` — three arms, three behaviors (nothing / one counter /
 three counters). If the key-type decision is what's blocking you, ask it as a
 lifetimes question: the maps outlive the loop and get returned out of the
 function — do the *lines* outlive the maps? Inside the property test they
@@ -334,10 +339,10 @@ parameter if you took the other road):
 
 ```rust
 pub struct Stats {
-    pub by_kind: HashMap<String, u32>,
-    pub by_day: HashMap<String, u32>,
-    pub events: u32,
-    pub malformed: u32,
+    pub by_kind: HashMap<String, u64>,
+    pub by_day: HashMap<String, u64>,
+    pub events: u64,
+    pub malformed: u64,
 }
 ```
 
@@ -347,7 +352,7 @@ and the counting idiom, once per axis:
 *stats.by_kind.entry(/* this event's kind, as your key type */).or_insert(0) += 1;
 ```
 
-Note the leading `*` — `or_insert` returns `&mut u32`, and you write straight
+Note the leading `*` — `or_insert` returns `&mut u64`, and you write straight
 through it. Derive `Debug` (proptest wants to print `Stats` on failure) and
 `Default` (an empty `Stats` for free via `Stats::default()`).
 
@@ -359,7 +364,7 @@ A `HashMap` refuses to have an order, so borrow its pairs into something that
 can hold one:
 
 ```rust
-fn sorted(map: &HashMap<String, u32>) -> Vec<(&String, &u32)>
+fn sorted(map: &HashMap<String, u64>) -> Vec<(&String, &u64)>
 ```
 
 ```rust

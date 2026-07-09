@@ -8,7 +8,7 @@
 
 Runs at [play.rust-lang.org](https://play.rust-lang.org) — no local setup needed for this step.
 
-1. Open the playground. It gives you an empty `fn main() { }`. Everything you write goes between those braces.
+1. Open the playground. It greets you with a `fn main` that already contains `println!("Hello, world!");` — delete that starter line so the writing is yours. Everything you write goes between the braces of `fn main`.
 2. Bind your name to a variable using `let`. String literals go in double quotes.
 3. Print a greeting with `println!`. Use a `{}` placeholder in the format string and pass your variable as the argument after it. Run it — you should see your greeting.
 4. **Break it on purpose:** delete the semicolon at the end of your `let` line. Run. Read the whole error, top to bottom. Put the semicolon back.
@@ -38,6 +38,8 @@ Your name is 5 bytes long.
 - You triggered all three errors on purpose and can say in one sentence what each one meant.
 - You can explain what the `!` in `println!` signifies.
 - You know what `.len()` returned (a number — Rust calls this type `usize`; it counts *bytes*, which equals characters only for plain ASCII).
+
+**Save what YOU wrote:** paste your playground code into `my-solution.rs` next to this README, then commit it — `ramp: step 1 — hello` (one commit per step; `my-solution.rs` is yours, `solution.rs` is the answer key).
 
 ## Hints (open one at a time)
 

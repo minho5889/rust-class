@@ -147,8 +147,10 @@ All commands run from the repo root. No new dependencies this sitting —
    git add crates/glake && git commit -m "003: sitting D — REQUIRED_KEYS drift-tested against the schema"
    ```
 
-4. **`Line<'a>` — the stretch lesson.** Every line of the lake becomes exactly
-   one of three things. The design froze the shape; aim at it precisely:
+4. **`Line<'a>` — the stretch lesson (L3).** Every line of the lake becomes
+   exactly one of three things — learning goal L3 (enums + `match`: states the
+   compiler forces you to handle completely) landing in real code. The design
+   froze the shape; aim at it precisely:
 
    ```rust
    pub enum Line<'a> {
@@ -317,11 +319,11 @@ cargo run -p glake -- validate crates/glake/tests/fixtures/lake/dt=2026-07-01/ev
 # → clean report, exit 0  (R1b is "iff" — this direction counts as much as the other)
 
 cargo run -p glake -- validate datalake/raw-local; echo $?
-# → the REAL lake: every line well-formed, exit 0. Whether your total includes
-#   the traces/ file your walk met in Sitting B depends on the dt=-recursion
-#   decision you wrote down there — both answers validate clean today (even the
-#   memlens trace dogfoods the envelope), and Sitting F's R10 cross-check will
-#   force the question properly. Note the numbers drift: dt=2026-07-09 grows as
+# → the REAL lake: every line well-formed, exit 0. Your Sitting B walk covers
+#   the whole tree (R3a: dt= partitions and traces/ alike), so this total
+#   includes the memlens traces — they dogfood the envelope and validate clean
+#   too, which Sitting F's R10 reconciliation identity counts on.
+#   Note the numbers drift: dt=2026-07-09 grows as
 #   we work, because your own session's hooks are appending to it right now.
 #   If validate ever flags a real lake line, don't assume you're wrong — read
 #   the line. You may have just found the lake's first genuine defect, which is

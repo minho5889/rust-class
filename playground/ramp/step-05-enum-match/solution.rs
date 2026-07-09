@@ -16,7 +16,7 @@
 // A match must prove it handled every shape of the enum; the compiler
 // lists the missing ones by name.
 //
-// --- The point-6 punchline (does NOT compile) ── E0004 ─────────────────
+// --- The move-6 punchline (does NOT compile) ── E0004 ─────────────────
 //
 //     Add `Truncated` to the enum, change nothing else:
 //
@@ -33,7 +33,7 @@ enum LineKind {
     Blank,                  // teach: unit variant — carries no data, just a name
     Broken(String),         // teach: tuple variant — the payload rides inside the value
     Event { kind: String }, // teach: struct-like variant — payload with a named field
-    Truncated,              // teach: the point-6 addition that re-broke `describe`
+    Truncated,              // teach: the move-6 addition that re-broke `describe`
 }
 // teach: a LineKind is exactly ONE of these shapes at a time (a "sum type").
 // In memory: one small tag saying which variant + room for the largest payload,

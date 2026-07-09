@@ -4,15 +4,20 @@
 `*.jsonl` under a lake folder (or takes one file as-is), and fails like a real
 Unix tool — clear stderr, exit 2, never a panic.
 **Requirements:** R3a, R3b, R6 (task 1.2).
-**Ramp you'll use:** steps 4 (`&str` vs `String`), 5 (`match`), 6 (`Result` + `?`) — step 7's file reading carries over from Sitting A.
+**Ramp you'll use:** steps 4 (`&str` vs `String`), 5 (`match`), 6 (`Result` + `?` (L4)) — step 7's file reading carries over from Sitting A.
 
 ## Where you are
 
 In Sitting A you made `crates/glake` a real workspace member: it takes one
-path from `std::env::args`, reads the file, and prints a line count. It works,
-but it trusts you completely — wrong arguments or a missing file and it
-panics. This sitting gives it a command vocabulary and manners: from here on,
-every way glake can fail is a *designed* behavior with a test, not an accident.
+path from `std::env::args` with a polite `.get(1)`, reads the file, and prints
+a line count. It already fails without panicking — a missing argument prints a
+usage line on stderr, a missing file surfaces a clean `?`-carried `io::Error`
+— but the exit *codes* still lie: the usage path returns `Ok(())` (exit 0, the
+lie A's move 3 told you to tolerate), and the I/O path exits with whatever
+`main`'s `Err` default is, not a code you chose. This sitting keeps A's
+manners and finishes the contract: a command vocabulary (`validate`/`stats`)
+and honest exit codes — from here on, every way glake can fail is a *designed*
+behavior with a test, not a default.
 
 ## The build, move by move
 
@@ -42,12 +47,15 @@ and E.
    `println!`: stdout is for answers, stderr is for complaints) and returns
    `ExitCode::from(2)`.
 
-   Before you write it, answer this from ramp step 6's worldview: Sitting A
-   probably indexed `args[1]`. What does `cargo run -p glake` with *no*
-   arguments do to that program, and which R6 word does that violate? There is
-   a method on `Vec` that returns an `Option` instead. (Hold onto this
-   get-vs-index instinct — the exact same choice comes back in Sitting E on a
-   timestamp, and the design already made a call about it.)
+   Before you write it, look at what you already have: Sitting A's `.get(1)`
+   match already turns "no arguments" into a usage line on stderr — that
+   behavior is right, and only its exit code (`Ok(())` → 0) is the tolerated
+   lie. What's new is the grammar: two words instead of one means two shapes A
+   never had to consider — a lone command and an unknown command — and the
+   pair-match lets all three bad shapes share one usage arm instead of each
+   needing its own check. (Hold onto A's get-vs-index instinct — the exact
+   same choice comes back in Sitting E on a timestamp, and the design already
+   made a call about it.)
 
    Prove the three bad shapes by hand:
 
@@ -57,7 +65,8 @@ and E.
    cargo run -p glake -- frobnicate x; echo $?
    ```
 
-   All three: usage on stderr, then `2`.
+   All three: usage on stderr, then `2` — the stderr half you've had since A;
+   the honest `2` is what this move adds.
 
    **Commit point** (after `cargo fmt` and
    `cargo clippy -p glake -- -D warnings` pass, as before every commit):
@@ -75,8 +84,15 @@ and E.
    Put an `events.jsonl` in each (a couple of real lines copied from
    `datalake/raw-local/dt=*/events.jsonl` are perfect — Sittings D and E will
    grow these fixtures into malformed/blank cases, so real envelope lines age
-   well). Also drop a decoy `notes.txt` into one partition: your walk must
-   *not* pick it up, and a test should prove that.
+   well). **One edit per copied line:** change its `ts` so the day agrees with
+   the partition it lands in — lines in `dt=2026-07-01/` get a `ts` starting
+   `2026-07-01`, lines in `dt=2026-07-02/` a `ts` starting `2026-07-02`. Why
+   this matters: `stats`' by-day buckets come from each line's **`ts`**, not
+   from the folder name, and Sitting E's checkpoint hand-counts these fixtures
+   expecting partition name and `ts` to agree — lines copied as-is would all
+   report their *original* day and E's by-day assertions would fail. Also drop
+   a decoy `notes.txt` into one partition: your walk must *not* pick it up,
+   and a test should prove that.
 
 4. **Write the walk in its own room.** Give the crate a library: create
    `src/lib.rs` declaring a `walk` module, and in `src/walk.rs` aim at the
@@ -90,7 +106,8 @@ and E.
    your pure functions directly, and `main.rs` should stay a thin shell that
    only translates `Result`s into exit codes. The behavior to achieve: a
    **file** path → a one-element `Vec` with just it (R3b); a **folder** →
-   every `*.jsonl` found by recursing through the `dt=…/` layout (R3a); any
+   every `*.jsonl` beneath it, however deep — `dt=` partitions and the memlens
+   `traces/` folder alike (R3a, rev 4); any
    I/O failure → `Err` bubbled up with `?` (ramp step 6 — no printing, no
    exiting inside the library; that's main's job). You'll want a private
    recursive helper — decide for yourself what it should borrow and what it
@@ -104,11 +121,13 @@ and E.
    - In what order does `read_dir` hand back entries? If you run
      `glake stats` twice, must the output match? What's the cheapest way to
      make it deterministic?
-   - R3a says "walked recursively through `dt=…/`". Do you *check* that folder
-     names look like `dt=…`, or recurse into any directory and let the
-     `.jsonl` filter do the work? Pick one, and write down what each choice
-     does to a stray folder holding `.jsonl` files — the real lake will make
-     this question concrete in move 6.
+   - You *could* check that folder names look like `dt=…` before recursing,
+     or recurse into any directory and let the `.jsonl` filter do the work.
+     This is not a free choice: requirements rev 4 fixed R3a's scope — the
+     walk finds **every `.jsonl` beneath the path**, `dt=` partitions and
+     `traces/` alike — so recurse into every directory. Still worth writing
+     down: what would the dt=-only version have silently missed? The real
+     lake makes it concrete in move 6.
 
 5. **Prove R3a and R3b with example tests.** In a `#[cfg(test)] mod tests` at
    the bottom of `walk.rs`, write two tests against your fixture lake: the
@@ -140,10 +159,12 @@ and E.
    ```
 
    Look closely at the first run's file count versus
-   `ls datalake/raw-local/dt=*/events.jsonl`. Did your walk find something
-   *extra*? Is it wrong, or is it a decision? Write what you observe in a
-   comment near `jsonl_files` — Sitting F's cross-check against `scan.sh`
-   (R10) will force the question, and you'll be glad past-you left a note.
+   `ls datalake/raw-local/dt=*/events.jsonl`. Your walk finds something
+   *extra* — the memlens `traces/` files. That's not a bug: it's R3a (rev 4)
+   working as specified, every `.jsonl` beneath the path. Write what you
+   observe in a comment near `jsonl_files` — Sitting F's reconciliation
+   against `scan.sh` (R10: glake's total = scan.sh's event count + the trace
+   lines) builds on exactly this note, and you'll be glad past-you left it.
 
 7. **Pin every R6 door shut with CLI example tests.** Create
    `crates/glake/tests/cli.rs` — an integration test that runs your real

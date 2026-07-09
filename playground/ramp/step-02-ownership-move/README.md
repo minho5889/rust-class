@@ -8,7 +8,7 @@
 
 Runs at [play.rust-lang.org](https://play.rust-lang.org) — no local setup needed.
 
-1. In `main`, create a `String` holding a city name. Use `String::from(...)` — you saw this shape in step 1.
+1. In `main`, create a `String` holding a city name. Use `String::from(...)` — new here: it turns a borrowed string literal like `"Seoul"` into an owned `String`.
 2. On the next line, assign that variable to a *second* variable with a plain `let`. No `&`, no method calls — just the variable name on the right-hand side.
 3. Now try to print the **first** variable with `println!`.
 4. Run it. It will not compile. **That's the exercise.** Read the whole error message slowly: the `error[E0382]` line, the note that says *where* the value moved, and the `help:` line at the bottom. The compiler is teaching; let it finish.
@@ -28,6 +28,8 @@ Runs at [play.rust-lang.org](https://play.rust-lang.org) — no local setup need
 - Fix 2 compiles and prints the second variable.
 - Your comment correctly says which fix allocates. Say this sentence out loud and mean it: *"assignment moves ownership; the old variable is invalid after the move."*
 
+**Save what YOU wrote:** paste your playground code into `my-solution.rs` next to this README, then commit it — `ramp: step 2 — ownership & move` (one commit per step; `my-solution.rs` is yours, `solution.rs` is the answer key).
+
 ## Hints (open one at a time)
 
 <details><summary>Hint 1 — a nudge</summary>
@@ -44,7 +46,7 @@ Fix 1 is a one-character... okay, one-*method* change to the assignment line:
 let b = a.clone();
 ```
 
-Fix 2 needs no new syntax at all — same move as before, but the `println!` names the second variable, not the first. For the comment in point 7: `clone()` copies the heap bytes into a brand-new allocation; a move copies only the pointer/length/capacity on the stack and hands over the deed. One is a memcpy of your data; the other is free.
+Fix 2 needs no new syntax at all — same move as before, but the `println!` names the second variable, not the first. For the comment in move 7: `clone()` copies the heap bytes into a brand-new allocation; a move copies only the pointer/length/capacity on the stack and hands over the deed. One is a memcpy of your data; the other is free.
 
 </details>
 

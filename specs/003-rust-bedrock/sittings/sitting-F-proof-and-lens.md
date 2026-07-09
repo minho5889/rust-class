@@ -15,7 +15,7 @@ Sitting E closed the build: the R9 conservation property went red then green,
 the real lake. Functionally, glake is done — but "done" in this course means
 *proven*, and the proofs are exactly the [O]-tagged rows of the requirements
 that no `#[test]` can reach: what's in the dependency tree, what's in the
-binary, whether the numbers survive a cross-examination by `scan.sh`, and
+binary, whether the numbers reconcile exactly with `scan.sh`, and
 whether the zero-copy story you've been telling since Sitting C's `<'a>` shows
 up as an actual flat line in a trace. Division of labor flips twice today:
 task 1.9 is machine checks — **Claude drives, you watch and interrogate** —
@@ -140,32 +140,29 @@ wiring lands, one when your observations land in `evidence.md`.
    Write the four numbers down (tree lines, grep counts) — they go into
    `evidence.md` in move 5.
 
-4. **R10 — the cross-check that refuses to match (Claude drives the commands;
-   *you* rule on the discrepancy).** R10 says `glake stats datalake/raw-local`
-   matches `datalake/queries/scan.sh`. Run both:
+4. **R10 — the reconciliation identity (Claude drives the commands; *you*
+   explain the arithmetic).** R10 (requirements rev 4) is an identity, not an
+   eyeball match: glake's grand total must equal scan.sh's process-event count
+   plus the memlens trace lines, because the two tools measure different
+   scopes **by design**. Run both and read them side by side:
 
    ```console
    cargo run -p glake -- stats datalake/raw-local        # default features — no lens, on purpose
    bash datalake/queries/scan.sh                          # read the "Event inventory" section
    ```
 
-   They will **not** match, and before reading on you must rule: whose bug is
-   it? Two pieces of evidence to examine: line 6 of `scan.sh` (look at exactly
-   which files its `EVENTS` glob can see) and your own `walk.rs` (which
-   directories does it descend into?). Also compare the two by-type tables —
-   which *rows* does glake have that scan.sh's inventory is missing entirely,
-   and what do their names have in common?
-
-   The ruling, and the arithmetic that makes it a proof rather than a shrug:
-   scan.sh's glob is `dt=*/events.jsonl` — it never descends into
+   Before the arithmetic, explain the two scopes from the evidence: line 6 of
+   `scan.sh` globs `dt=*/events.jsonl` — process events only; it never opens
    `datalake/raw-local/traces/`, where spec 002's memlens traces live (also
    `.jsonl`, also valid envelope events — the lake dogfoods its own schema).
-   Your walk recurses through *every* directory, so glake sees the whole lake.
-   **glake counting more than scan.sh is glake being right** — your first tool
-   just exposed a blind spot in the standing queries. The reconciliation must
-   be exact, though, so collect three numbers back-to-back (the lake grows as
-   you work — your own session's hooks are appending to `dt=<today>` right
-   now):
+   Your walk covers the whole lake — that's R3a (rev 4): every `.jsonl`
+   beneath the path, `dt=` partitions and `traces/` alike. Confirm the shape
+   in the two by-type tables: the rows glake has that scan.sh's inventory
+   lacks entirely are precisely the `memlens.*` ones.
+
+   The reconciliation must be exact, so collect three numbers back-to-back
+   (the lake grows as you work — your own session's hooks are appending to
+   `dt=<today>` right now):
 
    ```console
    cargo run -p glake -- stats datalake/raw-local | head -1    # glake's total,   T
@@ -173,19 +170,16 @@ wiring lands, one when your observations land in `evidence.md`.
    cat datalake/raw-local/traces/dt=*/*.jsonl | wc -l          # trace lines,     L
    ```
 
-   The identity that must hold **to the event**: `T − L = S`. Two more checks
-   that pin it per-row: every `memlens.*` row in glake's by-type table must
-   sum to exactly `L`, and every *non*-memlens row must equal scan.sh's
-   inventory count for that type exactly. The day this worksheet was
-   validated (2026-07-09): `T = 221`, `S = 157`, `L = 64`, and
-   `221 − 64 = 157` — exact. Your numbers will be bigger; your identity must
-   be just as exact. If instead your `T` equals `S` and glake shows no
-   `memlens.*` rows at all: your Sitting B walk only enters directories named
-   `dt=*` and shares scan.sh's blind spot — Sitting D's checkpoint warned this
-   question was coming. Fix the walk (it's an amendment to B's work, one
-   commit), and note that R3a's "walked recursively … into every `*.jsonl`"
-   always meant the whole tree. Record `T`, `S`, `L`, and the ruling — this
-   discrepancy is insight-card material for close-out.
+   The identity R10 demands, **to the event**: `T = S + L` (equivalently,
+   `T − L = S`). Two more checks that pin it per-row: every `memlens.*` row
+   in glake's by-type table must sum to exactly `L`, and every *non*-memlens
+   row must equal scan.sh's inventory count for that type exactly. The day
+   this worksheet was validated (2026-07-09): `T = 221`, `S = 157`, `L = 64`,
+   and `221 − 64 = 157` — exact. Your numbers will be bigger; your identity
+   must be just as exact (Hint 2 walks the suspects if it won't balance).
+   Record `T`, `S`, `L`, and one sentence on why an *identity*, not equality,
+   is the right check for two tools with different scopes — insight-card
+   material for close-out.
 
 5. **The lens moment — L6, and now *you* drive.** Everything before this was
    bookkeeping; this is why spec 002 was built first. Three parts.
@@ -252,7 +246,7 @@ wiring lands, one when your observations land in `evidence.md`.
    **Write it down.** Append your observations to
    `specs/003-rust-bedrock/evidence.md` (start it from `specs/_template/` if
    this is its first entry): the four machine-check numbers from move 3, the
-   `T`/`S`/`L` reconciliation and ruling from move 4, and at least three
+   `T`/`S`/`L` reconciliation from move 4 (identity shown exact), and at least three
    concrete lens observations *with numbers* (peak bytes and what it equals,
    the churn count and its guilty line, the scanner's contribution). Evidence
    is append-only, plain, and yours — this file is what "the learner can
@@ -323,7 +317,7 @@ cargo test -p glake                                    # entire suite green: R8 
 ```
 
 ```
-# R10, freshly collected back-to-back — the identity must hold to the event:
+# R10 (rev 4), freshly collected back-to-back — the identity must hold to the event:
 cargo run -p glake -- stats datalake/raw-local | head -1     # T
 jq -s 'length' datalake/raw-local/dt=*/events.jsonl          # S
 cat datalake/raw-local/traces/dt=*/*.jsonl | wc -l           # L
@@ -337,11 +331,12 @@ cargo run -p glake -- validate datalake/raw-local; echo $?   # still exit 0, def
 - The L6 trace exists at `datalake/raw-local/traces/dt=<today>/glake-<pid>.jsonl`
   (named `glake-…`, not `unnamed-…`) and has been opened in `viewer/memlens.html`.
 - `specs/003-rust-bedrock/evidence.md` holds the machine-check numbers, the
-  `T`/`S`/`L` reconciliation with your ruling, and ≥3 lens observations with
-  real numbers in them.
+  `T`/`S`/`L` reconciliation with the identity shown exact, and ≥3 lens
+  observations with real numbers in them.
 - `git log --oneline -2` shows both sitting-F commits.
 - You can answer aloud: why does glake count more events than `scan.sh`, and
-  which of the two is wrong? (Trick question — defend it.) Across the entire
+  is either tool wrong? (R10 rev 4 rules on this — give its answer in your
+  own words.) Across the entire
   lake, how many heap allocations did `get_str` make, what in the trace is the
   runtime witness, and which two characters in your code are the compile-time
   proof?
@@ -375,7 +370,11 @@ move 5); (b) `L` must count *every* file under `traces/`, including a new
 look at which files it listed; (c) blank lines — `jq -s 'length'` counts JSON
 documents while glake counts events and skips blanks (R5), so a stray blank
 line in an `events.jsonl` would split those by one. Today's lake has none,
-which is itself checkable: `glake validate` + a `wc -l` comparison. The
+which is itself checkable: `glake validate` + a `wc -l` comparison; (d) if
+glake's by-type table shows no `memlens.*` rows at all, your walk isn't
+descending into `traces/` — R3a (rev 4) scopes the walk to every `.jsonl`
+beneath the path, `dt=` partitions and `traces/` alike; bring the walk back
+to spec and the rows appear. The
 per-type tables are your debugger of last resort: find the *one row* that
 disagrees between glake and scan.sh's inventory, and it will name the file
 family one of them isn't seeing.

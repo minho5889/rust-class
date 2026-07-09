@@ -8,7 +8,7 @@
 
 Runs at [play.rust-lang.org](https://play.rust-lang.org) — no local setup needed.
 
-1. Above `main`, write a function named `shout` that takes one parameter of type `&String` and returns a `String`. Its whole job: return an uppercased *copy* of what it borrowed. There's a method on strings for this — type `s.` in the playground and look for the one about case. (Note what the `&` in the parameter type promises: *I will only look, I won't keep it.*)
+1. Above `main`, write a function named `shout` that takes one parameter of type `&String` and returns a `String`. Its whole job: return an uppercased *copy* of what it borrowed. There's a method on strings for this — the playground has no autocomplete, so open the [std `String` docs](https://doc.rust-lang.org/std/string/struct.String.html) and scan the method list for the one about case. (Note what the `&` in the parameter type promises: *I will only look, I won't keep it.*)
 2. In `main`, make a `String` — a codename, a city, your call. Call `shout` on it, but pass the variable **plain**, no `&`, exactly like you'd pass a value in any GC language. Store the result.
 3. Run it. It won't compile — **that's the exercise.** You want `error[E0308]`. Read it: the expected type, the found type, and the `help:` line that fixes it with a single character.
 4. Apply the fix at the call site, then print the shouted result **and the original variable after it**. In step 2 this second print was a crime (E0382). Now it compiles. Ask yourself why: who owned the data the whole time?
@@ -24,10 +24,12 @@ Runs at [play.rust-lang.org](https://play.rust-lang.org) — no local setup need
 
 ## Checkpoint
 
-- Your broken version from point 3 produced E0308, and you can say what type was expected vs. found.
+- Your broken version from move 3 produced E0308, and you can say what type was expected vs. found.
 - The fixed program prints three lines: the shouted copy, the original (unchanged, still owned by `main`), and the original again with `!` appended.
-- Your point-7 experiment produced E0502, and you can point at the shared borrow's *last use* — the line that kept it alive into the mutation.
+- Your move-7 experiment produced E0502, and you can point at the shared borrow's *last use* — the line that kept it alive into the mutation.
 - Say this out loud and mean it: *"`&` is a shared read-only loan, `&mut` is an exclusive write loan — many readers or one writer, never both."*
+
+**Save what YOU wrote:** paste your playground code into `my-solution.rs` next to this README, then commit it — `ramp: step 3 — borrowing` (one commit per step; `my-solution.rs` is yours, `solution.rs` is the answer key).
 
 ## Hints (open one at a time)
 

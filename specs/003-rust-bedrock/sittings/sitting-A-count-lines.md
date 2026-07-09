@@ -85,10 +85,12 @@ everything else (commands, folders, error discipline) is Sittings B onward.
    `.lines()` walks it as borrowed `&str` slices, and step 7's optional
    iterator payoff — `.count()` — becomes the real implementation. Print
    **just the number** on stdout (the checkpoint compares it against `wc -l`).
-   Memory story, because it's the through-line: the whole run costs *one* heap
-   allocation for the file text; counting 134 lines — or a million — allocates
+   Memory story, because it's the through-line (L1 — ownership & moves): the
+   whole run costs *one* heap allocation — the owned `String` that
+   `read_to_string` hands you; counting 134 lines — or a million — allocates
    nothing more, because every `line` is a borrowed view into that same
-   buffer. In Sitting F you'll watch your own lens confirm this.
+   buffer: looked at, never handed off. In Sitting F you'll watch your own
+   lens confirm this.
 
    One more question to park: `.lines().count()` counts blank lines too. Is a
    blank line an event? R5 says no — but *that decision belongs to Sitting C*,
@@ -134,8 +136,9 @@ classes stop recurring.
   arm has to *diverge* — leave `main` — instead of producing a value.
 - **`error[E0382]: borrow of moved value: `path``** — if you pass `path` to
   `read_to_string` by value and then try to use it again (say, printing it in
-  the output). Ramp 2 resurfacing in real code: passing by value is a move.
-  Lend it (`&path`) instead — `read_to_string` only needs to look.
+  the output). Ramp 2 resurfacing in real code (L1): passing the args
+  `String` by value is a move — it's handed off, gone. Lend it (`&path`)
+  instead — `read_to_string` only needs to look.
 - **A runtime panic, not a compiler error:** `index out of bounds` from
   `args[1]` with no arguments — the deliberate experiment from move 3. The
   compiler was silent because indexing is a *promise* ("this exists") while

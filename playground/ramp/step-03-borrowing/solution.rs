@@ -11,7 +11,7 @@
 // The signature says "I borrow"; passing `word` plain offers ownership.
 // Different contracts, different types. help: suggests `shout(&word)`.
 //
-// --- The point-7 experiment (does NOT compile) ── E0502 ────────────────
+// --- The move-7 experiment (does NOT compile) ── E0502 ────────────────
 //
 //     let peek = &word;         // shared borrow starts...
 //     exclaim(&mut word);       // error[E0502]: cannot borrow `word` as

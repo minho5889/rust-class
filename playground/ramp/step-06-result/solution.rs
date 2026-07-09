@@ -63,15 +63,21 @@ fn parse_day(s: &str) -> Result<u32, String> {
 //     }
 
 fn main() {
-    // teach: one good input plus two bad ones that fail in DIFFERENT places —
-    // the slice step catches "oops", the parse step catches "2026-07-xx".
-    for input in ["2026-07-09", "2026-07-xx", "oops"] {
-        // teach: the caller decides what an Err MEANS. Here: print it and
-        // keep going. A server might answer 400; a Lambda might retry. The
-        // type forces a decision; it doesn't dictate which one.
-        match parse_day(input) {
-            Ok(day) => println!("{input:>12} -> day {day}"),
-            Err(why) => println!("{input:>12} -> error: {why}"),
-        }
+    // teach: the caller decides what an Err MEANS. Here: print it and
+    // keep going. A server might answer 400; a Lambda might retry. The
+    // type forces a decision; it doesn't dictate which one.
+    match parse_day("2026-07-09") {
+        Ok(day) => println!("2026-07-09 -> day {day}"),
+        Err(why) => println!("2026-07-09 -> error: {why}"),
+    }
+
+    // teach: a bad input that fails in the SLICE step — "oops" is too short,
+    // so .get(8..10) comes back None and .ok_or_else builds the message.
+    // (The exercise's other bad input, "2026-07-xx", gets PAST the slice and
+    // fails in the parse step instead — a different message, which is how
+    // you prove which fallible step caught which input.)
+    match parse_day("oops") {
+        Ok(day) => println!("oops -> day {day}"),
+        Err(why) => println!("oops -> error: {why}"),
     }
 }

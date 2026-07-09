@@ -41,7 +41,9 @@ course lands, here and again in Sitting E.
    what would it mean, and what would it wrongly forbid, if `key` shared `'a`
    too? This signature is `longer()`'s exam, and the whole zero-copy story
    (the slice you return *is* the line's own bytes — nothing allocated, which
-   the lens will show you in Sitting F) hangs on it.
+   the lens will show you in Sitting F) hangs on it. That story has a name in
+   the requirements: **L2**, `&str` vs `String` — borrowed slices where a
+   lesser design would allocate owned copies. This sitting is where it lands.
 
 2. **Freeze the stubs.** Create `crates/glake/src/scan.rs`, add `pub mod scan;`
    to `src/lib.rs` (next to `walk`), and write exactly the two public
@@ -250,8 +252,9 @@ smallest reproducible form.
 - **`error[E0515]: cannot return value referencing local variable`** — if you
   build a cleaned-up `String` inside the scanner and try to return a `&str`
   view of it. The local dies at the closing brace; a borrow of it can't leave.
-  This error is the design talking: the *whole point* is returning slices of
-  the caller's line, not copies you manufactured.
+  This error is the design talking: the *whole point* (L2) is returning
+  borrowed `&str` slices of the caller's line, not owned `String` copies you
+  manufactured.
 - **Runtime panic: `attempt to subtract with overflow`** — the property's
   garbage half will feed you a line starting with `}`, and if your depth
   counter can't go below zero, debug builds abort. You answered this in move

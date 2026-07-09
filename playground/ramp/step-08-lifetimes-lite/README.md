@@ -12,7 +12,7 @@ Runs in this folder — create `lifetimes.rs` here, then:
 1. Write `fn first_word(s: &str) -> &str` — **no `<'a>` anywhere yet.** The body is one chained line: split on whitespace with `.split_whitespace()`, take `.next()`, and land safely on `""` with `.unwrap_or` when there's no word at all. In `main`, call it on a step-7-flavored line — `"2026-07-09T10:00:00Z memlens.alloc 64"` — and print what comes back. Also call it on `""` to prove the no-word path doesn't panic.
 2. It compiles. Stop and be suspicious. A borrow went in, a borrow came out, and you never said how they relate — yet the compiler let it through. The answer: with exactly **one** input reference, there's only one thing the output could possibly borrow from, so the compiler fills the annotation in itself. This is **elision**. The lifetime isn't absent; it's written for you.
 3. Prove it by writing what the compiler wrote: change the signature to `fn first_word<'a>(s: &'a str) -> &'a str`. Recompile — identical behavior, byte for byte. Read the signature out loud: *"there is some span of time `'a`; `s` is valid for at least that span; the `&str` I return is only guaranteed within it."*
-4. Now write a function where the compiler *can't* fill it in: `fn longer(a: &str, b: &str) -> &str` — again **no `<'a>`** — returning whichever input is longer (an `if`/`else` comparing `.len()`; remember from step 1 that a block's last expression is its value). Compile. It fails. **Read E0106 top to bottom, including the help lines — this failure is the lesson.**
+4. Now write a function where the compiler *can't* fill it in: `fn longer(a: &str, b: &str) -> &str` — again **no `<'a>`** — returning whichever input is longer (an `if`/`else` comparing `.len()`; remember from step 5 that a block's last expression is its value — the same "no `return`, no semicolon" move as the `match` that *was* `describe`'s body). Compile. It fails. **Read E0106 top to bottom, including the help lines — this failure is the lesson.**
 5. Fix it with one lifetime: declare it in angle brackets after the function name, then mark both inputs and the output with it. Recompile, call it in `main` on two event names of different lengths, print the winner.
 6. Directly above `longer`, write **one comment sentence in your own words** answering: *what does `'a` promise?* Not what it "is" — what it *promises*, and to whom.
 7. Optional stretch — watch the promise get enforced. Make `line` in `main` an owned `String`, and between `let word = first_word(&line);` and the `println!` that uses `word`, insert `drop(line);`. Read the error (E0505), grin, delete the line.
@@ -29,6 +29,7 @@ Runs in this folder — create `lifetimes.rs` here, then:
 - You can explain, without notes, why one-input `first_word` never needed the annotation but two-input `longer` did.
 - Your comment above `longer` answers "what does `'a` promise?" in a sentence you'd defend — something equivalent to: *the returned reference borrows from the inputs marked `'a`, so it cannot outlive them.*
 - Say this out loud and mean it: *"lifetimes never change what the program does — they name facts the borrow checker verifies, then compile to nothing."*
+- Save what YOU wrote: your working file already lives in this folder — name it `my-solution.rs`, then commit — `ramp: step 8 — lifetimes-lite`.
 
 ## Hints (open one at a time)
 

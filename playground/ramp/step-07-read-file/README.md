@@ -1,7 +1,7 @@
 # Step 7 — Reading a file, line by line
 
 **Concept:** `std::fs::read_to_string` pulls a whole file into one owned `String` — and because the filesystem can fail, it hands you a `Result`, not the `String` — then `.lines()` walks that one buffer as borrowed slices, no copies.
-**You can already:** handle a `Result` with `match` or `?` and make a `main` that returns one (step 6), tell an owned `String` from a borrowed `&str` and know which one allocates (step 4), and loop while borrowing instead of taking (step 3).
+**You can already:** handle a `Result` with `match` or `?` and make a `main` that returns one (step 6), tell an owned `String` from a borrowed `&str` and know which one allocates (step 4), and borrow values instead of taking them (step 3).
 **After this step you can:** write a program that touches the outside world — open a file, let the failure live in `main`'s signature, iterate its lines without allocating per line, and spot the class of bug the compiler *cannot* catch for you.
 
 ## The exercise
@@ -10,10 +10,11 @@ First step off the playground: this one runs **in this folder**, because it read
 
 1. Create `count.rs` in this folder. Write a plain `fn main()` and inside it, one binding: call `std::fs::read_to_string("sample.jsonl")` and annotate the binding as `String` — you're claiming the call hands you the text directly. Compile: `rustc --edition 2024 count.rs -o count`. Read the E0308 top to bottom. **This failure is the lesson:** the filesystem is allowed to fail, so the return type says so.
 2. Fix it the way step 6's E0277 discussion promised real CLI binaries do: change `main`'s return type so it can carry an `std::io::Error` out, put `?` after the call, drop the `String` annotation, and make `main`'s last expression the success value. Compile again — clean.
-3. Now the loop: `for line in contents.lines() { ... }` with a `let mut count = 0;` above it. Inside, count the line only if it isn't blank — first honest attempt: `!line.is_empty()`. Print the count after the loop with `println!`.
-4. Run it from this folder: `./count`. It prints **4**. But you can see only 3 events in the file. Look closer at the "blank" line — open `sample.jsonl` or run `cat -A sample.jsonl` — and once you've seen what's actually on line 3, find the `&str` method that shaves whitespace off both ends, and put it in front of your emptiness check. Re-run: 3.
-5. Prove the error path is real: change the filename in your code to `"sample.jsonl.nope"`, recompile, run. Watch the `?` carry the `io::Error` out of `main` — printed for you, exit code nonzero (`echo $?`). No crash handler you wrote, no try/catch anywhere. Restore the filename.
-6. Optional payoff: rewrite the loop as one line — `.lines()`, an iterator adapter that keeps only lines passing your blank test, then `.count()`. Same answer, and it compiles to the same machine code as your loop.
+3. One new piece of syntax, met on its own before it does real work: a `for` loop — `for item in collection { ... }` — borrows each item of a collection in turn and runs the body once per item. That's the whole idea. Warm up if you like: `for n in [1, 2, 3] { println!("{n}"); }` as a `main` body prints three lines.
+4. Now point it at the file: `for line in contents.lines() { ... }` with a `let mut count = 0;` above it. Inside, count the line only if it isn't blank — first honest attempt: `!line.is_empty()`. After the loop, print in exactly this shape: `println!("{count} non-blank lines");` — the checkpoint checks that wording.
+5. Run it from this folder: `./count`. It prints **`4 non-blank lines`**. But you can see only 3 events in the file. Look closer at the "blank" line — open `sample.jsonl` or run `cat -A sample.jsonl` — and once you've seen what's actually on line 3, find the `&str` method that shaves whitespace off both ends, and put it in front of your emptiness check. Re-run: `3 non-blank lines`.
+6. Prove the error path is real: change the filename in your code to `"sample.jsonl.nope"`, recompile, run. Watch the `?` carry the `io::Error` out of `main` — printed for you, exit code nonzero (`echo $?`). No crash handler you wrote, no try/catch anywhere. Restore the filename.
+7. Optional payoff: rewrite the loop as one line — `.lines()`, an iterator adapter that keeps only lines passing your blank test, then `.count()`. Same answer, and it compiles to the same machine code as your loop.
 
 ## Errors you should EXPECT (and want)
 
@@ -28,6 +29,7 @@ First step off the playground: this one runs **in this folder**, because it read
 - With the filename misspelled, the program prints an `io::Error` (something like `No such file or directory`) and `echo $?` shows a nonzero exit — and you can point at which character in your code made that happen (the `?`).
 - You can explain, without notes, why the count was 4 before the fix and why no compiler on earth would have flagged it.
 - Say this out loud and mean it: *"the file arrives as one owned `String`; every `line` is a borrowed `&str` into that same buffer — reading 4 lines cost 1 allocation, not 5."* (A GC language typically materializes a fresh string object per line. On Lambda, allocations are cold-start weight and memory-bill weight; this habit is where Rust's efficiency story starts being yours.)
+- Save what YOU wrote: your working file already lives in this folder — name it `my-solution.rs`, then commit — `ramp: step 7 — reading a file, line by line`.
 
 ## Hints (open one at a time)
 
@@ -52,7 +54,7 @@ fn main() -> Result<(), std::io::Error> {
 
 Then a `mut` counter, a `for` over `contents.lines()`, and inside it an `if` whose condition is `!line.trim().is_empty()`. Print the counter, and remember `main`'s last expression must be `Ok(())` — no semicolon story here, it's just the value.
 
-For move 6, the adapter you want is `.filter(|l| ...)` between `.lines()` and `.count()`.
+For move 7, the adapter you want is `.filter(|l| ...)` between `.lines()` and `.count()`.
 
 </details>
 

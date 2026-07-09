@@ -12,7 +12,7 @@ Runs at [play.rust-lang.org](https://play.rust-lang.org) — no local setup need
    ```rust
    let line = String::from("2026-07-09T10:00:00Z memlens.alloc");
    ```
-2. Slice out the first 10 characters by calling `.get(0..10)` on `line`, and bind the result to a new variable. One catch: `.get` doesn't hand you a `&str`, it hands you a *maybe* (`Option<&str>`) — slicing can fail. Chain `.unwrap_or("bad-ts")` onto it to get a plain `&str` with a fallback. **No `.clone()`, no `.to_string()`** — the entire point is that this allocates nothing.
+2. Slice out the first 10 **bytes** by calling `.get(0..10)` on `line` (string ranges index bytes, not characters), and bind the result to a new variable. One catch: `.get` doesn't hand you a `&str`, it hands you a *maybe* (`Option<&str>`) — slicing can fail. Chain `.unwrap_or("bad-ts")` onto it to get a plain `&str` with a fallback. **No `.clone()`, no `.to_string()`** — the entire point is that this allocates nothing.
 3. Print the slice **and** the original `String` in the same `println!`. Both work. Sit with that for a second: in step 2, using the old variable after handing data to a new one was E0382. This isn't a move — it's a borrow (step 3), and your slice is just a window into bytes that `line` still owns.
 4. Now prove the two types are physically different. Add two prints using `std::mem::size_of_val(&line)` and `std::mem::size_of_val(&ts)` (whatever you named your slice — note the `&` in both). **Write your guesses in a comment before running.** Bonus: try `size_of_val(ts)` with no `&` and explain what *that* number is.
 5. Break it on purpose. Declare a variable with a bare `let ts;` *before* an inner block, then inside `{ ... }` create the `String` and assign the slice to that outer variable, close the block, and print `ts` *after* the `}`. Run it. **This failure is the lesson** — read every line of the error, especially the two arrows: where the borrow happens and where the owner dies.
@@ -30,6 +30,8 @@ Runs at [play.rust-lang.org](https://play.rust-lang.org) — no local setup need
 - You provoked E0597 and can point at the exact `}` where the owner died.
 - `day(&line)` prints `2026-07-09`; `day("oops")` prints `bad-ts`; nothing panicked and nothing allocated.
 - Say this out loud and mean it: *"a `String` owns heap bytes; a `&str` borrows a window into someone else's bytes, so it can never outlive the owner."*
+
+**Save what YOU wrote:** paste your playground code into `my-solution.rs` next to this README, then commit it — `ramp: step 4 — &str vs String` (one commit per step; `my-solution.rs` is yours, `solution.rs` is the answer key).
 
 ## Hints (open one at a time)
 
@@ -57,7 +59,7 @@ And `day` is the same line wearing a function signature:
 fn day(line: &str) -> &str {
 ```
 
-…with that one expression as the body (no `return`, no semicolon — the last expression *is* the return value, remember step 1). The returned `&str` borrows from the parameter; Rust figures out that link on its own here. In step 8 you'll learn to write it explicitly.
+…with that one expression as the body (no `return`, no semicolon — new trick: in a Rust function body, the last expression, written *without* a semicolon, automatically becomes the return value). The returned `&str` borrows from the parameter; Rust figures out that link on its own here. In step 8 you'll learn to write it explicitly.
 
 </details>
 

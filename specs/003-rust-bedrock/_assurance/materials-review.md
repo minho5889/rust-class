@@ -119,3 +119,124 @@ and `Option::map`/`String::as_str` arrive untaught but only inside Hint 1.
 ---
 
 VERDICT: 78% — Compile-clean, fully covered, and rigorously fact-checked, but Sitting F re-rules R10 and the walk against the approved specs, the reference classify breaks the design's frozen interface, Sitting E's fixture assertion fails as written, and the ramp threads three false back-references plus an untaught `for` loop.
+
+---
+
+# Re-verification pass — 2026-07-09
+
+**Reviewer:** adversarial materials critic (fresh context, post-fix)
+**Inputs:** requirements.md rev 4, design.md rev 3, all six sittings, all eight
+ramp steps + solutions, `_reference/glake` (classify signature change), fixtures.
+
+## 1. Compile sweep — ALL PASS (8/8)
+
+`rustc --edition 2024 solution.rs` + run, per step directory: steps 01–08 all
+compile and run clean (step 07 verified against its `sample.jsonl`, prints
+`3 non-blank lines`, exit 0).
+
+## 2. Reference tests — ALL GREEN
+
+`cargo test` in `_reference/glake`: 7 suites, 17 tests total
+(7 unit + 6 cli + 2 prop_scan + 1 prop_tally + 1 schema_drift), 0 failed.
+
+## 3. Finding-by-finding
+
+- **M1 — FIXED.** requirements.md rev 4: R3a now *"walked recursively into every
+  `*.jsonl` file beneath it — `dt=` partitions and `traces/` alike"* (line 118);
+  R10 now the reconciliation identity *"glake's total = scan.sh's process-event
+  count + the lines of memlens trace files … 221 = 157 + 64 (amended rev 4 from
+  'matches')"* (line 132), changelog entry present. design.md rev 3 walk row:
+  *"every `*.jsonl` beneath it, recursively (`dt=` partitions and `traces/`
+  alike — rev 3)"* + changelog row citing the change protocol. Sitting F move 4
+  now opens *"R10 (requirements rev 4) is an identity, not an eyeball match"*;
+  Hint 2(d) cites *"R3a (rev 4) scopes the walk to every `.jsonl` beneath the
+  path"*. Zero overruling language remains (grep for "will not match" / "being
+  right" / "always meant": no hits). Sitting B move 4 now says the walk scope
+  *"is not a free choice: requirements rev 4 fixed R3a's scope … so recurse
+  into every directory"* — the old free-choice contradiction is gone.
+- **M2 — FIXED.** `_reference/glake/src/classify.rs:38`:
+  `pub fn classify<'a>(line: &'a str, required: &[&'a str]) -> Line<'a>`;
+  line 31: `Malformed { missing: &'a str }`; tests call
+  `classify(GOOD, &REQUIRED_KEYS)`. The module doc now *answers* D's teaching
+  question: *"`missing` borrows from `required` — the key names live in the
+  caller's slice, not in the line."* Sitting D (lines 162, 380) and design.md
+  (line 79) carry the identical signature; the "If truly stuck" pointer now
+  lands on a reference that matches the frozen interface.
+- **M3 — FIXED.** Sitting B "Where you are" now correctly credits A: *"It
+  already fails without panicking — a missing argument prints a usage line on
+  stderr, a missing file surfaces a clean `?`-carried `io::Error` — but the
+  exit *codes* still lie."* Move 2: *"Sitting A's `.get(1)` match already turns
+  'no arguments' into a usage line on stderr — that behavior is right"* and
+  *"the stderr half you've had since A; the honest `2` is what this move adds."*
+- **M4 — FIXED.** B move 3 now mandates *"One edit per copied line: change its
+  `ts` so the day agrees with the partition"* and explains why; the reference
+  fixtures comply (dt=2026-07-01 lines carry ts 2026-07-01, dt=2026-07-02 carry
+  2026-07-02 — verified by grep). E move 8 asserts *"the two days the output
+  must show are `2026-07-01` and `2026-07-02` … **as bare days** … no `dt=`
+  prefix"* plus a debugging pointer back to fixture ts. Requirements worked
+  example now prints the bare day (`2026-07-05           214`, line 30; rev 4
+  changelog notes the correction).
+- **M5 — FIXED.** Step 7 move 3 introduces the `for` loop on its own before it
+  does real work (*"One new piece of syntax, met on its own … `for item in
+  collection { ... }`"* with a warm-up); step 6's solution no longer contains
+  any `for` loop; step 7's "You can already" line no longer attributes looping
+  to step 3.
+- **M6 — FIXED.** (a) Step 2 move 1: *"Use `String::from(...)` — new here"*.
+  (b) Expression-return: step 4 hint 2 introduces it as *"new trick"*; step 5
+  move 4 teaches it in the main flow (*"no `return`, no semicolon … the `match`
+  **is** the function body"*); step 6 hint 2 and step 8 move 4 now back-reference
+  **step 5**. No remaining attribution to step 1.
+- **M7 — FIXED.** All eight step checkpoints carry a "Save what YOU wrote"
+  line naming `my-solution.rs` and the exact commit (`ramp: step N — <concept>`),
+  e.g. step 1: *"paste your playground code into `my-solution.rs` next to this
+  README, then commit it — `ramp: step 1 — hello`"*; steps 7–8 use the local-file
+  variant (*"your working file already lives in this folder — name it
+  `my-solution.rs`, then commit"*). Format matches tasks.md 0.1.
+- **m8 — FIXED.** Step 1 move 1: *"It greets you with a `fn main` that already
+  contains `println!(\"Hello, world!\");` — delete that starter line"*. Step 3
+  move 1: *"the playground has no autocomplete, so open the std `String` docs
+  and scan the method list"*.
+- **m9 — PARTIAL.** All READMEs now say "move" (step 2 "move 7", step 3
+  "move-7 experiment", step 5 "move-3"/"move 6"). Residue in solution-file
+  comments only: `step-03-borrowing/solution.rs:14` ("point-7 experiment"),
+  `step-05-enum-match/solution.rs:19` ("point-6 punchline") and `:36`
+  ("point-6 addition") still say "point".
+- **m10 — FIXED.** Sitting E is `u64` throughout (`HashMap<String, u64>`,
+  `sum::<u64>()`, `&mut u64`); zero `u32` occurrences remain in the sitting.
+- **m11 — PARTIAL.** L-labels now anchored in the sittings: L1 (A moves 4/fights,
+  E fights), L2 (C moves+fights, E), L3 (D move 4), L5 (E intro + move 5), L6 (F
+  throughout). **L4 is still cited by label in no sitting** — only in
+  requirements.md and a reference `main.rs` comment; sitting B (its natural
+  home: `Result` + `?` + ExitCode) never says "L4".
+- **m12 — FIXED.** Step 7 move 4 specifies the exact output —
+  *"print in exactly this shape: `println!(\"{count} non-blank lines\");` — the
+  checkpoint checks that wording."*
+- **m13 — FIXED.** design.md rev 3 Detailed interfaces: *"tally.rs — pure fold
+  over lines (property-testable); validate/stats are thin functions in main.rs
+  that own I/O and exit codes (rev 3 layout)"*, with a changelog row citing the
+  change protocol; matches the reference (`src/tally.rs` exists, no
+  stats.rs/validate.rs) and the sittings.
+- **m14 — FIXED.** Step 4 move 2: *"Slice out the first 10 **bytes** by calling
+  `.get(0..10)` … (string ranges index bytes, not characters)"*.
+
+## 4. Regression check — CLEAN
+
+- **Solution leaks:** no sitting or step guide pastes a reference function
+  body. Sitting D hint 3 remains a commented skeleton; the two previously
+  accepted near-misses (B hint 1 tuple-match line, E's entry idiom in hint
+  code) are unchanged, nothing new leaked. The new classify body (the
+  `required` loop) appears nowhere outside the reference.
+- **Terminology:** zero occurrences of "rung" in any learner-facing file.
+- **Commit formats:** all 13 sitting commit points still match
+  `003: sitting X — …`; all 8 ramp checkpoints match `ramp: step N — <concept>`.
+- **New-content consistency:** sitting F's R10 numbers (T=221, S=157, L=64,
+  221−64=157) match requirements rev 4's authored identity; reference `walk.rs`
+  recurses every directory (R3a rev 4); reference fixtures' ts↔partition
+  alignment holds; compile sweep and full reference test suite green post-change.
+
+## 5. Remaining items (both minor, no teaching impact)
+
+1. m9 residue: three "point-N" comments in step 3/5 solution files.
+2. m11 residue: L4 unanchored in sitting B.
+
+RE-VERDICT: 96% — All seven majors and five of seven minors verified fixed with specs amended per the change protocol and everything compiling and testing green; only two cosmetic residues remain (three "point-N" solution comments in steps 3/5, and L4 still lacking a by-label anchor in sitting B).

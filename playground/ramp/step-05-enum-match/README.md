@@ -18,16 +18,17 @@ Runs at [play.rust-lang.org](https://play.rust-lang.org) — no local setup need
 
 ## Errors you should EXPECT (and want)
 
-- **`error[E0004]: non-exhaustive patterns`** — deliberately triggered twice. First as `` `&LineKind::Broken(_)` and `&LineKind::Event { .. }` not covered ``, then, in point 6, as `` `&LineKind::Truncated` not covered ``. What it's really saying: `match` is not a switch with optional cases — it's a proof obligation. An enum declares a *closed set* of shapes, and the compiler refuses to compile a `match` until every shape has an arm, naming the missing ones for you. Point 6 is why this matters: when the data model grows, the compiler hands you a complete to-do list of every match that must catch up. That's exhaustiveness as a refactoring tool — and it's why idiomatic Rust avoids the wildcard `_` arm unless it truly means "anything else, forever." A `_` would have compiled silently past `Truncated` and rotted at runtime instead. (Once your program works, try swapping the last three arms for `_ => ...`, watch E0004 vanish, feel what you lost, and put the arms back.)
+- **`error[E0004]: non-exhaustive patterns`** — deliberately triggered twice. First as `` `&LineKind::Broken(_)` and `&LineKind::Event { .. }` not covered ``, then, in move 6, as `` `&LineKind::Truncated` not covered ``. What it's really saying: `match` is not a switch with optional cases — it's a proof obligation. An enum declares a *closed set* of shapes, and the compiler refuses to compile a `match` until every shape has an arm, naming the missing ones for you. Move 6 is why this matters: when the data model grows, the compiler hands you a complete to-do list of every match that must catch up. That's exhaustiveness as a refactoring tool — and it's why idiomatic Rust avoids the wildcard `_` arm unless it truly means "anything else, forever." A `_` would have compiled silently past `Truncated` and rotted at runtime instead. (Once your program works, try swapping the last three arms for `_ => ...`, watch E0004 vanish, feel what you lost, and put the arms back.)
 - **`error[E0170]: pattern binding `Blank` is named the same as one of the variants`** — you'll hit this if you write an arm as `Blank =>` instead of `LineKind::Blank =>`. A bare name in a pattern isn't a comparison — it's a *new variable binding* that matches anything, which would silently swallow every variant. The compiler notices the near-collision with your variant's name and stops you; the `help:` line spells out the qualified path. (You'll also see an `unreachable pattern` warning on the arms below it — same root cause: the bare name matched everything first.)
 - You may brush past **`error[E0308]: mismatched types`** if one arm produces `"blank line"` (a `&str`) while another produces `format!(...)` (a `String`). The whole `match` is *one expression* with *one type*, so all arms must agree — `String::from("...")` brings a literal arm in line.
 
 ## Checkpoint
 
-- Your point-3 one-arm match produced E0004, and you can read the `not covered` list — the compiler names *variants*, not just line numbers.
+- Your move-3 one-arm match produced E0004, and you can read the `not covered` list — the compiler names *variants*, not just line numbers.
 - The three-variant program prints three lines, one description per value, each mentioning the data carried inside (the broken reason, the event kind).
 - Adding `Truncated` re-broke the build with E0004 pointing at `describe` and naming exactly the new variant; one arm (plus a fourth value in `main`) fixed it — four lines print.
 - Say this out loud and mean it: *"An enum is a closed set of shapes; `match` must prove it handled all of them — and a `_` arm trades that proof away."*
+- Save what YOU wrote: paste your playground code into `my-solution.rs` next to this README, then commit — `ramp: step 5 — enums and exhaustive match`.
 
 ## Hints (open one at a time)
 
