@@ -175,8 +175,11 @@ All commands from the repo root.
 
    Replace the hand-rolled arg `match` in `main` (a moment of silence — it
    served honestly since Sitting B) with `Cli::parse()` and a `match` on
-   `cli.command`; thread `kind`/`since` as far as a `Filter::default()` for
-   now. Update `tests/cli.rs`: bad usage still exits **2** (clap's own
+   `cli.command`. At *this* commit the flags parse but do nothing: match
+   `Command::Stats { path, .. }` and call the old pipeline — wiring the
+   filter is the green phase's job, and everything stubbed still `todo!()`s
+   (the `..` keeps clippy quiet about fields you aren't reading yet). Update
+   `tests/cli.rs`: bad usage still exits **2** (clap's own
    default — the F5 contract survives the regime change), but the wording is
    clap's now; assert case-insensitively on `usage` / `possible values`
    rather than your old string. Add the two new F10 tests: `--help` exits 0

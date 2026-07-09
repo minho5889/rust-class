@@ -50,13 +50,16 @@ tests), then the threading.
    optional). Run the check and read the new answer:
 
    ```console
-   cargo tree -p glake -e normal
+   cargo tree -p glake -e normal --depth 1
    ```
 
-   Two lines now — glake and `thiserror v2.x`. (Curious why the *proc-macro*
-   machinery — `syn`, `quote` — doesn't show? Ask what `-e normal` excludes,
-   and remember Sitting F's dev-vs-normal edges lesson; build-time code never
-   enters the shipped binary.) Sitting J's hygiene sweep records the full F11
+   Two lines now — glake and `thiserror v2.x`. Drop the `--depth 1` and
+   you'll see more: `thiserror-impl` marked `(proc-macro)`, hauling in `syn`
+   and `quote`. Before you panic about R4's ghost, read the marker again —
+   proc-macros are *build-time* code, compiler plugins that run while your
+   crate compiles and never enter the shipped binary (Sitting F's
+   what-ships-vs-what's-needed lesson, third verse: dev edges, build edges,
+   and now proc-macro subtrees). Sitting J's hygiene sweep records the full F11
    evidence; today just know the tree is opening by design, not by drift.
 
 2. **Design the enum on paper first.** Read F6 aloud: fallible library paths
@@ -296,7 +299,7 @@ cargo fmt --check                                  # no diff
 cargo clippy -p glake --all-targets -- -D warnings # clean
 cargo test -p glake                                # green: the three f6_* checklist
                                                    # tests + your whole 003 suite
-cargo tree -p glake -e normal                      # exactly two lines: glake, thiserror
+cargo tree -p glake -e normal --depth 1            # exactly two lines: glake, thiserror
 ```
 
 ```
@@ -306,7 +309,8 @@ cargo run -p glake -- stats /no/such/path; echo $?
 cargo run -p glake -- validate datalake/raw-local; echo $?
 # → all lines well-formed, 0        (findings-vs-errors: still not an Err)
 cargo run -p glake -- stats datalake/raw-local
-# → output unchanged from sitting G's snapshot (errors are plumbing, not behavior)
+# → same shape and numbers as a pre-sitting run taken back-to-back with this
+#   one (errors are plumbing, not behavior — G's diff discipline applies)
 ```
 
 - `git log --oneline -2` shows the enum commit below the threading commit.

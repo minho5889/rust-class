@@ -3,7 +3,7 @@
 Notes from building/validating the v1 reference at `_reference/glake`.
 These feed the sitting-J teaching material, the F8 property design, and the
 F11 dependency-policy record. (Measured F9 numbers for `evidence.md` come
-from the learner's own run — task 1.7; the smoke numbers below just prove
+from the learner's own run — task 1.9 (tasks rev 2); the smoke numbers below just prove
 the pipeline works and the lesson is real.)
 
 ## F8: where the hand scanner and serde_json legitimately diverge
@@ -133,6 +133,6 @@ Same command (`stats datalake/raw-local`), identical stdout, per backend:
 
 ≈ 9.7× the allocations for serde — the owned-`Value`-per-line cost the
 hand-first curriculum was built to make visible. The learner re-measures
-this for `evidence.md` in task 1.7 (memlens refuses release builds by
+this for `evidence.md` in task 1.9 (memlens refuses release builds by
 design; traces here were redirected via `MEMLENS_TRACE`, not written into
 the repo lake).

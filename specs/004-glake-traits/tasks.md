@@ -29,9 +29,11 @@ if you're reading this at the gate, they exist.
 ## 1. glake v1, four sittings (learner writes, Claude coaches)
 
 ### Sitting G — the refactor *(T4; F12 groundwork)*
-- [ ] 1.1 Split your glake into lib + thin bin (reference shape); modules
-      `scan/classify/walk/tally`; everything still green afterwards — the
-      refactor-under-tests lesson. *(commits: split, then green)*
+- [ ] 1.1 Reconcile your glake to the reference shape — lib + thin bin,
+      modules `scan/classify/walk/tally` (if you followed sittings A–F you
+      already have this: G audits it, generalizes `tally`, adds the F12
+      derives, bumps to 0.2.0); everything still green afterwards — the
+      refactor-under-tests lesson. *(commits: refactor, then green)*
 
 ### Sitting H — errors by design *(F5, F6)*
 - [ ] 1.2 `thiserror` dep; `GlakeError` with io source chain; lib paths return
@@ -46,17 +48,20 @@ if you're reading this at the gate, they exist.
       green. *(commits: red, clap, green)*
 
 ### Sitting J — the trait, the rival, the measurement *(F7–F9, F13; T1, T2, T6)*
-- [ ] 1.5 **F8a equivalence property first** (red): both-parsers-agree on
-      well-formed input, against stub parsers (`todo!()`).
+- [ ] 1.5 **Equivalence property first** (red): the *naive* both-parsers-agree
+      property over the full mixed strategy, against stub parsers (`todo!()`)
+      — deliberately naive; it meets its counterexample in 1.7 and the triage
+      reshapes it into F8a/F8b (the planned spec-bug lesson).
 - [ ] 1.6 `EventParser` trait + `ClassifiedLine`; `HandParser` wrapping your
       scanner (owned only at the boundary); the generic pipeline
       (`fn run<P: EventParser>`) + monomorphized unit tests (F13); F8a green
       for hand-vs-hand. *(commits: red, trait+hand)*
-- [ ] 1.7 `SerdeParser`; `--parser` via `Box<dyn …>` in the bin only; F8a
-      green; then **co-write F8b** (divergence containment) and walk its three
-      classes — leniency, escapes, duplicate keys — in the debugger of your
-      choice: shrunk inputs. Any *unclassifiable* divergence → normal triage.
-      *(commits: serde+F8a green, F8b)*
+- [ ] 1.7 `SerdeParser`; `--parser` via `Box<dyn …>` in the bin only; the
+      naive property meets its real, shrunk counterexample → **spec-bug
+      triage** → reshape into F8a (green) + co-written **F8b** (divergence
+      containment), walking its three classes — leniency, escapes, duplicate
+      keys — via shrunk inputs and pinned property arms. Any *unclassifiable*
+      divergence → normal triage. *(commits: serde+F8a green, F8b)*
 - [ ] 1.8 Hygiene sweep (Claude drives): F11 `cargo tree` check, F12
       C-COMMON-TRAITS rubric review, fmt/clippy both configs — outputs
       recorded for evidence.
@@ -88,6 +93,7 @@ if you're reading this at the gate, they exist.
 | Date | Change | Trigger | Re-gated? |
 |---|---|---|---|
 | 2026-07-09 | Initial fast-path draft | Part-3 directive | pending combined ack |
+| 2026-07-09 | Rev 2.1 (materials reconciliation): 1.1 reworded — A–F leavers already own the split, G audits/generalizes; 1.5/1.7 reworded to the naive-property→counterexample→F8a/F8b dramaturgy the guides and NOTES actually teach; "debugger" → shrunk inputs + pinned arms | sitting-guide authoring | this combined gate |
 | 2026-07-09 | Rev 2 per design+tasks audit (62%): materials claim made truthful-at-gate (MAJOR-3); sitting J restructured for F8a/F8b + F13 (trait→hand→generic tests→serde→divergence walk); hygiene task 1.8 owns F11/F12; sitting I uses `verdict` + validate-rejects-filters test | 004 audits | this combined gate |
 
 </details>

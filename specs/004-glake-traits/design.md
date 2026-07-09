@@ -42,7 +42,7 @@ on it.
 |---|---|---|---|
 | **cli.rs** | `clap` derive struct: command, path, `--type`, `--since`, `--parser`; filter flags on `validate` → usage exit 2 | derive macros, how clap owns usage/exit-2 | F1, F2a/b, F10 |
 | **parser.rs** | `trait EventParser { fn classify(&self, line: &str, required: &[&str]) -> ClassifiedLine }` + `HandParser` (wraps the v0 scanner; never returns `Unparseable` — the scanner has no parse-failure concept; allocates only at the boundary) + `SerdeParser` (parse to a local `Value`, extract; non-object/invalid JSON → `Unparseable`, tallied as malformed) | traits, why the boundary owns | F7, F8a/b |
-| **pipeline (lib)** | the core walk→classify→tally path is `fn run<P: EventParser>(…)` — **generic, monomorphized**; unit tests call it with each parser directly; only `main` wraps the choice in `Box<dyn EventParser>` | static vs dynamic dispatch, side by side | F13, F7 |
+| **pipeline (lib)** | the core walk→classify→tally path is `fn tally_filtered<P: EventParser + ?Sized>(…)` — **generic, monomorphized** (`?Sized` so `&dyn` also fits); unit tests call it with each parser directly; only `main` wraps the choice in `Box<dyn EventParser>` | static vs dynamic dispatch, side by side | F13, F7 |
 | **filter.rs** | `Filter { kind: Option<String>, since: Option<String> }` → `fn verdict(&self, e: &ClassifiedLine) -> Verdict { Keep, Skip, SkipBadTs }` (a bare `bool` can't feed F2b's excluded-bad-ts count); tallied with iterator adapters + `match` | closures, iterator adapters, Option combinators | F1–F4 |
 | **error.rs** | `#[derive(thiserror::Error)] enum GlakeError { Io{path, #[source] source}, Usage(String) }`; io errors wrapped via a small `map_err` helper that attaches the path (`#[from]` can't — multi-field variant); lib returns `Result<_, GlakeError>`, `main` maps to stderr + exit code | error design, source chains, C-GOOD-ERR | F5, F6 |
 | **lib/bin split** | already the reference shape; the learner's own crate refactors here (sitting G) | modules, `pub` discipline, API rubric | F12 |
@@ -87,6 +87,7 @@ that a refined strategy would regenerate differently guards nothing. Any
 | Date | Change | Trigger | Re-gated? |
 |---|---|---|---|
 | 2026-07-09 | Initial fast-path draft | Part-3 directive | pending combined ack |
+| 2026-07-09 | Rev 2.1: generic pipeline named as built (`tally_filtered<P: EventParser + ?Sized>`; `run` stayed the CLI dispatcher) | materials reconciliation | this combined gate |
 | 2026-07-09 | Rev 2 per design+tasks audit (62%): `ClassifiedLine` defined (variants + derives F8 needs); the dyn/borrow justification corrected (borrows *can* cross `dyn` — the forcer is serde's local `Value`); F8 split into F8a/F8b with divergence classes replacing the incoherent expected-seed plan; generic pipeline row added (F13); filter `keep()->bool` → `verdict()` enum (F2b count); `#[from]` → `#[source]`+path helper; F11/F12 verification ownership named | 004 audits | this combined gate |
 
 </details>
