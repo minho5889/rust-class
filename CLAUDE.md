@@ -116,6 +116,15 @@ Two kinds of spec, and they run differently:
   Rust; Claude coaches.** The deliverable is the learner's understanding; the
   code is the by-product. This is the default for Phase 1.
 
+**Materials-ahead model (learner directive 2026-07-09):** Claude authors the
+entire course in advance — a worksheet per ramp step (`playground/ramp/step-NN/`)
+and per glake sitting (`specs/003-rust-bedrock/sittings/`), each with goals,
+prompts, a hint ladder, expected compiler errors, and checkpoint commands.
+Solutions are pre-written and **validated** (they compile and pass) but live
+clearly separated (`solution.rs` / `_reference/`) under a don't-peek-until-tried
+convention. The learner follows the trail self-paced; Claude reviews submissions
+live. Worksheets supersede chat-posed exercises.
+
 Coached-mode rules:
 - **One concept per sitting.** The smallest step that compiles and teaches.
 - **Ramp before tool.** Throwaway `playground/` exercises (no spec needed)

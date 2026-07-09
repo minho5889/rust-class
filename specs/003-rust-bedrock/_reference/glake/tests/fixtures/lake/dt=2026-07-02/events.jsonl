@@ -1,0 +1,2 @@
+{"event_id":"b1","ts":"2026-07-02T09:00:00Z","session_id":"s2","actor":"human","event_type":"gate.approved","schema_version":1,"payload":{}}
+{"event_id":"b2","ts":"2026-07-02T09:05:00Z","session_id":"s2","event_type":"gate.approved","schema_version":1,"payload":{}}

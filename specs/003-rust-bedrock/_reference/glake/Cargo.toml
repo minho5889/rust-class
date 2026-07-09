@@ -1,0 +1,28 @@
+[package]
+name = "glake"
+version = "0.1.0"
+edition = "2024"
+
+# Course reference implementation — lives outside the workspace on purpose.
+# The learner's own glake will be crates/glake; this one exists to validate
+# every worksheet checkpoint before the learner reaches it.
+[workspace]
+
+[features]
+# The lens is opt-in (requirement R4/R7): memlens is an OPTIONAL dependency
+# that only enters the tree with --features lens.
+lens = ["dep:memlens", "memlens/memlens"]
+
+[dependencies]
+memlens = { path = "../../../../crates/memlens", optional = true }
+
+[dev-dependencies]
+proptest = "1"
+
+[lib]
+name = "glake"
+path = "src/lib.rs"
+
+[[bin]]
+name = "glake"
+path = "src/main.rs"
