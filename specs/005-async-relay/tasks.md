@@ -53,14 +53,16 @@ a live service's memory in the lens.
       async×proptest pattern: sync body owning a **multi-thread** runtime,
       one `tokio::spawn` per request): fire generated mixed batches at the
       sitting-L naive writer. Two honest outcomes, both taught: it tears (a
-      real red), or `O_APPEND` saves it and we name the savior and why it's
-      no guarantee (design's note). Shutdown-mid-queue conservation is where
-      the strawman *does* go red.
+      real red — validation found a two-write append tearing ~170 of 200
+      lines), or `O_APPEND` saves the single-buffer shape and we name the
+      savior and why it's no guarantee (design's note).
 - [ ] 1.4 The **mpsc (bounded, 256) + single writer task**: handlers
       `send().await`, writer owns the files (per-day handle cache,
-      `tokio::fs`, flush per line); A4 green **by construction**; **A5
-      partition property** (glake-agrees check) green.
-      *(commits: red, channel, A5 green)*
+      `tokio::fs`, flush per line). The first harness run *without* the
+      drain choreography goes genuinely red (shutdown-mid-queue loses
+      enqueued events) — then `drop(app)` + `writer.await` makes A4 green
+      **by construction**; **A5 partition property** (glake-agrees check)
+      green. *(commits: red, channel, A5 green)*
 
 ### Sitting N — drain, flush, prove, observe *(A6a/b, A8–A10; T5)*
 - [ ] 1.5 Checkpoint question first (predict before running): *if `main`
@@ -101,6 +103,7 @@ a live service's memory in the lens.
 | Date | Change | Trigger | Re-gated? |
 |---|---|---|---|
 | 2026-07-09 | Initial fast-path draft | Part-4 directive | pending combined ack |
+| 2026-07-09 | Rev 2.1 (materials reconciliation): shutdown-mid-queue red relocated from 1.3 to 1.4 where it's actually reproducible (the strawman has no queue; the channel-without-drain does); 1.3 records the empirical tearing result (~170/200 lines, two-write shape) | sitting-guide authoring | this combined gate |
 | 2026-07-09 | Rev 2 per design+tasks audit (72%): sitting M rewritten for real parallelism + honest-red protocol; sitting N gets the tx-retention checkpoint question and real-SIGINT A6 test; A7 test named in K; `select!` added to step 12; sitting L pacing note; SKILLS ref fixed to 1d | 005 audits | this combined gate |
 
 </details>

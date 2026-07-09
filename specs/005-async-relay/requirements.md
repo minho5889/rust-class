@@ -126,8 +126,9 @@ call your public API is you.
 
 **Hygiene**
 - **[O] A8** — dependency policy: `tokio`, `axum`, `serde_json`, `clap`,
-  `thiserror`, `anyhow` (bin only), `tracing` allowed; validation logic comes
-  from the learner's `glake` lib (path dep), not reimplemented.
+  `thiserror`, `anyhow` (bin only), `tracing` + `tracing-subscriber` allowed;
+  validation logic comes from the learner's `glake` lib (path dep), not
+  reimplemented.
 - **[O] A9** — no `unwrap()`/`expect()` in handler paths
   (`clippy::unwrap_used` on the crate — first deployable-shaped crate, the
   constitution's Cloudflare lesson applies from here on).
@@ -142,6 +143,7 @@ call your public API is you.
 | Date | Change | Trigger | Re-gated? |
 |---|---|---|---|
 | 2026-07-09 | Initial fast-path draft (with design+tasks) | Part-4 directive | pending combined ack |
+| 2026-07-09 | Rev 2.2: A8 allow-list gains `tracing-subscriber` (the `tracing` companion the reference legitimately needs; the audit question "does the list match reality" answered) | materials reconciliation | this combined gate |
 | 2026-07-09 | Rev 2.1: A4 equality defined on parsed JSON values + compact re-serialization rule (a raw body may span lines; byte-equality was unimplementable) | reference design | this combined gate |
 | 2026-07-09 | Rev 2 per requirements audit (68%): the door check defined once (glake key-presence + comparable day; explicitly weaker than the JSON Schema, stricter than glake-the-reader — MAJOR-1); A3 pinned to quiescent consistency (MAJOR-2); A4 rewritten as multiset equality + explicit no-dedup policy (MAJOR-3); A2 gets a fixed first-problem order + 413 note; A6 split into A6a/A6b with late-request behavior; cross-process hook coexistence + temp-lake rule stated; A1 fixture = real hook envelope | 005 audits | this combined gate |
 
