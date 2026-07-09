@@ -211,7 +211,9 @@ rust-class/ (goldeneye)
   accepts branch creates/updates only: **no tag pushes, no branch deletes**):
   - `claude/rust-aws-learning-44il52` — the designated **active dev branch**;
     all ongoing work commits here (the harness/PR tracks it). Our trunk.
-  - `main` — mirror of the trunk, fast-forwarded at each spec close. Pushed.
+  - `main` — mirror of the trunk, fast-forwarded at spec closes and at
+    fully-gated milestones (e.g. all of a spec's docs approved + materials
+    validated). Never carries un-gated WIP.
   - **Spec boundaries** are marked with `spec-close/NNN-name` **branches** (not
     tags — tags can't push here). `git diff spec-close/002-… spec-close/003-…`
     shows exactly what a spec added.
