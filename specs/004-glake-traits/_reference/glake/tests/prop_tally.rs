@@ -1,8 +1,16 @@
-//! [P] R9 — conservation: by-type totals and by-day totals EACH sum to the
-//! grand total of valid events; nothing double-counted, nothing dropped.
-//! The generator emits its own expected counts (independent truth), and
-//! includes blanks, malformed lines, short/multibyte timestamps.
+//! [P] R9 (003, carried into v1) — conservation: by-type totals and by-day
+//! totals EACH sum to the grand total of valid events; nothing
+//! double-counted, nothing dropped. The generator emits its own expected
+//! counts (independent truth), and includes blanks, malformed lines,
+//! short/multibyte/pattern-violating timestamps.
+//!
+//! v1 adaptation: `tally` now consumes owned `ClassifiedLine`s (the trait
+//! boundary's type), so the pipeline under test is HandParser → tally.
+//! Expected days follow the tightened F2 day rule via `day_of_ts` — the
+//! same one-source-of-truth helper the classifiers use.
 
+use glake::classify::{REQUIRED_KEYS, day_of_ts};
+use glake::parser::{EventParser, HandParser};
 use glake::tally::tally;
 use proptest::prelude::*;
 use std::collections::HashMap;
@@ -32,12 +40,15 @@ fn gen_line() -> impl Strategy<Value = GenLine> {
         Just("2026".to_string()),
         // multibyte in the first 10 bytes → bad-ts bucket
         Just("🦀🦀🦀🦀".to_string()),
+        // 10 chars but not YYYY-MM-DD shaped → bad-ts bucket (F2, new in v1)
+        Just("2026/07/09T00:00:00Z".to_string()),
     ];
     prop_oneof![
         1 => Just(GenLine::Blank("   ".to_string())),
         1 => Just(GenLine::Malformed),
         4 => (kind, ts).prop_map(|(kind, ts)| {
-            let expected_day = ts.get(0..10).unwrap_or("bad-ts").to_string();
+            // the F2 day rule, from the same helper the classifiers use
+            let expected_day = day_of_ts(&ts).unwrap_or("bad-ts").to_string();
             GenLine::Event { kind, ts, expected_day }
         }),
     ]
@@ -79,7 +90,11 @@ proptest! {
         }
 
         let rendered: Vec<String> = lines.iter().map(render).collect();
-        let stats = tally(rendered.iter().map(String::as_str));
+        let stats = tally(
+            rendered
+                .iter()
+                .map(|line| HandParser.classify(line, &REQUIRED_KEYS)),
+        );
 
         prop_assert_eq!(stats.events, want_events);
         prop_assert_eq!(stats.malformed, want_malformed);

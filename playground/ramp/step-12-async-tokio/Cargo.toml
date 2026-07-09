@@ -1,0 +1,22 @@
+# Step 12 — the ramp's first Cargo.toml. Read every line; move 1 walks it.
+
+[package]
+name = "step-12-async-tokio"
+version = "0.1.0"
+edition = "2024" # the same edition `rustc --edition 2024` gave you, declared once
+
+[dependencies]
+# teach: async/await is language SYNTAX, but the ENGINE that drives futures is
+# a library you choose. Ours is tokio — relay's (spec 005) and Rust-on-Lambda's.
+# Features are opt-in slices of a crate: pull only what you use, pay only for
+# what you pull (compile time AND binary size — Lambda will care):
+#   rt-multi-thread  the work-stealing runtime #[tokio::main] starts
+#   macros           #[tokio::main] and tokio::select! themselves
+#   time             tokio::time::sleep — the async sleep this step runs on
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "time"] }
+
+# teach: playground steps live OUTSIDE the repo's crates/ workspace. Without
+# this empty table, cargo would walk up, find [workspace] at the repo root,
+# see this folder isn't in its members list, and refuse to build. This says:
+# "I'm my own tiny world."
+[workspace]

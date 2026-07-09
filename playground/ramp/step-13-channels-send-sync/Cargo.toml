@@ -1,0 +1,14 @@
+# Step 13 — same shape as step 12's manifest, one new feature. Spot it.
+
+[package]
+name = "step-13-channels-send-sync"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+# teach: one addition to step 12's feature list —
+#   sync   tokio's synchronization toolbox; tokio::sync::mpsc lives here
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "time", "sync"] }
+
+# teach: standalone, outside the repo's crates/ workspace (see step 12).
+[workspace]

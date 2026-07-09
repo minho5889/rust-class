@@ -1,0 +1,2 @@
+this line is not JSON at all
+{"event_id":"j1","ts":"2026-07-04T00:00:00Z","session_id":"s","actor":"hook","event_type":"task.done","schema_version":1,"payload":{}}
