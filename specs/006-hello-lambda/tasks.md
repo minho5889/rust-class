@@ -28,17 +28,20 @@ instead: the 005 door contract from memory)*
 
 ## 1. hello-lambda, three sittings (learner writes Rust; Claude coaches)
 
-### Sitting O — the server you don't write *(H1–H5; T1, T2, T4)*
-- [ ] 1.1 **H4 equivalence property first** (red, co-written): 005's message
-      generator, hello-lambda's door stubbed (`todo!()`), relay compared via
-      `oneshot`. *(commit: red)*
-- [ ] 1.2 `cargo new crates/hello-lambda`; `lambda_http` + glake dep; the
-      handler: door → 202/stdout-line/400, healthz from `OnceLock` state,
-      404 else; H1–H3/H5 tests green; H4 green; lints denied (H7).
-      The T4 conversation happens here: what do these counters mean *now*?
-      *(commits: handler, tests+green)*
+### Sitting O — the server you don't write *(H1–H5, H12 context; T1, T2, T4)*
+- [ ] 1.1 `cargo new crates/hello-lambda` (scaffold + stub door returning
+      `todo!()`); then **H4 equivalence property first** (red, co-written):
+      005's size-bounded message generator, relay compared via `oneshot`
+      with its writer receiver alive. *(commits: scaffold, red)*
+- [ ] 1.2 The handler: door returning the line through the emit seam →
+      202/400, `println!` at the edge only, tracing → stderr; healthz from
+      eagerly-initialized `OnceLock` state; 404 else; H1–H3b/H5 tests green;
+      H4 green; lints denied (H7). The T4 conversation happens here: what do
+      these counters mean *now*? *(commits: handler, tests+green)*
 
-### Sitting P — the artifact and the stack *(H6–H8; T2, T3)*
+### Sitting P — the artifact and the stack *(H6–H8, H12; T2, T3)*
+> Prerequisite: `cargo lambda` (and its zig toolchain) installed locally —
+> `cdk synth` bundles the function by invoking it.
 - [ ] 1.3 The build (you drive): `cargo lambda build --release --arm64`;
       `file` the bootstrap; record size + `cargo bloat` top-10 → evidence
       draft. Compare against the workspace release profile — say which
@@ -68,8 +71,9 @@ instead: the 005 door contract from memory)*
 ## Operations checklist
 
 - [ ] fmt + clippy clean (`unwrap_used`/`expect_used` denied); H4 ≥256 cases,
-      red-first, seed committed on genuine failure; H1–H3/H5 tests green;
-      H6 artifact + size recorded; H8 synth + nag clean-or-suppressed;
+      red-first, seed committed on genuine failure; H1–H3b/H5 tests green;
+      H6 artifact + size recorded; H7 no-`aws-sdk-*` verified by `cargo
+      tree`; H8 synth + both nag packs clean-or-suppressed (real rule IDs);
       H9–H11 evidence from deploy day; **deploy AND teardown both logged**;
       property-auditor pass.
 
@@ -84,5 +88,6 @@ the split is tagged per-requirement in requirements.md.*
 | Date | Change | Trigger | Re-gated? |
 |---|---|---|---|
 | 2026-07-10 | Initial fast-path draft | Part-5 directive (full loop) | pending combined ack |
+| 2026-07-10 | Rev 2 per design+tasks audit (68%): 1.1 scaffolds the crate the red property needs (ordering bug); sitting P states the cargo-lambda synth prerequisite; ops checklist gains the H7 cargo-tree check and both nag packs | 006 audits | this combined gate |
 
 </details>

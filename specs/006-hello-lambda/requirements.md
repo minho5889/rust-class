@@ -77,23 +77,35 @@ with Claude co-driving, and land in `evidence.md`.
 > Scope tags: *(local)* validated in-session · *(deploy day)* sitting Q,
 > learner's account, results → evidence.md.
 
+> **The door check, stated in full** (H1/H2/H4 use it — same three clauses
+> as relay's, restated here so this spec stands alone): a body is **valid**
+> iff (1) it parses as a JSON object, (2) the glake lib's classification
+> finds all `REQUIRED_KEYS` at top level, and (3) its `ts` has a comparable
+> day (004's digit-pattern rule). Errors name the **first** problem in the
+> fixed order: not-a-JSON-object → first missing key in `REQUIRED_KEYS`
+> order → no comparable day.
+
 **The handler** *(all local)*
-- **[E] H1** — `POST /events` with a valid body (005's door check, verbatim:
-  glake classification + comparable day) returns **202** with an empty body,
-  and emits the accepted event as **exactly one compact JSON line on stdout**.
-- **[E] H2** — `POST /events` with an invalid body returns **400** with the
-  same one-line JSON error, in the same fixed first-problem order, as relay
-  (005 A2); nothing is emitted to stdout for rejected bodies.
-- **[E] H3** — `GET /healthz` returns **200** with per-instance counters
-  `{instance, started, received, accepted, rejected}`; any other
-  method/path returns 404. The doc and code must say out loud: these
-  counters are **per warm instance** — they reset on cold start and are not
-  shared across concurrent instances (T4).
-- **[P] H4** — door equivalence: for any generated body (005's A4 message
-  strategy), hello-lambda's (status, error text) equals relay's. The two
-  doors may never drift.
-- **[E] H5** — all of H1–H3 are proven by local `#[tokio::test]`s driving the
-  handler with `lambda_http` Request values — no AWS, no network.
+- **[E] H1** — `POST /events` with a valid body returns **202** with an
+  empty body, and emits the accepted event as **exactly one compact JSON
+  line on stdout** (the door path returns the line through a testable seam;
+  `println!` lives only at the edge, so H5's tests can assert it).
+- **[E] H2** — `POST /events` with an invalid body returns **400** with a
+  one-line JSON error per the door check's fixed order; **no event line** is
+  emitted for rejected bodies.
+- **[E] H3a** — `GET /healthz` returns **200** with per-instance counters
+  `{instance, started, received, accepted, rejected}`, where `started` is
+  the **cold-start (init) time**, not first-request time. Code and docs say
+  out loud: these counters are **per warm instance** — they reset on cold
+  start and are not shared across concurrent instances (T4).
+- **[E] H3b** — any other method/path returns 404.
+- **[P] H4** — door equivalence: for any generated body **up to 64 KiB**
+  (005's A4 message strategy, size-bounded), hello-lambda's (status, error
+  text) equals relay's. Above the bound the platforms legitimately diverge
+  (axum's stock 413 vs Lambda's ~6 MB platform rejection before the handler
+  runs) — that divergence is documented and outside the property's domain.
+- **[E] H5** — all of H1–H3b are proven by local `#[tokio::test]`s driving
+  the handler with `lambda_http` Request values — no AWS, no network.
 
 **The artifact** *(local)*
 - **[O] H6** — `cargo lambda build --release --arm64` produces
@@ -101,26 +113,36 @@ with Claude co-driving, and land in `evidence.md`.
   top-10 are recorded (expected: single-digit MB — the no-SDK baseline 007
   will be measured against).
 - **[O] H7** — dependency policy: `lambda_http`/`lambda_runtime`, `tokio`,
-  `serde_json`, `tracing` (+subscriber), and the glake lib (path dep). **No
-  `aws-sdk-*`.** `clippy::unwrap_used` + `expect_used` denied (deployable
-  crate).
+  `serde_json`, `tracing` (+subscriber, **writing to stderr — stdout is
+  reserved for event lines**), and the glake lib (path dep). **No
+  `aws-sdk-*`** (verified by `cargo tree`). `clippy::unwrap_used` +
+  `expect_used` denied (deployable crate).
 
 **The infrastructure** *(local synth; deploy is Q)*
 - **[O] H8** — `infra/` is born: a CDK v2 TypeScript app with a
   **stateless stack** containing the function (cargo-lambda-cdk
   `RustFunction`, explicit `Architecture.ARM_64`) and its Function URL;
   every resource tagged `project=goldeneye`; `cdk synth` passes with
-  **cdk-nag** (AwsSolutions) clean or carrying written suppressions; the
-  stateful stack file exists as a documented stub for 007.
+  **cdk-nag** (AwsSolutions **and** Serverless packs) clean or carrying
+  written suppressions that name real rule IDs; the stateful stack file
+  exists as a documented stub for 007.
+- **[O] H12** — the public-endpoint posture is a requirements-level fact,
+  not a design footnote: the Function URL is **unauthenticated (NONE)**,
+  justified only by its bounded life — deployed and torn down within one
+  sitting, receiving telemetry-shaped JSON, writing only to its own logs —
+  and that justification is written into the stack as the nag suppression
+  (or, if no nag rule covers Function-URL auth, into the stack file as a
+  comment plus a NOTES record of the rule's absence).
 
 **Deploy day** *(all deploy day)*
 - **[O] H9** — deployed to us-east-1 on the learner's account; the three
   curl transcripts above reproduced against the real URL; the stdout event
   line found in CloudWatch Logs.
 - **[O] H10** — the cold-start experiment: ≥5 cold starts each at 128 MB and
-  512 MB; `REPORT`-line init + duration numbers tabulated in evidence.md,
-  with one paragraph comparing against a GC-runtime baseline from the
-  research reports (cite, don't hand-wave).
+  512 MB; `REPORT`-line **init duration, duration, and Max Memory Used**
+  tabulated in evidence.md (the memory floor is part of the claim), with one
+  paragraph comparing against a GC-runtime baseline from the research
+  reports (cite, don't hand-wave).
 - **[O] H11** — teardown the same sitting: stateless stack destroyed;
   `evidence.md` records the deploy/destroy timestamps and (approximate) cost.
 
@@ -130,6 +152,7 @@ with Claude co-driving, and land in `evidence.md`.
 
 | Date | Change | Trigger | Re-gated? |
 |---|---|---|---|
-| 2026-07-10 | Initial fast-path draft (with design+tasks); Parts 3–5 audit lessons pre-applied: single-clause EARS, scope tags for the no-credentials reality, [P] strategy lives in design, door defined by reference to 005 rather than re-specified | Part-5 directive (full loop) | pending combined ack |
+| 2026-07-10 | Initial fast-path draft (with design+tasks) | Part-5 directive (full loop) | pending combined ack |
+| 2026-07-10 | Rev 2 per requirements audit (74%) + design+tasks audit (68%): H4 size-bounded with the 413/platform divergence documented (MAJOR-1); stdout purity reconciled with tracing — stderr rule in H7, emit-seam in H1 (MAJOR-2, design MAJOR-2); door check inlined so the spec stands alone instead of soft-pinning unapproved 005 text (MODERATE-1); H10 gains Max Memory Used (MODERATE-2); H3 split into H3a/H3b (MODERATE-3); H12 states the public-endpoint posture at the requirements layer (MODERATE-4); H8 names both nag packs and real-rule-ID discipline (design MAJOR-3) | 006 audits | this combined gate |
 
 </details>

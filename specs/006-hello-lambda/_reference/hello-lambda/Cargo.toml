@@ -1,0 +1,89 @@
+# hello-lambda v0 — spec 006 reference implementation ("answer key").
+#
+# Course reference — lives OUTSIDE the cargo workspace on purpose (the
+# learner's own crate will be crates/hello-lambda). The empty [workspace]
+# table below is the opt-out that keeps `cargo` from walking up to the
+# repo root.
+
+[package]
+name = "hello-lambda"
+version = "0.1.0"
+edition = "2024"
+
+[workspace]
+
+[dependencies]
+# The H7 allow-list, and nothing else. Deliberately absent: aws-sdk-* (007
+# measures exactly what the SDK costs; this binary is the no-SDK baseline)
+# and axum (the platform owns the router now — see handler.rs).
+#
+# lambda_http wraps lambda_runtime (a transitive dep, fine per H7) and
+# translates Function-URL payloads (API-Gateway-v2-shaped) into real
+# `http::Request`/`Response` values — the 005 mental model carries over.
+# Feature-picking, same discipline as relay's tokio block: we name the one
+# event flavor we speak (apigw_http = Function URL / HTTP API payload v2)
+# instead of hauling in ALB/REST/WebSocket/VPC-Lattice codecs we never
+# receive. `tracing` keeps the runtime's own diagnostics flowing to our
+# subscriber (stderr), not lost.
+lambda_http = { version = "1.3", default-features = false, features = [
+    "apigw_http",
+    "tracing",
+] }
+# tokio — only what main.rs needs: the scheduler and #[tokio::main]/
+# #[tokio::test]. Compare relay's seven features: no signal (the platform
+# owns shutdown), no sync (no channel — no writer task), no fs/io-util (no
+# file — stdout is the sink), no time. The shrinkage IS the T1 lesson.
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+serde_json = "1"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", default-features = false, features = [
+    "fmt",
+] }
+# The 004 payoff, third caller: the door's classification comes from the
+# learner's OWN glake library — same call relay makes, so 202/400 behavior
+# is identical by construction (and H4 proves it instead of hoping).
+glake = { path = "../../../004-glake-traits/_reference/glake" }
+
+[dev-dependencies]
+proptest = "1"
+# The H4 oracle: relay ITSELF (the 005 reference lib) is a dev-dependency,
+# driven in-process through its axum Router — tower's oneshot + axum types
+# exist here only to speak to it. None of this ships in the bootstrap.
+relay = { path = "../../../005-async-relay/_reference/relay" }
+tower = { version = "0.5", features = ["util"] }
+axum = "0.8"
+# The prop test builds relay's channel itself (no writer task — see
+# tests/prop_door.rs); dev-only feature union adds `sync` for tests.
+tokio = { version = "1", features = ["sync"] }
+
+[lints.clippy]
+# H7, mechanized (same as relay's A9): a deployable crate bans
+# unwrap()/expect() outright — a panicking handler takes the whole instance
+# down mid-request (the Cloudflare Nov-2025 lesson). Tests re-allow it at
+# module level: a panicking test is a FAILING test, which is fine.
+unwrap_used = "deny"
+expect_used = "deny"
+
+# REPLICATED VERBATIM from the workspace root (/Cargo.toml). This reference
+# lives outside the workspace (see the [workspace] opt-out above), so cargo
+# would otherwise build it with stock release defaults — and H6's artifact
+# size would be measured on a DIFFERENT profile than the one the learner's
+# crates/hello-lambda inherits from the root. Same flags or the number lies.
+# - thin LTO: ~10-20% runtime + smaller binaries at modest link cost
+# - codegen-units = 1: better codegen, slower compile (fine for deployables)
+# - panic = "abort": no unwind tables; tests are unaffected (the test
+#   harness ignores this setting and always builds with unwind)
+# - strip = "symbols": debuginfo is auto-stripped since 1.77, symbols are not
+[profile.release]
+lto = "thin"
+codegen-units = 1
+panic = "abort"
+strip = "symbols"
+
+[lib]
+name = "hello_lambda"
+path = "src/lib.rs"
+
+[[bin]]
+name = "hello-lambda"
+path = "src/main.rs"

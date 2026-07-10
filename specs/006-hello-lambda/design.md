@@ -33,11 +33,11 @@ meaning change.
 
 | Part | What it is | Rust you learn | REQs |
 |---|---|---|---|
-| **crates/hello-lambda/src/main.rs** | `#[tokio::main]` → `lambda_http::run(service_fn(handler))`; `#[cfg(feature="lens")]` allocator hook kept out (lens is a local tool; noted) | the runtime loop you no longer write | H1–H3 |
-| **handler.rs** | `async fn handler(req: Request) -> Result<Response<Body>, Error>` — match (method, path): POST /events → door; GET /healthz → counters; else 404. Accepted → `println!("{line}")` (one compact JSON line, stdout = CloudWatch) | lambda_http Request/Response, the one-fn server | H1–H3, H5 |
-| **door (via glake)** | same call relay makes: classification verdict + first-missing-key + comparable day → 202/400 in 005's fixed order | your lib's third caller | H1, H2, H4 |
-| **state.rs** | `OnceLock<Instance>` — instance id (from init timestamp + a few random bytes), started-at, three `AtomicU64`s | per-instance state, said honestly | H3 |
-| **infra/** | CDK v2 TS app: `bin/goldeneye.ts`, `lib/stateless-stack.ts` (RustFunction ARM_64 + FunctionUrl), `lib/stateful-stack.ts` (documented stub, 007), cdk-nag `AwsSolutions` aspect, `Tags.of(app).add("project","goldeneye")` | — (Claude writes TS; learner reviews as the AWS pro) | H8 |
+| **crates/hello-lambda/src/main.rs** | `#[tokio::main]`: install `tracing_subscriber` **writing to stderr** (stdout is the event-line channel — both land in the same CloudWatch stream, but event lines stay grep-ably pure), **eagerly initialize state** (so `started` = cold-start time, not first-request time), then `lambda_http::run(service_fn(handler))` | the runtime loop you no longer write | H1–H3a, H7 |
+| **handler.rs** | `async fn handler(req: Request) -> Result<Response<Body>, Error>` — match (method, path): POST /events → door; GET /healthz → counters; else 404. The door path **returns** `(Response, Option<String>)` — the accepted line comes back as a value (the testable seam, relay's writer-seam lesson recycled); `println!` happens only at the outermost edge | lambda_http Request/Response, the one-fn server, seams for testability | H1–H3b, H5 |
+| **door (via glake)** | the same three-clause check relay makes (restated in requirements so this spec stands alone): glake classification + comparable day → 202/400 in the fixed first-problem order | your lib's third caller | H1, H2, H4 |
+| **state.rs** | `OnceLock<Instance>` set eagerly in `main` — instance id from `AWS_LAMBDA_LOG_STREAM_NAME` when present (unique per instance, free), else init-time nanos + process id (local runs); started-at; three `AtomicU64`s | per-instance state, said honestly | H3a |
+| **infra/** | CDK v2 TS app: `bin/goldeneye.ts`, `lib/stateless-stack.ts` (RustFunction ARM_64 + FunctionUrl), `lib/stateful-stack.ts` (documented stub, 007), **cdk-nag v3 with both the AwsSolutions and Serverless packs** (wired per the current cdk-nag API — verified against the installed major version, not from memory), `Tags.of(app).add("project","goldeneye")`. Suppressions name **real rule IDs discovered from actual nag output**; if no rule covers Function-URL auth, that absence is recorded, not papered over with an invented ID | — (Claude writes TS; learner reviews as the AWS pro) | H8, H12 |
 
 ## Key decisions
 
@@ -54,7 +54,7 @@ meaning change.
 
 | REQ | Property | Generation strategy |
 |---|---|---|
-| H4 | ∀ bodies: `(status, error_text)` of hello-lambda's door ≡ relay's door | reuse 005's A4 message strategy (valid envelopes over a multi-day domain ∪ malformed arms ∪ duplicates); drive hello-lambda via a `lambda_http::Request` and relay via its router `oneshot`; compare status + body. ≥256 cases |
+| H4 | ∀ bodies ≤ 64 KiB: `(status, body_text)` of hello-lambda's door ≡ relay's door | reuse 005's A4 message strategy (valid envelopes over a multi-day domain ∪ malformed arms ∪ duplicates), size-bounded; drive hello-lambda via a `lambda_http::Request` and relay via its router `oneshot` — **with relay's writer receiver alive** (a 202 with a dead channel degrades to 500 and would fail equivalence for the wrong reason; the harness builds the router the way relay's own tests do, temp lake and all). The relay side is a dev-dependency on the 005 reference lib. Compare status + body. ≥256 cases |
 
 One property is the right number here: 006's risk is not logic (the door is
 imported, not rewritten) — it's **drift** between the two deployment shapes.
@@ -62,7 +62,8 @@ H4 pins exactly that. The heavy lifting moved to [O] measurements.
 
 ## How we verify
 
-**In-session (the reference was validated with all of these):**
+**In-session (the reference is validated with all of these before this gate
+is presented — if you're reading this at the gate, it exists and passed):**
 - H4 proptest ≥256, written before the handler wiring (red against a stub).
 - H1–H3/H5 as `#[tokio::test]` with hand-built `lambda_http` Requests.
 - fmt + clippy (`unwrap_used`, `expect_used` deny) clean.
@@ -70,9 +71,11 @@ H4 pins exactly that. The heavy lifting moved to [O] measurements.
   in-session): artifact exists, size recorded, `file` says aarch64.
 - `cargo bloat --release -n 10` recorded (host target — bloat can't cross-
   compile; noted as approximation).
-- `cd infra && npx cdk synth` with cdk-nag: zero unsuppressed findings;
-  template asserts: ARM_64, PROVIDED_AL2023, FunctionUrl AuthType=NONE with
-  the written suppression, project tag present.
+- `cd infra && npx cdk synth` with cdk-nag (both packs): zero unsuppressed
+  findings; template asserts: ARM_64, PROVIDED_AL2023, FunctionUrl
+  AuthType=NONE with the written suppression (or the recorded rule-absence
+  note), project tag present. Synth bundling requires cargo-lambda locally —
+  stated as sitting-P's prerequisite.
 
 **Deploy day (sitting Q → evidence.md):** H9 transcripts, H10 cold-start
 table (≥5 × {128, 512} MB), H11 teardown + cost note.
@@ -84,5 +87,6 @@ table (≥5 × {128, 512} MB), H11 teardown + cost note.
 | Date | Change | Trigger | Re-gated? |
 |---|---|---|---|
 | 2026-07-10 | Initial fast-path draft | Part-5 directive (full loop) | pending combined ack |
+| 2026-07-10 | Rev 2 per design+tasks audit (68%): emit seam designed in (door returns the line; println at the edge — H1/H2 become testable, MAJOR-2); cdk-nag corrected to v3-current API + both packs + real-rule-ID discipline (MAJOR-3); validation claims re-tensed truthful-at-gate (MAJOR-1); tracing→stderr design element; H4 harness names its relay dev-dep, size bound, and the live-receiver precondition; instance id from log-stream env; eager state init (started = cold start) | 006 audits | this combined gate |
 
 </details>

@@ -30,32 +30,44 @@ DuckDB answers the standing queries over `s3://` with the same totals as
 
 ### Sitting R — the seam and the laws *(S1–S4; T1, T2, T5)*
 - [ ] 1.1 Design `ObjectStore` + `ObjectMeta` + `StoreError` together
-      (co-written rubric pass, S7 groundwork); `cargo new crates/lake-sync`
-      (lib+bin); `FakeStore` with the ledger (puts counted, gauge).
-      *(commit: the seam)*
+      (co-written rubric pass, S7 groundwork) — **including the Send
+      moment**: write it as bare `async fn` first, meet the `JoinSet` wall
+      (predicted before compiling), then desugar to RPITIT `+ Send`.
+      `cargo new crates/lake-store` (the seam crate) and
+      `crates/lake-sync` (lib+bin); `FakeStore` behind the `fake` feature
+      (put-replaces-key, ledger with the gauge **inside `put`**).
+      *(commits: the seam, the fake)*
 - [ ] 1.2 **S3 conservation + S4 idempotence properties first** (red,
-      co-written): tempdir lake generator adapted from your R9 generator,
-      against a stub `plan`/`run` core. *(commit: red)*
-- [ ] 1.3 The pure core: `plan` (walk + list + size/md5 compare) and `run`
-      (execute against any `S: ObjectStore`); S1/S2 examples; S3/S4 green.
-      *(commits: plan, laws green)*
+      co-written): tempdir lake generator adapted from your R9 generator —
+      domain includes `traces/` and `dt=bad-ts` arms — against a stub
+      `plan`/`run` core. *(commit: red)*
+- [ ] 1.3 The pure core: `plan` (walk + list + size/etag compare;
+      key = `raw/` + relative path) and `run` (execute against `Arc<S>`);
+      S1/S2 examples; S3/S4 green — incl. the same-size mutation arm and
+      the conservation re-check after re-sync. *(commits: plan, laws green)*
 
 ### Sitting S — reality and the bill *(S5, S8, S9; T3, T4)*
 - [ ] 1.4 Streaming + the bound: one reused line buffer; `JoinSet` +
-      `Semaphore(4)`; **S9 gauge test** (many-file generated lake never
-      exceeds 4 in flight); S5 error paths + CLI examples.
-      *(commits: streaming, bound+errors)*
-- [ ] 1.5 `S3Store` (aws-sdk-s3, ~60 lines, read together line by line);
-      clap wiring; **the bill (S8, you drive):** ARM64 builds of 006
-      baseline vs ingest-to-be + lake-sync; sizes and `cargo bloat` deltas
-      → evidence draft; Graviton crypto-backend note recorded.
+      `Arc<Semaphore>(4)` with `acquire_owned`; **S9 gauge test**
+      (many-file generated lake never exceeds 4 in flight, measured inside
+      `put`); S5 error paths incl. the fake's `fail_on` mid-run failure +
+      CLI examples. *(commits: streaming, bound+errors)*
+- [ ] 1.5 `S3Store` (aws-sdk-s3, ~60 lines, read together line by line —
+      pause at the etag quote-strip and say why it exists); clap wiring;
+      **the bill (S8, you drive):** ARM64 builds of 006 baseline vs
+      ingest-to-be + lake-sync; sizes and `cargo bloat` deltas → evidence
+      draft; checksum-crate Graviton note recorded.
       *(commits: s3store, the-bill notes)*
 
-### Sitting T — the Lambda grows a real sink + the stateful stack *(S6, S10, S11)*
-- [ ] 1.6 Evolve `crates/hello-lambda`: `println!` → `store.put(...)`
-      (client-once `OnceLock`, `LAKE_BUCKET` env); **S6 fake-store tests**;
-      006's H4 property re-run green (the door didn't move).
-      *(commits: sink swap, tests green)*
+### Sitting T — the Lambda grows a real sink + the stateful stack *(S6, S6b, S10, S11)*
+- [ ] 1.6 Evolve `crates/hello-lambda` at the 006 emit seam: the returned
+      line goes to `store.put(...)` instead of `println!` (client built
+      once in async `main`, parked in `OnceLock`; `LAKE_BUCKET` env);
+      **S6 fake-store tests**; 006's H4 property re-run green (the door
+      didn't move). **Change protocol (S6b):** amend 006 requirements —
+      H1's stdout sink superseded, H7's no-SDK rule superseded for the
+      evolved crate — changelog entries in 006, re-gated with this spec's
+      close. *(commits: sink swap, tests green, 006 amendment)*
 - [ ] 1.7 The stateful stack (Claude drove, you review as the AWS pro):
       buckets, RETAIN + termination protection, the scoped `raw/*` grant —
       challenge anything; `cdk synth` + nag both stacks. **Scan pack**: run
@@ -81,11 +93,13 @@ DuckDB answers the standing queries over `s3://` with the same totals as
 
 ## Operations checklist
 
-- [ ] fmt + clippy clean (`unwrap_used`/`expect_used` denied, both crates);
-      S3/S4 ≥256 cases red-first (seeds committed on genuine failure);
-      S1/S2/S5/S6/S9 examples green; H4 re-run green; S8 bill recorded;
-      both ARM64 artifacts built; synth + nag clean-or-suppressed; scan pack
-      local runs recorded; S12 deploy-day evidence incl. **buckets retained,
+- [ ] fmt + clippy clean (`unwrap_used`/`expect_used` denied, all three
+      crates); S3/S4 ≥256 cases red-first incl. same-size arm + re-sync
+      conservation re-check (seeds committed on genuine failure);
+      S1/S2/S5/S6/S9 examples green; H4 re-run green; S6b's 006 amendments
+      logged; S8 bill recorded; both ARM64 artifacts built; synth + both
+      nag packs clean-or-suppressed; scan pack local runs + reconciliation
+      identity recorded; S12 deploy-day evidence incl. **buckets retained,
       compute torn down**; property-auditor pass.
 
 *Deviation declared: deploy/teardown happen in sitting U on the learner's
@@ -99,5 +113,6 @@ intentionally NOT torn down — it is the lake.*
 | Date | Change | Trigger | Re-gated? |
 |---|---|---|---|
 | 2026-07-10 | Initial fast-path draft | Part-6 directive (full loop) | pending combined ack |
+| 2026-07-10 | Rev 2 per audits (reqs 68%, design+tasks 58%): 1.1 gains the lake-store crate + the planned Send wall; generator domain includes traces//bad-ts; 1.4 gauge-inside-put + fail_on; 1.5 pauses at the quote-strip; 1.6 carries the S6b change-protocol amendment of 006; ops checklist updated to match | 007 audits | this combined gate |
 
 </details>
