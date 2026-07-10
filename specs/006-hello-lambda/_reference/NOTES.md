@@ -102,8 +102,11 @@ Template assertions (read from `cdk.out/goldeneye-stateless.template.json`):
 - `AWS::Lambda::Function` → `Architectures: ["arm64"]`,
   `Runtime: provided.al2023`, `MemorySize: 128`, `Timeout: 10`,
   `Tags: [{project: goldeneye}]` ✓
-- `AWS::Lambda::Url` → `AuthType: NONE` ✓ (+ the matching
-  `lambda:InvokeFunctionUrl` permission with `FunctionUrlAuthType: NONE`)
+- `AWS::Lambda::Url` → `AuthType: NONE` ✓ — with **two**
+  `AWS::Lambda::Permission` resources: the `lambda:InvokeFunctionUrl` one
+  (`FunctionUrlAuthType: NONE`) and a second `lambda:InvokeFunction`
+  permission scoped by `InvokedViaFunctionUrl: true` (a favorable,
+  scoped-down detail — sitting P reads both)
 - `AWS::IAM::Role` → only `AWSLambdaBasicExecutionRole` managed policy,
   project tag ✓
 - Bundled asset in cdk.out is byte-identical in size (1,843,256) and
@@ -235,18 +238,14 @@ rule, synth fails and forces the text into a real acknowledgment.
 
 ## 5. Spec frictions (for the parent session / doc revision)
 
-- **requirements.md's healthz example** shows `"instance":"i-3f9a…"`; with
-  the H7 rev 2 identity amendment, on real Lambda the value will be a log
-  stream name (`2026/07/12/[$LATEST]abc…`). The example should either show
-  that shape or note the local-fallback `i-…` form is what local tests see.
-- **design.md's state row** says instance id = "init timestamp + a few
-  random bytes"; the implemented rule (per amendment) is env-var-first,
-  nanos⊕pid fallback, no rand. The design row should be amended at re-gate.
-- **design.md's auth decision** says "NONE + cdk-nag suppression"; cdk-nag
-  3.0.1 has no Function-URL-auth rule in either required pack, so the
-  literal suppression cannot exist. Suggested wording: "NONE + written
-  justification (as a cdk-nag suppression if a matching rule exists —
-  as of cdk-nag 3.0.1 none does)."
+- ~~**requirements.md's healthz example** shows `"instance":"i-3f9a…"`~~ —
+  **resolved**: requirements rev 2.1 shows the log-stream shape.
+- ~~**design.md's state row** says "init timestamp + a few random bytes"~~ —
+  **resolved**: design rev 2 says env-var-first, nanos+pid fallback.
+- ~~**design.md's auth decision** says "NONE + cdk-nag suppression"~~ —
+  **resolved**: the decision row now records the rule-absence finding
+  (cdk-nag 3.0.1 has no Function-URL-auth rule in either pack) and points
+  at H12's either/or.
 - **H10 note (doc-level):** the cold-start table now also records **Max
   Memory Used** from the REPORT lines — the sitting-Q materials should
   include that column. No code impact on this reference.
