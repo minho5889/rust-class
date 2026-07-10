@@ -1,0 +1,9 @@
+# Dependencies and synth output are machine-local; never committed.
+node_modules/
+cdk.out/
+# ts-node runs the app directly; no emitted JS should appear, but if a
+# stray tsc run produces any, keep it out of git.
+*.js
+*.d.ts
+!jest.config.js
+package-lock.json.bak

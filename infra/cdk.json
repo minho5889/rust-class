@@ -1,0 +1,6 @@
+{
+  "app": "npx ts-node --prefer-ts-exts bin/goldeneye.ts",
+  "context": {
+    "//": "helloLambdaDir may be overridden per-invocation: -c helloLambdaDir=../specs/006-hello-lambda/_reference/hello-lambda (authoring/CI synth against the validated reference). Default (unset) points at the learner's crate ../crates/hello-lambda - see lib/stateless-stack.ts."
+  }
+}

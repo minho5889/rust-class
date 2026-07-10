@@ -1,0 +1,23 @@
+{
+  "name": "goldeneye-infra",
+  "version": "0.1.0",
+  "private": true,
+  "description": "goldeneye IaC - CDK v2 TypeScript app (born in spec 006-hello-lambda)",
+  "scripts": {
+    "build": "tsc --noEmit",
+    "synth": "cdk synth",
+    "synth:reference": "cdk synth -c helloLambdaDir=../specs/006-hello-lambda/_reference/hello-lambda"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "aws-cdk": "^2.1000.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.6.0"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "^2.200.0",
+    "cargo-lambda-cdk": "^0.0.32",
+    "cdk-nag": "^3.0.0",
+    "constructs": "^10.4.0"
+  }
+}
