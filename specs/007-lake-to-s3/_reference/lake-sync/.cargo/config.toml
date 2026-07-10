@@ -1,0 +1,8 @@
+# Cross-compiling for Graviton (CLAUDE.md: ARM64 everywhere): cargo can
+# COMPILE for aarch64 out of the box (the target is Tier 1 and installed),
+# but LINKING needs a linker that speaks aarch64 ELF — the host's `cc`
+# would silently produce x86-64 link errors. Debian's cross toolchain
+# provides it. (hello-lambda doesn't need this file: cargo-lambda brings
+# its own zig-based linker.)
+[target.aarch64-unknown-linux-gnu]
+linker = "aarch64-linux-gnu-gcc"

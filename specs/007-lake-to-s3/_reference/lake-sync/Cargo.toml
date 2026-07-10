@@ -1,0 +1,71 @@
+# lake-sync — push the local lake to S3, idempotently (spec 007 reference).
+#
+# Course reference — lives OUTSIDE the cargo workspace on purpose (the
+# learner's own crate will be crates/lake-sync). The empty [workspace]
+# table below is the opt-out that keeps `cargo` from walking up to the
+# repo root.
+
+[package]
+name = "lake-sync"
+version = "0.1.0"
+edition = "2024"
+
+[workspace]
+
+[dependencies]
+# The seam (design.md three-crate layout). Default features = the real
+# S3Store; the FAKE arrives only through [dev-dependencies] below, so it
+# can never ship in the release binary.
+lake-store = { path = "../lake-store" }
+# The 004 payoff, fourth caller: the walker that knows what a lake looks
+# like (`jsonl_files` — recursive, sorted, path-context errors) is the
+# learner's OWN library. lake-sync adds no walking logic of its own.
+glake = { path = "../../../004-glake-traits/_reference/glake" }
+# CLI surface, same derive discipline as glake v1.
+clap = { version = "4", features = ["derive"] }
+# COMPATIBILITY CHECKSUM, NOT SECURITY: md5 exists here only because S3
+# spells single-part-PUT etags as body-md5 and the idempotence compare
+# must speak that spelling. Pure Rust on purpose — no C, no OpenSSL, so
+# the ARM64 cross-build stays trivial and the Graviton hardware-backend
+# checklist is n/a by construction (S7).
+md5 = "0.8"
+# One designed error enum for the lib (thiserror for libs, CLAUDE.md).
+thiserror = "2"
+# JoinSet ("rt") + Semaphore ("sync") for bounded fan-out; macros +
+# rt-multi-thread for the binary's #[tokio::main].
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "sync"] }
+# Credential/region resolution for the REAL runs only — main.rs builds the
+# client once; --dry-run never touches this path (S2: dry-run needs no AWS).
+aws-config = "1"
+
+[dev-dependencies]
+# The fake side of the seam, for the laws (S3/S4) and the ledger-reading
+# example tests (S2/S5/S9). Feature-gated so `cargo build --release`
+# never compiles it in.
+lake-store = { path = "../lake-store", features = ["fake"] }
+proptest = "1"
+tempfile = "3"
+
+[lints.clippy]
+# Deployable-crate discipline (CLAUDE.md): no unwrap()/expect() in runtime
+# paths; tests re-allow at module level.
+unwrap_used = "deny"
+expect_used = "deny"
+
+# REPLICATED VERBATIM from the workspace root (/Cargo.toml) — this
+# reference lives outside the workspace (see the [workspace] opt-out), so
+# without these lines the S8 size numbers would be measured on a different
+# profile than the learner's crates inherit. Same flags or the number lies.
+[profile.release]
+lto = "thin"
+codegen-units = 1
+panic = "abort"
+strip = "symbols"
+
+[lib]
+name = "lake_sync"
+path = "src/lib.rs"
+
+[[bin]]
+name = "lake-sync"
+path = "src/main.rs"

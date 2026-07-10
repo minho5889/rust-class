@@ -1,0 +1,58 @@
+# lake-store — the ObjectStore seam (spec 007 reference implementation).
+#
+# Course reference — lives OUTSIDE the cargo workspace on purpose (the
+# learner's own crate will be crates/lake-store). The empty [workspace]
+# table below is the opt-out that keeps `cargo` from walking up to the
+# repo root.
+#
+# THE THREE-CRATE LAYOUT (design.md, "Crate layout" decision): this crate
+# holds the trait and both implementations; lake-sync and hello-lambda both
+# depend on it and NEITHER depends on the other — so the S8 size
+# measurement isolates exactly what the SDK costs the Lambda, unpolluted
+# by clap or the CLI's dependency tree.
+
+[package]
+name = "lake-store"
+version = "0.1.0"
+edition = "2024"
+
+[workspace]
+
+[features]
+# The REAL implementation is the default surface: a consumer that says
+# nothing gets S3Store and nothing test-shaped. The fake NEVER rides along
+# by default — consumers turn it on in [dev-dependencies] only, so it can
+# never leak into a deployable artifact (the S8 measurement stays honest).
+default = ["s3"]
+s3 = ["dep:aws-sdk-s3"]
+fake = ["dep:md5", "dep:tokio"]
+
+[dependencies]
+# The error type's boring parts (Display/Error impls) — the design is ours.
+thiserror = "2"
+# The real store, feature-gated: aws-sdk-s3 appears ONLY behind `s3` and
+# ONLY in src/s3.rs (S7: "aws-sdk-s3 appears only in the real impl module").
+aws-sdk-s3 = { version = "1", optional = true }
+# The fake's etag spelling: bare-hex md5 of the stored bytes, the SAME
+# format S3Store::list produces after quote-stripping, so the fake and
+# reality can never drift on spelling (design etag fact #3). Pure Rust —
+# a compatibility checksum, not security (see fake.rs).
+md5 = { version = "0.8", optional = true }
+# The fake dwells across two yield points inside put() so "in flight" is
+# observable (the S9 gauge). yield_now needs tokio's "rt" feature.
+tokio = { version = "1", features = ["rt"], optional = true }
+
+[dev-dependencies]
+# #[tokio::test] for the fake's own unit tests (macros on top of rt).
+tokio = { version = "1", features = ["macros", "rt"] }
+
+[lints.clippy]
+# Same discipline as every deployable-adjacent crate (CLAUDE.md, the
+# Cloudflare Nov-2025 lesson): unwrap()/expect() are denied crate-wide;
+# tests re-allow at module level (a panicking test is a failing test).
+unwrap_used = "deny"
+expect_used = "deny"
+
+[lib]
+name = "lake_store"
+path = "src/lib.rs"
