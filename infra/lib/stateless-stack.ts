@@ -7,6 +7,7 @@
  */
 import * as path from 'node:path';
 import { CfnOutput, Duration, Stack, StackProps, Validations } from 'aws-cdk-lib';
+import { PolicyStatement } from 'aws-cdk-lib/aws-iam';
 import { Architecture, FunctionUrlAuthType } from 'aws-cdk-lib/aws-lambda';
 import { RustFunction } from 'cargo-lambda-cdk';
 import { Construct } from 'constructs';
@@ -40,6 +41,59 @@ export class StatelessStack extends Stack {
       // Linux that execs our `bootstrap` binary (T2).
       memorySize: 128, // the H10 cold-start experiment's lower rung
       timeout: Duration.seconds(10),
+      environment: {
+        // Spec 007 (S10): the ingest sink. The bucket name is one of the
+        // project's two hardcoded physical names (a cross-spec contract),
+        // so the compute stack NAMES it rather than importing the bucket
+        // construct - no cross-stack reference means tearing this stack
+        // down can never entangle CloudFormation with lake state.
+        LAKE_BUCKET: 'goldeneye-lake',
+      },
+    });
+
+    // Spec 007 (S10): the ingest permission, HAND-WRITTEN on purpose.
+    // `lake.grantPut(handler)` would also bundle s3:PutObjectLegalHold,
+    // s3:PutObjectRetention, s3:PutObjectTagging, s3:PutObjectVersionTagging
+    // and s3:Abort* - none of which this function uses, and whose presence
+    // would falsify the "nothing wider than PutObject on raw/*" claim the
+    // requirement makes. Least privilege you can literally READ in the
+    // synthesized template: one action, one prefix.
+    //   - s3:PutObject only: the ingest never lists, never reads, never
+    //     deletes (lake-sync's LIST runs as the OPERATOR's credentials,
+    //     not the function's).
+    //   - resource is the raw/* PREFIX of the one bucket, not the bucket:
+    //     S1's "nothing is ever written outside raw/" holds at the IAM
+    //     layer too, not just in code.
+    handler.addToRolePolicy(
+      new PolicyStatement({
+        sid: 'GoldeneyeLakeRawPutOnly',
+        actions: ['s3:PutObject'],
+        resources: ['arn:aws:s3:::goldeneye-lake/raw/*'],
+      }),
+    );
+
+    // cdk-nag on that statement: AwsSolutions-IAM5 flags ANY wildcard, and
+    // the 007 discovery synth reported the granular finding
+    //   AwsSolutions-IAM5[Resource::arn:aws:s3:::goldeneye-lake/raw/*]
+    // (raw findings list: specs/007-lake-to-s3/_reference/NOTES.md). Here
+    // the wildcard IS the least privilege: object keys under raw/ are
+    // minted per event (evt-<event_id>.json) and per synced file, so no
+    // finite resource list can exist - the prefix is the narrowest
+    // expressible grant, and the action list is exactly one action.
+    // Same rough edge as 006's IAM4 note: the granular id embeds the
+    // ARN's '::' pairs and aws-cdk-lib's Validations.acknowledge() rejects
+    // ids with more than one '::' (qualifyId reserves the delimiter), so
+    // this acknowledgment travels via the same public metadata key
+    // acknowledge() itself writes and cdk-nag reads.
+    handler.node.addMetadata(Validations.ACKNOWLEDGED_RULES_METADATA_KEY, {
+      'AwsSolutions-IAM5[Resource::arn:aws:s3:::goldeneye-lake/raw/*]':
+        'The wildcard is a single PREFIX (goldeneye-lake/raw/*) under one named ' +
+        'bucket, paired with exactly one action (s3:PutObject). Ingest keys are ' +
+        'minted per event at request time, so a non-wildcard resource list is ' +
+        'impossible by construction; the prefix bound enforces S1\'s "nothing is ' +
+        'ever written outside raw/" at the IAM layer. No List/Get/Delete/Abort or ' +
+        'tagging/retention actions ride along (grantPut was rejected for exactly ' +
+        'that reason - see the block comment above).',
     });
 
     // The lab door: a Function URL with NO auth. This is a deliberate,

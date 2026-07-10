@@ -6,7 +6,8 @@
   "scripts": {
     "build": "tsc --noEmit",
     "synth": "cdk synth",
-    "synth:reference": "cdk synth -c helloLambdaDir=../specs/006-hello-lambda/_reference/hello-lambda"
+    "synth:reference": "cdk synth -c helloLambdaDir=../specs/006-hello-lambda/_reference/hello-lambda",
+    "synth:reference007": "cdk synth -c helloLambdaDir=../specs/007-lake-to-s3/_reference/hello-lambda"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

@@ -14,6 +14,7 @@
  */
 import * as cdk from 'aws-cdk-lib';
 import { AwsSolutionsChecks, ServerlessChecks } from 'cdk-nag';
+import { StatefulStack } from '../lib/stateful-stack';
 import { StatelessStack } from '../lib/stateless-stack';
 
 const app = new cdk.App();
@@ -33,11 +34,20 @@ cdk.Validations.of(app).addPlugins(
 new StatelessStack(app, 'goldeneye-stateless', {
   env: { region: 'us-east-1' },
   description:
-    'goldeneye stateless compute: hello-lambda (spec 006) - freely destroyable, torn down the same sitting it is deployed',
+    'goldeneye stateless compute: hello-lambda (specs 006/007) - freely destroyable, torn down the same sitting it is deployed',
 });
 
-// The STATEFUL stack (goldeneye-lake / goldeneye-discovery buckets,
-// termination-protected) is deliberately NOT instantiated yet: spec 007
-// fills lib/stateful-stack.ts and adds the `new StatefulStack(...)` call
-// here. Keeping the file present-but-uninstantiated means 006's deploys and
-// teardowns can never touch lake state by accident.
+// The STATEFUL stack, instantiated by spec 007 exactly as 006 promised.
+// terminationProtection lives HERE, on the stack (S10): `cdk destroy
+// goldeneye-stateful` refuses until a human disables protection first -
+// the buckets' own RemovalPolicy.RETAIN (in the stack file) is the second,
+// independent safety. Deploys of goldeneye-stateless never touch this
+// stack; there is no cross-stack reference on purpose (the bucket name is
+// a fixed contract, so the compute stack names it instead of importing it
+// - tearing compute down can never tangle with lake state).
+new StatefulStack(app, 'goldeneye-stateful', {
+  env: { region: 'us-east-1' },
+  terminationProtection: true,
+  description:
+    'goldeneye stateful: the goldeneye-lake / goldeneye-discovery buckets (spec 007) - termination-protected, RETAIN, never torn down casually: it IS the lake',
+});

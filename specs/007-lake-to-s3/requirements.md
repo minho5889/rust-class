@@ -12,7 +12,7 @@ becoming magical.**
 
 ```console
 $ lake-sync --bucket goldeneye-lake --dry-run datalake/raw-local
-plan: upload 7 (301 events), skip 0
+plan: upload 7, skip 0
 
 $ lake-sync --bucket goldeneye-lake datalake/raw-local
 uploaded 7, skipped 0
@@ -195,6 +195,7 @@ lake. *(deploy day)* lines run in sitting U on the learner's account.
 | Date | Change | Trigger | Re-gated? |
 |---|---|---|---|
 | 2026-07-10 | Initial fast-path draft (with design+tasks); scope tags per the no-credentials reality; fake-store law-testing pattern chosen so [P]s stay local | Part-6 directive (full loop) | pending combined ack |
+| 2026-07-10 | Rev 2.1 (reference reconciliation): dry-run example drops its "(N events)" decoration — sync moves bytes, not judgments, and the plan doesn't parse lines | reference build | this combined gate |
 | 2026-07-10 | Rev 2 per requirements audit (68%) + design audit (58%): S11/S12 rewritten as reconciliation identities with the pinned two-shape glob (M1 — the 003 R10 lesson, nearly re-learned); S1 key rule = raw/ + path-relative-to-root, `traces/` and `dt=bad-ts` covered verbatim (M2); S6b states the 006 H1/H7 supersession + change protocol (M3); S3/S4 pin put-replaces-key, the same-size mutation arm, and conservation-after-re-sync (M4, design M2); S10 explicit hand-written PutObject policy + discovery-bucket purpose; deletion/concurrency domain stated; retained-bucket cost in plain words; T4/T5 wording fixed | 007 audits | this combined gate |
 
 </details>

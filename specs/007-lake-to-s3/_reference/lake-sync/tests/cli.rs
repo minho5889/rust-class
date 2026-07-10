@@ -16,7 +16,6 @@
 
 #![allow(clippy::unwrap_used)]
 
-use std::path::Path;
 use std::process::Command;
 use std::sync::Arc;
 

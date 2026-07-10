@@ -1,11 +1,12 @@
 # goldeneye infra — CDK v2 TypeScript app
 
-Born in **spec 006-hello-lambda** (H8). Two stacks:
+Born in **spec 006-hello-lambda** (H8); the stateful half landed with
+**spec 007-lake-to-s3** (S10). Two stacks:
 
 | Stack | File | Status |
 |---|---|---|
-| `goldeneye-stateless` | `lib/stateless-stack.ts` | live — hello-lambda (RustFunction, ARM64) + Function URL |
-| `goldeneye-stateful` | `lib/stateful-stack.ts` | **documented stub** — spec 007 fills it (lake buckets); not instantiated in `bin/goldeneye.ts` |
+| `goldeneye-stateless` | `lib/stateless-stack.ts` | live — hello-lambda (RustFunction, ARM64) + Function URL; 007 adds `LAKE_BUCKET` env + a hand-written `s3:PutObject` grant on `goldeneye-lake/raw/*` |
+| `goldeneye-stateful` | `lib/stateful-stack.ts` | live — `goldeneye-lake` + `goldeneye-discovery` buckets (SSE-S3, BPA, SSL-enforced, versioning off, `RETAIN`), stack termination-protected; **deployed once, never torn down casually — it IS the lake** |
 
 Region: **us-east-1** (project primary), account-agnostic — deploys into
 whatever account your credentials name. Every resource carries the
@@ -32,18 +33,24 @@ key (path relative to this directory):
 #    Cargo.toml file" until that crate exists - expected before sitting O.
 $ npx cdk synth
 
-# 2. Reference mode: the validated spec-006 reference implementation
+# 2. Reference mode: a validated reference implementation
 #    (used for authoring/CI validation of the infra itself).
 $ npx cdk synth -c helloLambdaDir=../specs/006-hello-lambda/_reference/hello-lambda
+# or the 007 evolution (the ingest Lambda with the S3 sink):
+$ npx cdk synth -c helloLambdaDir=../specs/007-lake-to-s3/_reference/hello-lambda
 ```
 
-npm shortcuts: `npm run synth` / `npm run synth:reference`.
+npm shortcuts: `npm run synth` / `npm run synth:reference` /
+`npm run synth:reference007`.
 
-## Deploy / destroy (sitting Q — same-sitting teardown is part of the spec)
+## Deploy / destroy — the two stacks live DIFFERENT lives
 
 ```console
+$ npx cdk deploy goldeneye-stateful         # ONCE (sitting U): the lake is born
 $ npx cdk deploy goldeneye-stateless        # prints FunctionUrl output
-$ npx cdk destroy goldeneye-stateless       # H11: torn down the SAME sitting
+$ npx cdk destroy goldeneye-stateless       # torn down the SAME sitting (H11/S12)
+# goldeneye-stateful is never in a destroy command: termination protection
+# (stack) + RemovalPolicy.RETAIN (buckets) both stand in the way, on purpose.
 ```
 
 ## The auth decision (Function URL, AuthType=NONE)
@@ -65,20 +72,26 @@ Both rule packs CLAUDE.md requires run at synth: **AwsSolutions** and
 `Validations.of(app).addPlugins(...)` — not the stale v2 Aspects API).
 Synthesis fails on any unacknowledged error-level finding.
 
-Findings and their written acknowledgments (all in `lib/stateless-stack.ts`):
+Findings and their written acknowledgments (stateless ones in
+`lib/stateless-stack.ts`, stateful ones in `lib/stateful-stack.ts`):
 
 | Rule | Level | Disposition |
 |---|---|---|
-| `AwsSolutions-IAM4[Policy::…AWSLambdaBasicExecutionRole]` | Error | acknowledged — the managed policy is exactly the logs-only access the function needs |
-| `Serverless-LambdaDLQ` | Error | acknowledged — synchronous Function-URL invocation only; a DLQ would never receive a message |
-| `Serverless-LambdaTracing` | Warning | acknowledged — H10 reads REPORT lines, not X-Ray traces |
+| `AwsSolutions-IAM4[Policy::…AWSLambdaBasicExecutionRole]` | Error | acknowledged (006) — the managed policy is exactly the logs-only access the function needs |
+| `AwsSolutions-IAM5[Resource::arn:aws:s3:::goldeneye-lake/raw/*]` | Error | acknowledged (007) — the wildcard IS the least privilege: per-event keys make a finite resource list impossible; one action, one prefix |
+| `AwsSolutions-S1` (both buckets) | Error | acknowledged (007) — access logs for a single-operator, BPA'd, SSL-enforced lab lake would double the bucket count to audit cents of telemetry |
+| `Serverless-LambdaDLQ` | Error | acknowledged (006) — synchronous Function-URL invocation only; a DLQ would never receive a message |
+| `Serverless-LambdaTracing` | Warning | acknowledged (006) — H10 reads REPORT lines, not X-Ray traces |
 | Function-URL auth | — | **no rule exists** in either pack (cdk-nag 3.0.1); the auth decision is documented in code + spec instead — nothing to suppress |
 
-One rough edge, documented in `specs/006-hello-lambda/_reference/NOTES.md`:
-the granular `AwsSolutions-IAM4[Policy::…]` id contains `::`, which
-`Validations.acknowledge()` rejects; that single acknowledgment is recorded
-via the same public metadata key (`Validations.ACKNOWLEDGED_RULES_METADATA_KEY`)
-that `acknowledge()` writes and cdk-nag reads.
+One rough edge, documented in `specs/006-hello-lambda/_reference/NOTES.md`
+(and hit again by 007's IAM5): granular ids like
+`AwsSolutions-IAM4[Policy::…]` / `AwsSolutions-IAM5[Resource::…]` contain
+`::`, which `Validations.acknowledge()` rejects; those acknowledgments are
+recorded via the same public metadata key
+(`Validations.ACKNOWLEDGED_RULES_METADATA_KEY`) that `acknowledge()` writes
+and cdk-nag reads. Plain-id findings (`AwsSolutions-S1`,
+`Serverless-*`) use `Validations.of(construct).acknowledge()` normally.
 
 ## Housekeeping
 
