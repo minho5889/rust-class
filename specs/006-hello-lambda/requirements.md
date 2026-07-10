@@ -24,7 +24,7 @@ $ curl -s -X POST "$URL/events" -d '{"not":"an envelope"}'
 {"error":"missing key: event_id"}
 
 $ curl -s "$URL/healthz"
-{"instance":"i-3f9a…","started":"2026-07-12T…","received":3,"accepted":2,"rejected":1}
+{"instance":"2026/07/12/[$LATEST]8c3f…","started":"2026-07-12T…","received":3,"accepted":2,"rejected":1}
 ```
 
 Accepted events don't hit a disk — a Lambda has none worth keeping. Each one
@@ -153,6 +153,7 @@ with Claude co-driving, and land in `evidence.md`.
 | Date | Change | Trigger | Re-gated? |
 |---|---|---|---|
 | 2026-07-10 | Initial fast-path draft (with design+tasks) | Part-5 directive (full loop) | pending combined ack |
+| 2026-07-10 | Rev 2.1 (reference reconciliation): healthz example shows the real instance-id shape (a CloudWatch log-stream name, not an EC2-style id) | reference build | this combined gate |
 | 2026-07-10 | Rev 2 per requirements audit (74%) + design+tasks audit (68%): H4 size-bounded with the 413/platform divergence documented (MAJOR-1); stdout purity reconciled with tracing — stderr rule in H7, emit-seam in H1 (MAJOR-2, design MAJOR-2); door check inlined so the spec stands alone instead of soft-pinning unapproved 005 text (MODERATE-1); H10 gains Max Memory Used (MODERATE-2); H3 split into H3a/H3b (MODERATE-3); H12 states the public-endpoint posture at the requirements layer (MODERATE-4); H8 names both nag packs and real-rule-ID discipline (design MAJOR-3) | 006 audits | this combined gate |
 
 </details>
