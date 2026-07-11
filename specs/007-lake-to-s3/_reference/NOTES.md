@@ -331,6 +331,13 @@ the sync" term (stated in the query headers).
    append live). Any recorded count in evidence.md needs its instant;
    suggested: the sitting-U evidence template carries a timestamp column
    for each identity term.
+9. **(added post-guides) The stateless stack's AuthType=NONE justification
+   is stale after this evolution**: its bound 2 ("can reach no data store
+   … role is logs-only, no aws-sdk") is falsified by the `s3:PutObject`
+   grant and the SDK in the binary. Sitting T deliberately stages this as
+   the learner's security-review finding; the comment amendment is the
+   learner's supervised edit there, and the spec close verifies it
+   happened. Recorded here so the trail exists outside the guide.
 
 ## 7. Housekeeping
 

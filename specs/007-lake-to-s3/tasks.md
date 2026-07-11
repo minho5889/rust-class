@@ -54,17 +54,20 @@ DuckDB answers the standing queries over `s3://` with the same totals as
       CLI examples. *(commits: streaming, bound+errors)*
 - [ ] 1.5 `S3Store` (aws-sdk-s3, ~60 lines, read together line by line —
       pause at the etag quote-strip and say why it exists); clap wiring;
-      **the bill (S8, you drive):** ARM64 builds of 006 baseline vs
-      ingest-to-be + lake-sync; sizes and `cargo bloat` deltas → evidence
-      draft; checksum-crate Graviton note recorded.
-      *(commits: s3store, the-bill notes)*
+      **the bill, part one (S8, you drive):** ARM64 builds of the 006
+      baseline + lake-sync; sizes and `cargo bloat` → evidence draft, plus
+      a **written prediction** of what the ingest build will weigh (the
+      evolved Lambda doesn't exist until sitting T fills the row — the
+      prediction-then-measurement is the experiment shape); checksum-crate
+      Graviton note recorded. *(commits: s3store, the-bill notes)*
 
 ### Sitting T — the Lambda grows a real sink + the stateful stack *(S6, S6b, S10, S11)*
 - [ ] 1.6 Evolve `crates/hello-lambda` at the 006 emit seam: the returned
       line goes to `store.put(...)` instead of `println!` (client built
       once in async `main`, parked in `OnceLock`; `LAKE_BUCKET` env);
       **S6 fake-store tests**; 006's H4 property re-run green (the door
-      didn't move). **Change protocol (S6b):** amend 006 requirements —
+      didn't move); **the bill, part two:** the ingest ARM64 build fills
+      the S8 row sitting S predicted. **Change protocol (S6b):** amend 006 requirements —
       H1's stdout sink superseded, H7's no-SDK rule superseded for the
       evolved crate — changelog entries in 006, re-gated with this spec's
       close. *(commits: sink swap, tests green, 006 amendment)*
@@ -113,6 +116,7 @@ intentionally NOT torn down — it is the lake.*
 | Date | Change | Trigger | Re-gated? |
 |---|---|---|---|
 | 2026-07-10 | Initial fast-path draft | Part-6 directive (full loop) | pending combined ack |
+| 2026-07-10 | Rev 2.1 (materials reconciliation): S8 split into predict (sitting S) / measure (sitting T) — the ingest binary can't be weighed before the sink swap exists | sitting-guide authoring | this combined gate |
 | 2026-07-10 | Rev 2 per audits (reqs 68%, design+tasks 58%): 1.1 gains the lake-store crate + the planned Send wall; generator domain includes traces//bad-ts; 1.4 gauge-inside-put + fail_on; 1.5 pauses at the quote-strip; 1.6 carries the S6b change-protocol amendment of 006; ops checklist updated to match | 007 audits | this combined gate |
 
 </details>

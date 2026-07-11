@@ -21,13 +21,16 @@
 //! `lambda_http::run`" discipline (design.md), and it's the same reason
 //! relay bound its listener before announcing "listening on".
 //!
-//! Why the `OnceLock`: `service_fn`'s closure must be `'static` (the
-//! runtime holds it for the process's whole life), so it cannot borrow a
-//! local. Parking the built store in a `static OnceLock` mints exactly
-//! the `&'static S3Store` the closure needs — no `Box::leak` trick, no
-//! global constructor, no unsafe. (Same tool state.rs already uses for
-//! the instance record, doing the same job for a value that must be
-//! *constructed asynchronously* first.)
+//! Why the `OnceLock`: precise version — a *non-move* closure borrowing a
+//! `main`-local store actually compiles here (main never returns while the
+//! runtime runs), but the moment you write `move` (which async blocks
+//! usually force) the `Fn`-capture rules bite: the moved store would be
+//! given away on the first call. Parking the built store in a `static
+//! OnceLock` sidesteps the whole cliff edge and mints a plain
+//! `&'static S3Store` — no `Box::leak` trick, no global constructor, no
+//! unsafe. (Same tool state.rs already uses for the instance record,
+//! doing the same job for a value that must be *constructed
+//! asynchronously* first.)
 
 #![forbid(unsafe_code)]
 
